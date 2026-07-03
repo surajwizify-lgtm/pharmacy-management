@@ -1,0 +1,221 @@
+// Pharmacy Management System - Prisma schema
+// Ported from MedicPOS (Spring Boot / JPA) domain model.
+// Key change from the original: GST is split into CGST + SGST (intra-state)
+// or IGST (inter-state) instead of a single flat gstPercentage/gstAmount,
+// which is what Indian GST-compliant invoices actually require.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- USERS & AUTH ----------
+
+enum Role {
+  ADMIN
+  PHARMACIST
+  CASHIER
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique @db.VarChar(100)
+  passwordHash String    @map("password_hash")
+  fullName     String    @map("full_name") @db.VarChar(200)
+  role         Role
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  bills        Bill[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+// ---------- CATALOG & INVENTORY ----------
+
+enum MedicineStatus {
+  ACTIVE
+  DISCONTINUED
+}
+
+model Medicine {
+  id                   Int            @id @default(autoincrement())
+  name                 String         @db.VarChar(200)
+  manufacturer         String         @db.VarChar(200)
+  category             String?        @db.VarChar(100)
+  barcode              String?        @db.VarChar(50) // GTIN/EAN, not unique per unit
+  hsnCode              String         @unique @map("hsn_code") @db.VarChar(20)
+  gstPercentage        Decimal        @map("gst_percentage") @db.Decimal(5, 2)
+  prescriptionRequired Boolean        @default(false) @map("prescription_required")
+  status               MedicineStatus @default(ACTIVE)
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+  version              Int            @default(0) // optimistic locking
+
+  batches              Batch[]
+  billItems            BillItem[]
+
+  @@index([name])
+  @@index([hsnCode])
+  @@index([status])
+  @@index([barcode])
+  @@map("medicines")
+}
+
+model Batch {
+  id                Int       @id @default(autoincrement())
+  medicineId        Int       @map("medicine_id")
+  medicine          Medicine  @relation(fields: [medicineId], references: [id])
+  batchNumber       String    @map("batch_number") @db.VarChar(50)
+  expiryDate        DateTime  @map("expiry_date") @db.Date
+  purchasePrice     Decimal   @map("purchase_price") @db.Decimal(10, 2)
+  sellingPrice      Decimal   @map("selling_price") @db.Decimal(10, 2)
+  quantityAvailable Int       @map("quantity_available")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  version           Int       @default(0) // optimistic locking
+
+  billItems         BillItem[]
+  returnItems       ReturnItem[]
+
+  @@index([medicineId])
+  @@index([expiryDate])
+  @@index([batchNumber])
+  @@index([medicineId, expiryDate])
+  @@map("batches")
+}
+
+// ---------- BILLING ----------
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  OTHER
+}
+
+model Bill {
+  id                 Int           @id @default(autoincrement())
+  billNumber         String        @unique @map("bill_number") @db.VarChar(50)
+  billDate           DateTime      @default(now()) @map("bill_date")
+  cashierId          Int           @map("cashier_id")
+  cashier            User          @relation(fields: [cashierId], references: [id])
+  customerName       String?       @map("customer_name") @db.VarChar(200)
+  customerPhone      String?       @map("customer_phone") @db.VarChar(20)
+  customerGstin      String?       @map("customer_gstin") @db.VarChar(15) // for B2B invoices
+  isInterState       Boolean       @default(false) @map("is_inter_state") // drives IGST vs CGST+SGST
+  subtotal           Decimal       @db.Decimal(10, 2)
+  totalCgst          Decimal       @default(0) @map("total_cgst") @db.Decimal(10, 2)
+  totalSgst          Decimal       @default(0) @map("total_sgst") @db.Decimal(10, 2)
+  totalIgst           Decimal      @default(0) @map("total_igst") @db.Decimal(10, 2)
+  totalGst           Decimal       @map("total_gst") @db.Decimal(10, 2) // cgst+sgst+igst, kept for quick reporting
+  totalAmount        Decimal       @map("total_amount") @db.Decimal(10, 2)
+  paymentStatus      PaymentStatus @default(PENDING) @map("payment_status")
+  cancelled          Boolean       @default(false)
+  cancellationReason String?       @map("cancellation_reason")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  billItems          BillItem[]
+  payments           Payment[]
+  returns            Return[]
+
+  @@index([billDate])
+  @@index([cashierId])
+  @@map("bills")
+}
+
+model BillItem {
+  id            Int      @id @default(autoincrement())
+  billId        Int      @map("bill_id")
+  bill          Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+  medicineId    Int      @map("medicine_id")
+  medicine      Medicine @relation(fields: [medicineId], references: [id])
+  batchId       Int      @map("batch_id")
+  batch         Batch    @relation(fields: [batchId], references: [id])
+  batchNumber   String   @map("batch_number") @db.VarChar(50)
+  quantity      Int
+  unitPrice     Decimal  @map("unit_price") @db.Decimal(10, 2)
+  gstPercentage Decimal  @map("gst_percentage") @db.Decimal(5, 2) // total slab, e.g. 12.00
+  cgstAmount    Decimal  @default(0) @map("cgst_amount") @db.Decimal(10, 2)
+  sgstAmount    Decimal  @default(0) @map("sgst_amount") @db.Decimal(10, 2)
+  igstAmount    Decimal  @default(0) @map("igst_amount") @db.Decimal(10, 2)
+  gstAmount     Decimal  @map("gst_amount") @db.Decimal(10, 2) // cgst+sgst+igst for this line
+  totalAmount   Decimal  @map("total_amount") @db.Decimal(10, 2)
+
+  @@index([billId])
+  @@index([batchId])
+  @@map("bill_items")
+}
+
+model Payment {
+  id        Int           @id @default(autoincrement())
+  billId    Int           @map("bill_id")
+  bill      Bill          @relation(fields: [billId], references: [id], onDelete: Cascade)
+  amount    Decimal       @db.Decimal(10, 2)
+  method    PaymentMethod
+  paidAt    DateTime      @default(now()) @map("paid_at")
+
+  @@index([billId])
+  @@map("payments")
+}
+
+// ---------- RETURNS ----------
+
+model Return {
+  id          Int          @id @default(autoincrement())
+  billId      Int          @map("bill_id")
+  bill        Bill         @relation(fields: [billId], references: [id])
+  reason      String?
+  totalRefund Decimal      @map("total_refund") @db.Decimal(10, 2)
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  returnItems ReturnItem[]
+
+  @@index([billId])
+  @@map("returns")
+}
+
+model ReturnItem {
+  id          Int     @id @default(autoincrement())
+  returnId    Int     @map("return_id")
+  return      Return  @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  batchId     Int     @map("batch_id")
+  batch       Batch   @relation(fields: [batchId], references: [id])
+  quantity    Int
+  refundAmount Decimal @map("refund_amount") @db.Decimal(10, 2)
+
+  @@index([returnId])
+  @@map("return_items")
+}
+
+// ---------- AUDIT ----------
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(100)
+  entityId  Int?     @map("entity_id")
+  details   String?
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
