@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { Bill, Medicine } from '@/types';
@@ -19,6 +20,8 @@ import {
   ArrowLeftRight,
   Clock,
   IndianRupee,
+  Stethoscope,
+  Building2,
 } from 'lucide-react';
 
 interface CartLine {
@@ -29,6 +32,18 @@ interface CartLine {
   batchId?: number;
   availableStock: number;
   sellingPrice: string;
+}
+
+interface DoctorOption {
+  id: number;
+  name: string;
+  specialization?: string | null;
+}
+
+interface HospitalOption {
+  id: number;
+  name: string;
+  address?: string | null;
 }
 
 const STATUS_OPTIONS = ['ALL', 'PAID', 'PARTIALLY_PAID', 'UNPAID'] as const;
@@ -65,6 +80,22 @@ export default function BillingPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
+  // ---- Doctor autocomplete ----
+  const [doctorId, setDoctorId] = useState<number | null>(null);
+  const [doctorName, setDoctorName] = useState('');
+  const [doctorSuggestions, setDoctorSuggestions] = useState<DoctorOption[]>([]);
+  const [showDoctorSuggestions, setShowDoctorSuggestions] = useState(false);
+  const doctorBoxRef = useRef<HTMLDivElement>(null);
+
+  // ---- Hospital autocomplete ----
+  const [hospitalId, setHospitalId] = useState<number | null>(null);
+  const [hospitalName, setHospitalName] = useState('');
+  const [hospitalSuggestions, setHospitalSuggestions] = useState<HospitalOption[]>([]);
+  const [showHospitalSuggestions, setShowHospitalSuggestions] = useState(false);
+  const hospitalBoxRef = useRef<HTMLDivElement>(null);
+
+  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
+
   async function loadBills() {
     setLoadingBills(true);
     try {
@@ -78,6 +109,7 @@ export default function BillingPage() {
     loadBills();
   }, []);
 
+  // Medicine search
   useEffect(() => {
     if (!search) {
       setResults([]);
@@ -89,6 +121,78 @@ export default function BillingPage() {
     }, 250);
     return () => clearTimeout(t);
   }, [search]);
+
+  // Doctor suggestions (debounced)
+  useEffect(() => {
+    if (!doctorName.trim()) {
+      setDoctorSuggestions([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      try {
+        const data = await apiFetch<DoctorOption[]>(`/api/doctors?search=${encodeURIComponent(doctorName)}`);
+        setDoctorSuggestions(data);
+      } catch {
+        setDoctorSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [doctorName]);
+
+  // Hospital suggestions (debounced)
+  useEffect(() => {
+    if (!hospitalName.trim()) {
+      setHospitalSuggestions([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      try {
+        const data = await apiFetch<HospitalOption[]>(`/api/hospitals?search=${encodeURIComponent(hospitalName)}`);
+        setHospitalSuggestions(data);
+      } catch {
+        setHospitalSuggestions([]);
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [hospitalName]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (doctorBoxRef.current && !doctorBoxRef.current.contains(e.target as Node)) {
+        setShowDoctorSuggestions(false);
+      }
+      if (hospitalBoxRef.current && !hospitalBoxRef.current.contains(e.target as Node)) {
+        setShowHospitalSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  function handleDoctorNameChange(value: string) {
+    setDoctorName(value);
+    setDoctorId(null); // typing invalidates a previously selected doctor
+    setShowDoctorSuggestions(true);
+  }
+
+  function selectDoctor(d: DoctorOption) {
+    setDoctorId(d.id);
+    setDoctorName(d.name);
+    setShowDoctorSuggestions(false);
+  }
+
+  function handleHospitalNameChange(value: string) {
+    setHospitalName(value);
+    setHospitalId(null);
+    setShowHospitalSuggestions(true);
+  }
+
+  function selectHospital(h: HospitalOption) {
+    setHospitalId(h.id);
+    setHospitalName(h.name);
+    setShowHospitalSuggestions(false);
+  }
 
   function addToCart(m: Medicine) {
     const stock = m.batches.reduce((s, b) => s + b.quantityAvailable, 0);
@@ -132,11 +236,26 @@ export default function BillingPage() {
     0,
   );
 
-  function closeModal() {
-    setShowCreateBill(false);
+  function resetFormState() {
     setSearch('');
     setResults([]);
     setError(null);
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerGstin('');
+    setIsInterState(false);
+    setDoctorId(null);
+    setDoctorName('');
+    setDoctorSuggestions([]);
+    setHospitalId(null);
+    setHospitalName('');
+    setHospitalSuggestions([]);
+    setPrescriptionFile(null);
+  }
+
+  function closeModal() {
+    setShowCreateBill(false);
+    resetFormState();
   }
 
   async function submitBill() {
@@ -147,19 +266,33 @@ export default function BillingPage() {
       const bill = await apiFetch<Bill>('/api/bills', {
         method: 'POST',
         body: JSON.stringify({
-          items: cart.map((l) => ({ medicineId: l.medicineId, quantity: l.quantity })),
+          items: cart.map((l) => ({
+            medicineId: l.medicineId,
+            quantity: l.quantity,
+          })),
+
           customerName: customerName || undefined,
           customerPhone: customerPhone || undefined,
           customerGstin: customerGstin || undefined,
+
+          // If an existing doctor was picked from suggestions, send its id.
+          // Otherwise send the free-typed name so the backend can create one.
+          doctorId: doctorId || undefined,
+          doctorName: !doctorId && doctorName.trim() ? doctorName.trim() : undefined,
+
+          // Same find-or-create pattern for hospital.
+          hospitalId: hospitalId || undefined,
+          hospitalName: !hospitalId && hospitalName.trim() ? hospitalName.trim() : undefined,
+
+          // Send this after uploading the file
+          prescriptionFile: undefined,
+
           isInterState,
         }),
       });
       setLastBill(bill);
       setCart([]);
-      setCustomerName('');
-      setCustomerPhone('');
-      setCustomerGstin('');
-      setIsInterState(false);
+      resetFormState();
       loadBills();
       setShowCreateBill(false);
     } catch (err) {
@@ -526,6 +659,99 @@ export default function BillingPage() {
                         className="h-4 w-4 accent-brand-600"
                       />
                     </label>
+
+                    {/* Doctor autocomplete */}
+                    <div className="relative" ref={doctorBoxRef}>
+                      <label className="label flex items-center gap-1.5">
+                        <Stethoscope className="h-3.5 w-3.5" /> Referring doctor
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Search or type a new doctor name"
+                        value={doctorName}
+                        onChange={(e) => handleDoctorNameChange(e.target.value)}
+                        onFocus={() => doctorName.trim() && setShowDoctorSuggestions(true)}
+                      />
+                      {doctorId && (
+                        <p className="mt-1 text-xs text-emerald-600">Existing doctor selected ✓</p>
+                      )}
+                      {!doctorId && doctorName.trim() && !showDoctorSuggestions === false && null}
+                      {showDoctorSuggestions && doctorSuggestions.length > 0 && (
+                        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                          {doctorSuggestions.map((d) => (
+                            <button
+                              key={d.id}
+                              type="button"
+                              className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50"
+                              onClick={() => selectDoctor(d)}
+                            >
+                              <span className="font-medium text-slate-700">{d.name}</span>
+                              {d.specialization && (
+                                <span className="text-xs text-slate-400">{d.specialization}</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {showDoctorSuggestions && doctorName.trim() && doctorSuggestions.length === 0 && (
+                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-400 shadow-lg">
+                          No match — a new doctor “{doctorName.trim()}” will be created.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Hospital autocomplete */}
+                    <div className="relative" ref={hospitalBoxRef}>
+                      <label className="label flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5" /> Referring hospital
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Search or type a new hospital name"
+                        value={hospitalName}
+                        onChange={(e) => handleHospitalNameChange(e.target.value)}
+                        onFocus={() => hospitalName.trim() && setShowHospitalSuggestions(true)}
+                      />
+                      {hospitalId && (
+                        <p className="mt-1 text-xs text-emerald-600">Existing hospital selected ✓</p>
+                      )}
+                      {showHospitalSuggestions && hospitalSuggestions.length > 0 && (
+                        <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                          {hospitalSuggestions.map((h) => (
+                            <button
+                              key={h.id}
+                              type="button"
+                              className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50"
+                              onClick={() => selectHospital(h)}
+                            >
+                              <span className="font-medium text-slate-700">{h.name}</span>
+                              {h.address && <span className="text-xs text-slate-400">{h.address}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {showHospitalSuggestions && hospitalName.trim() && hospitalSuggestions.length === 0 && (
+                        <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-400 shadow-lg">
+                          No match — a new hospital “{hospitalName.trim()}” will be created.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Prescription Upload */}
+                    <div>
+                      <label className="label">Prescription (Image/PDF)</label>
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                        className="input"
+                        onChange={(e) => setPrescriptionFile(e.target.files?.[0] ?? null)}
+                      />
+                      {prescriptionFile && (
+                        <p className="mt-1 text-xs text-slate-500">Selected: {prescriptionFile.name}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

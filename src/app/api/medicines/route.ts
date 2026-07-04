@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         status: status ?? undefined,
         ...(search && {
           OR: [
-            { name: { contains: search, mode: 'insensitive' } },
+            { name: { contains: search } },
             { barcode: { contains: search } },
             { hsnCode: { contains: search } },
           ],
