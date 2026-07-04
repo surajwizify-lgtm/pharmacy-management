@@ -4,7 +4,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
-import type { Bill, Medicine } from '@/types';
+import type { Bill, Medicine, PaymentMethod } from '@/types';
+import BillInvoice from '@/components/BillInvoice';
+import InvoicePrintStyles from '@/components/InvoicePrintStyles';
+import { downloadInvoicePdf } from '@/lib/invoice-pdf';
 import {
   Plus,
   X,
@@ -26,7 +29,9 @@ import {
   FileText,
   UserPlus,
   MapPin,
-  ClipboardList,
+  CreditCard,
+  Printer,
+  Download,
 } from 'lucide-react';
 
 interface CartLine {
@@ -139,6 +144,16 @@ export default function BillingPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
+  // ---- View bill (inline, shown below the lists) — read-only ----
+  const [viewingBill, setViewingBill] = useState<Bill | null>(null);
+  const [loadingViewBill, setLoadingViewBill] = useState(false);
+  const [viewError, setViewError] = useState<string | null>(null);
+  const [showViewBill, setShowViewBill] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  // ---- Invoice popup (separate from inline view, opened via the Invoice icon) — read-only ----
+  const [showInvoicePopup, setShowInvoicePopup] = useState(false);
+
   // ---- Doctor autocomplete ----
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [doctorName, setDoctorName] = useState('');
@@ -155,6 +170,11 @@ export default function BillingPage() {
 
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const [prescriptionNotes, setPrescriptionNotes] = useState('');
+
+  // ---- Payment collected at the time of creating the bill ----
+  const [createPaymentAmount, setCreatePaymentAmount] = useState('');
+  const [createPaymentMethod, setCreatePaymentMethod] = useState<PaymentMethod>('CASH');
+  const [createPaymentError, setCreatePaymentError] = useState<string | null>(null);
 
   // ---- "Create new doctor" mini modal ----
   const [showCreateDoctor, setShowCreateDoctor] = useState(false);
@@ -399,6 +419,9 @@ export default function BillingPage() {
     setHospitalSuggestions([]);
     setPrescriptionFile(null);
     setPrescriptionNotes('');
+    setCreatePaymentAmount('');
+    setCreatePaymentMethod('CASH');
+    setCreatePaymentError(null);
   }
 
   function closeModal() {
@@ -406,48 +429,6 @@ export default function BillingPage() {
     resetFormState();
   }
 
-  // async function submitBill() {
-  //   if (cart.length === 0) return;
-  //   setSubmitting(true);
-  //   setError(null);
-  //   try {
-  //     const bill = await apiFetch<Bill>('/api/bills', {
-  //       method: 'POST',
-  //       body: JSON.stringify({
-  //         items: cart.map((l) => ({
-  //           medicineId: l.medicineId,
-  //           quantity: l.quantity,
-  //         })),
-
-  //         customerName: customerName || undefined,
-  //         customerPhone: customerPhone || undefined,
-  //         customerGstin: customerGstin || undefined,
-
-  //         // If an existing doctor was picked from suggestions, send its id.
-  //         // Otherwise send the free-typed name so the backend can create one.
-  //         doctorId: doctorId || undefined,
-  //         doctorName: !doctorId && doctorName.trim() ? doctorName.trim() : undefined,
-
-  //         // Same find-or-create pattern for hospital.
-  //         hospitalId: hospitalId || undefined,
-  //         hospitalName: !hospitalId && hospitalName.trim() ? hospitalName.trim() : undefined,
-  //         // Send this after uploading the file
-  //         prescriptionFile: undefined,
-
-  //         isInterState,
-  //       }),
-  //     });
-  //     setLastBill(bill);
-  //     setCart([]);
-  //     resetFormState();
-  //     loadBills();
-  //     setShowCreateBill(false);
-  //   } catch (err) {
-  //     setError(err instanceof ApiClientError ? err.message : 'Something went wrong');
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // }
   async function submitBill() {
     if (cart.length === 0) return;
     setSubmitting(true);
@@ -499,6 +480,23 @@ export default function BillingPage() {
           isInterState,
         }),
       });
+      // If an amount was entered in the Payment section, record it against
+      // the newly created bill right away.
+      if (createPaymentAmount && Number(createPaymentAmount) > 0) {
+        try {
+          await apiFetch(`/api/bills/${bill.id}/payments`, {
+            method: 'POST',
+            body: JSON.stringify({ amount: Number(createPaymentAmount), method: createPaymentMethod }),
+          });
+        } catch (err) {
+          setCreatePaymentError(
+            err instanceof ApiClientError
+              ? err.message
+              : 'Bill created, but the payment could not be recorded. Please record it from the bill.'
+          );
+        }
+      }
+
       setLastBill(bill);
       setCart([]);
       resetFormState();
@@ -525,6 +523,69 @@ export default function BillingPage() {
     }
   }
 
+  // ---- Inline view (below the lists) — read-only ----
+  async function openViewBill(id: number) {
+    setShowInvoicePopup(false); // ensure the popup isn't also open at the same time
+    setShowViewBill(true);
+    setViewError(null);
+    setLoadingViewBill(true);
+    setViewingBill(null);
+    try {
+      const full = await apiFetch<Bill>(`/api/bills/${id}`);
+      setViewingBill(full);
+    } catch (err) {
+      setViewError(err instanceof ApiClientError ? err.message : 'Could not load this bill');
+    } finally {
+      setLoadingViewBill(false);
+    }
+  }
+
+  function closeViewBill() {
+    setShowViewBill(false);
+    setViewingBill(null);
+    setViewError(null);
+  }
+
+  // ---- Invoice popup (separate from inline view) — read-only ----
+  async function openInvoicePopup(id: number) {
+    setShowViewBill(false); // ensure the inline view isn't also open at the same time
+    setShowInvoicePopup(true);
+    setViewError(null);
+    setLoadingViewBill(true);
+    setViewingBill(null);
+    try {
+      const full = await apiFetch<Bill>(`/api/bills/${id}`);
+      setViewingBill(full);
+    } catch (err) {
+      setViewError(err instanceof ApiClientError ? err.message : 'Could not load this bill');
+    } finally {
+      setLoadingViewBill(false);
+    }
+  }
+
+  function closeInvoicePopup() {
+    setShowInvoicePopup(false);
+    setViewingBill(null);
+    setViewError(null);
+  }
+
+  function handlePrintViewingBill() {
+    window.print();
+  }
+
+  async function handleDownloadViewingBillPdf() {
+    if (!viewingBill) return;
+    setDownloadingPdf(true);
+    try {
+      await downloadInvoicePdf(viewingBill.billNumber);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('Could not generate PDF. Make sure jspdf and html2canvas are installed (npm install jspdf html2canvas).');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
+
   const filteredBills = bills.filter((b) => {
     const matchesSearch =
       !billSearch ||
@@ -537,6 +598,9 @@ export default function BillingPage() {
   const recentBills = [...bills]
     .sort((a, b) => new Date(b.billDate).getTime() - new Date(a.billDate).getTime())
     .slice(0, 8);
+
+  const viewingTotalPaid = viewingBill ? (viewingBill.payments ?? []).reduce((s, p) => s + Number(p.amount), 0) : 0;
+  const viewingBalanceDue = viewingBill ? Number(viewingBill.totalAmount) - viewingTotalPaid : 0;
 
   return (
     <div className="space-y-6">
@@ -663,13 +727,20 @@ export default function BillingPage() {
                         </td>
                         <td className="p-3">
                           <div className="flex items-center justify-end gap-1 opacity-70 transition-opacity group-hover:opacity-100">
-                            <Link
-                              href={`/billing/${bill.id}`}
+                            <button
                               title="View"
+                              onClick={() => openViewBill(bill.id)}
                               className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                             >
                               <Eye className="h-4 w-4" />
-                            </Link>
+                            </button>
+                            <button
+                              title="Invoice"
+                              onClick={() => openInvoicePopup(bill.id)}
+                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-purple-50 hover:text-purple-600"
+                            >
+                              <FileText className="h-4 w-4" />
+                            </button>
                             <Link
                               href={`/billing/${bill.id}?edit=1`}
                               title="Edit"
@@ -714,7 +785,10 @@ export default function BillingPage() {
             <ul className="divide-y divide-slate-100">
               {recentBills.map((b) => (
                 <li key={b.id} className="py-2.5">
-                  <Link href={`/billing/${b.id}`} className="flex items-center justify-between text-sm hover:text-brand-600">
+                  <button
+                    onClick={() => openViewBill(b.id)}
+                    className="flex w-full items-center justify-between text-left text-sm hover:text-brand-600"
+                  >
                     <span>
                       <span className="font-medium text-slate-800">{b.billNumber}</span>
                       <br />
@@ -726,7 +800,7 @@ export default function BillingPage() {
                         {b.paymentStatus.replace('_', ' ')}
                       </span>
                     </span>
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -735,13 +809,181 @@ export default function BillingPage() {
           {lastBill && (
             <div className="mt-4 rounded-lg bg-brand-50 p-3 text-sm">
               Bill <span className="font-semibold">{lastBill.billNumber}</span> created — ₹{lastBill.totalAmount}.{' '}
-              <Link href={`/billing/${lastBill.id}`} className="font-medium text-brand-700 hover:underline">
+              <button onClick={() => openViewBill(lastBill.id)} className="font-medium text-brand-700 hover:underline">
                 View →
-              </Link>
+              </button>
             </div>
           )}
         </div>
       </div>
+
+      {/* Bill detail — inline, All Bills list ke niche, jab koi bill select ho (Eye icon).
+          READ-ONLY: sirf totals + payment status/history, koi payment record karne ka form nahi. */}
+      {showViewBill && (
+        <div className="card space-y-6 p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">
+                {viewingBill ? viewingBill.billNumber : 'Loading bill…'}
+              </h1>
+              {viewingBill && (
+                <p className="text-sm text-slate-500">
+                  {new Date(viewingBill.billDate).toLocaleString()} · Cashier:{' '}
+                  {viewingBill.cashier?.fullName ?? viewingBill.cashierId}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {viewingBill && (
+                <span
+                  className={`badge ${viewingBill.paymentStatus === 'PAID'
+                    ? 'bg-brand-100 text-brand-700'
+                    : viewingBill.paymentStatus === 'PARTIALLY_PAID'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-slate-100 text-slate-600'
+                    }`}
+                >
+                  {viewingBill.paymentStatus}
+                </span>
+              )}
+              <button
+                onClick={closeViewBill}
+                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {loadingViewBill ? (
+            <div className="flex h-40 items-center justify-center text-slate-400">Loading bill…</div>
+          ) : viewError ? (
+            <p className="text-sm text-red-600">{viewError}</p>
+          ) : viewingBill ? (
+            <>
+              {(viewingBill.customerName || viewingBill.customerPhone || viewingBill.customerGstin) && (
+                <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-600">
+                  {viewingBill.customerName && <p>Customer: {viewingBill.customerName}</p>}
+                  {viewingBill.customerPhone && <p>Phone: {viewingBill.customerPhone}</p>}
+                  {viewingBill.customerGstin && <p>GSTIN: {viewingBill.customerGstin}</p>}
+                  <p>{viewingBill.isInterState ? 'Inter-state sale (IGST)' : 'Intra-state sale (CGST + SGST)'}</p>
+                </div>
+              )}
+
+              <div className="overflow-hidden rounded-xl border border-slate-100">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">Medicine</th>
+                      <th className="px-4 py-3">Batch</th>
+                      <th className="px-4 py-3">Qty</th>
+                      <th className="px-4 py-3">Unit price</th>
+                      <th className="px-4 py-3">GST</th>
+                      <th className="px-4 py-3">Line total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {viewingBill.billItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-4 py-3">{item.medicine?.name ?? `#${item.medicineId}`}</td>
+                        <td className="px-4 py-3 text-slate-500">{item.batchNumber}</td>
+                        <td className="px-4 py-3">{item.quantity}</td>
+                        <td className="px-4 py-3">₹{item.unitPrice}</td>
+                        <td className="px-4 py-3 text-slate-500">
+                          {viewingBill.isInterState
+                            ? `IGST ₹${item.igstAmount}`
+                            : `CGST ₹${item.cgstAmount} + SGST ₹${item.sgstAmount}`}
+                        </td>
+                        <td className="px-4 py-3 font-medium">₹{item.totalAmount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="rounded-xl border border-slate-100 p-5">
+                  <h2 className="mb-3 font-medium text-slate-800">Totals</h2>
+                  <dl className="space-y-1.5 text-sm">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Subtotal</span>
+                      <span>₹{viewingBill.subtotal}</span>
+                    </div>
+                    {viewingBill.isInterState ? (
+                      <div className="flex justify-between text-slate-600">
+                        <span>IGST</span>
+                        <span>₹{viewingBill.totalIgst}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between text-slate-600">
+                          <span>CGST</span>
+                          <span>₹{viewingBill.totalCgst}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-600">
+                          <span>SGST</span>
+                          <span>₹{viewingBill.totalSgst}</span>
+                        </div>
+                      </>
+                    )}
+                    <div className="flex justify-between text-slate-600">
+                      <span>Total GST</span>
+                      <span>₹{viewingBill.totalGst}</span>
+                    </div>
+                    <div className="mt-2 flex justify-between border-t border-slate-100 pt-2 text-base font-semibold">
+                      <span>Total amount</span>
+                      <span>₹{viewingBill.totalAmount}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-600">
+                      <span>Paid</span>
+                      <span>₹{viewingTotalPaid.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-medium text-slate-800">
+                      <span>Balance due</span>
+                      <span>₹{viewingBalanceDue.toFixed(2)}</span>
+                    </div>
+                  </dl>
+                </div>
+
+                {/* Read-only payment status/history — no recording form */}
+                <div className="rounded-xl border border-slate-100 p-5">
+                  <h2 className="mb-3 flex items-center gap-1.5 font-medium text-slate-800">
+                    <CreditCard className="h-4 w-4 text-brand-600" />
+                    Payment
+                  </h2>
+
+                  <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+                    <span className="text-slate-500">Status</span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(viewingBill.paymentStatus)}`}
+                    >
+                      {viewingBill.paymentStatus.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  {viewingBill.payments && viewingBill.payments.length > 0 ? (
+                    <div>
+                      <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Payment history</h3>
+                      <ul className="space-y-1 text-sm text-slate-600">
+                        {viewingBill.payments.map((p) => (
+                          <li key={p.id} className="flex justify-between">
+                            <span>
+                              {p.method} · {new Date(p.paidAt).toLocaleString()}
+                            </span>
+                            <span>₹{p.amount}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400">No payments recorded for this bill yet.</p>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
 
       {/* Create bill popup */}
       {showCreateBill && (
@@ -834,13 +1076,13 @@ export default function BillingPage() {
                       )}
                       {showDoctorSuggestions && doctorName.trim() && doctorSuggestions.length === 0 && (
                         <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg">
-                          <p className="mb-2 text-slate-400">No doctor named “{doctorName.trim()}” found.</p>
+                          <p className="mb-2 text-slate-400">No doctor named "{doctorName.trim()}" found.</p>
                           <button
                             type="button"
                             onClick={openCreateDoctor}
                             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-50 py-1.5 font-medium text-brand-700 hover:bg-brand-100"
                           >
-                            <UserPlus className="h-3.5 w-3.5" /> Create “{doctorName.trim()}” as new doctor
+                            <UserPlus className="h-3.5 w-3.5" /> Create "{doctorName.trim()}" as new doctor
                           </button>
                         </div>
                       )}
@@ -886,13 +1128,13 @@ export default function BillingPage() {
                       )}
                       {showHospitalSuggestions && hospitalName.trim() && hospitalSuggestions.length === 0 && (
                         <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg">
-                          <p className="mb-2 text-slate-400">No hospital named “{hospitalName.trim()}” found.</p>
+                          <p className="mb-2 text-slate-400">No hospital named "{hospitalName.trim()}" found.</p>
                           <button
                             type="button"
                             onClick={openCreateHospital}
                             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-50 py-1.5 font-medium text-brand-700 hover:bg-brand-100"
                           >
-                            <Plus className="h-3.5 w-3.5" /> Create “{hospitalName.trim()}” as new hospital
+                            <Plus className="h-3.5 w-3.5" /> Create "{hospitalName.trim()}" as new hospital
                           </button>
                         </div>
                       )}
@@ -1067,37 +1309,77 @@ export default function BillingPage() {
                   )}
                 </div>
 
-                {/* 3. Prescription upload — last step */}
+                {/* 3. Prescription — Payment moved to the right sidebar */}
                 <div className="rounded-xl border border-slate-100 p-4">
                   <h3 className="mb-3 flex items-center gap-1.5 text-sm font-medium text-slate-700">
                     <FileText className="h-4 w-4 text-brand-600" />
                     Prescription
                   </h3>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="label !flex items-center gap-1.5">
-                        <Upload className="h-3.5 w-3.5" /> Prescription (image/PDF)
-                      </label>
-                      <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500 transition-colors hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700">
-                        <Upload className="h-4 w-4" />
-                        {prescriptionFile ? prescriptionFile.name : 'Click to upload prescription'}
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".jpg,.jpeg,.png,.webp,.pdf"
-                          onChange={(e) => setPrescriptionFile(e.target.files?.[0] ?? null)}
-                        />
-                      </label>
-                    </div>
-                  </div>
+                  <label className="label !flex items-center gap-1.5">
+                    <Upload className="h-3.5 w-3.5" /> Prescription (image/PDF)
+                  </label>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-3 text-sm text-slate-500 transition-colors hover:border-brand-300 hover:bg-brand-50/50 hover:text-brand-700">
+                    <Upload className="h-4 w-4" />
+                    {prescriptionFile ? prescriptionFile.name : 'Click to upload prescription'}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf"
+                      onChange={(e) => setPrescriptionFile(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
                 </div>
 
                 {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
 
-              {/* Right: bill summary — unchanged */}
+              {/* Right: Payment card (above "Amount to collect") + bill summary */}
               <div className="flex flex-col gap-4">
+                {/* Payment card — moved here from the Prescription row, sits right above the summary */}
+                <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                  <h3 className="mb-3 flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                    <CreditCard className="h-4 w-4 text-brand-600" />
+                    Payment
+                    <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                      Optional
+                    </span>
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="label">Amount collected now</label>
+                      <div className="relative">
+                        <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                        <input
+                          className="input pl-8"
+                          type="number"
+                          step="0.01"
+                          min={0}
+                          placeholder="0.00"
+                          value={createPaymentAmount}
+                          onChange={(e) => setCreatePaymentAmount(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label">Method</label>
+                      <select
+                        className="input"
+                        value={createPaymentMethod}
+                        onChange={(e) => setCreatePaymentMethod(e.target.value as PaymentMethod)}
+                      >
+                        <option value="CASH">Cash</option>
+                        <option value="CARD">Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="OTHER">Other</option>
+                      </select>
+                    </div>
+                    {createPaymentError && <p className="text-sm text-red-600">{createPaymentError}</p>}
+                    <p className="text-xs text-slate-400">Leave amount empty to skip payment for now.</p>
+                  </div>
+                </div>
+
                 <div className="sticky top-0 rounded-xl bg-slate-50 p-4">
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Amount to collect</p>
                   <p className="mb-3 flex items-center gap-1 text-3xl font-semibold text-brand-700">
@@ -1139,6 +1421,77 @@ export default function BillingPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice popup — READ-ONLY, sirf invoice. Koi payment card/form nahi. */}
+      {showInvoicePopup && (
+        <div
+          id="view-bill-overlay"
+          className="no-print fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          onClick={closeInvoicePopup}
+        >
+          <div
+            id="view-bill-modal"
+            className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="no-print flex items-center justify-between bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-4 text-white">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+                  <Receipt className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold leading-tight">
+                    {viewingBill ? viewingBill.billNumber : 'Loading bill…'}
+                  </h2>
+                  <p className="text-xs text-white/70">Invoice preview</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {viewingBill && (
+                  <>
+                    <button
+                      onClick={handleDownloadViewingBillPdf}
+                      disabled={downloadingPdf}
+                      title="Download PDF"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/25 disabled:opacity-50"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      {downloadingPdf ? 'Preparing…' : 'PDF'}
+                    </button>
+                    <button
+                      onClick={handlePrintViewingBill}
+                      title="Print"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/25"
+                    >
+                      <Printer className="h-3.5 w-3.5" />
+                      Print
+                    </button>
+                    <Link
+                      href={`/billing/${viewingBill.id}`}
+                      className="rounded-lg bg-white/15 px-3 py-1.5 text-xs font-medium transition-colors hover:bg-white/25"
+                    >
+                      Open full page →
+                    </Link>
+                  </>
+                )}
+                <button onClick={closeInvoicePopup} className="rounded-full p-2 transition-colors hover:bg-white/15">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-slate-50 p-6">
+              {loadingViewBill ? (
+                <div className="flex h-64 items-center justify-center text-slate-400">Loading invoice…</div>
+              ) : viewError ? (
+                <p className="text-sm text-red-600">{viewError}</p>
+              ) : viewingBill ? (
+                <BillInvoice bill={viewingBill} />
+              ) : null}
             </div>
           </div>
         </div>
@@ -1244,6 +1597,8 @@ export default function BillingPage() {
           </div>
         </div>
       )}
+
+      <InvoicePrintStyles />
     </div>
   );
 }
