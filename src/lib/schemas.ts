@@ -72,7 +72,7 @@
 // });
 
 import { z } from 'zod';
-import { Role, MedicineStatus, PaymentMethod } from '@prisma/client';
+import { Role, MedicineStatus, PaymentMethod, GstType } from '@prisma/client';
 
 // ---------- auth ----------
 export const loginSchema = z.object({
@@ -89,6 +89,19 @@ export const createUserSchema = z.object({
 });
 
 // ---------- medicines ----------
+// export const createMedicineSchema = z.object({
+//   name: z.string().min(1),
+//   manufacturer: z.string().min(1),
+//   category: z.string().optional(),
+//   barcode: z.string().optional(),
+//   hsnCode: z.string().min(1),
+//   gstPercentage: z.number().min(0).max(28),
+//   prescriptionRequired: z.boolean().optional(),
+// });
+
+// export const updateMedicineSchema = createMedicineSchema.partial();
+
+
 export const createMedicineSchema = z.object({
   name: z.string().min(1),
   manufacturer: z.string().min(1),
@@ -96,6 +109,7 @@ export const createMedicineSchema = z.object({
   barcode: z.string().optional(),
   hsnCode: z.string().min(1),
   gstPercentage: z.number().min(0).max(28),
+  gstType: z.nativeEnum(GstType).optional(),
   prescriptionRequired: z.boolean().optional(),
 });
 
@@ -107,6 +121,14 @@ export const medicineQuerySchema = z.object({
 });
 
 // ---------- batches ----------
+// export const createBatchSchema = z.object({
+//   medicineId: z.number().int(),
+//   batchNumber: z.string().min(1),
+//   expiryDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date'),
+//   purchasePrice: z.number().positive(),
+//   sellingPrice: z.number().positive(),
+//   quantityAvailable: z.number().int().min(0),
+// });
 export const createBatchSchema = z.object({
   medicineId: z.number().int(),
   batchNumber: z.string().min(1),
@@ -114,6 +136,7 @@ export const createBatchSchema = z.object({
   purchasePrice: z.number().positive(),
   sellingPrice: z.number().positive(),
   quantityAvailable: z.number().int().min(0),
+  location: z.string().max(50).optional(),
 });
 
 export const updateStockSchema = z.object({
