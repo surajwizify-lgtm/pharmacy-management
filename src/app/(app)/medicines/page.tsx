@@ -1,3 +1,4 @@
+// src/app/medicines/page.tsx
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
@@ -5,6 +6,8 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { Medicine } from '@/types';
+
+type GstType = 'INCLUSIVE' | 'EXCLUSIVE';
 
 const EMPTY_FORM = {
   name: '',
@@ -14,7 +17,16 @@ const EMPTY_FORM = {
   hsnCode: '',
   gstPercentage: '',
   prescriptionRequired: false,
+  // MRP in Indian pharmacies is almost always GST-inclusive by default,
+  // so that's the sensible default for a new medicine.
+  gstType: 'INCLUSIVE' as GstType,
 };
+
+function gstTypeBadgeClass(type?: string) {
+  return type === 'EXCLUSIVE'
+    ? 'bg-blue-100 text-blue-700'
+    : 'bg-emerald-100 text-emerald-700';
+}
 
 export default function MedicinesPage() {
   const { data: session } = useSession();
@@ -64,6 +76,8 @@ export default function MedicinesPage() {
       hsnCode: m.hsnCode,
       gstPercentage: m.gstPercentage,
       prescriptionRequired: m.prescriptionRequired,
+      // Falls back to INCLUSIVE for medicines saved before this field existed.
+      gstType: ((m as unknown as { gstType?: GstType }).gstType ?? 'INCLUSIVE'),
     });
     setError(null);
     setShowForm(true);
@@ -82,6 +96,7 @@ export default function MedicinesPage() {
         hsnCode: form.hsnCode,
         gstPercentage: Number(form.gstPercentage),
         prescriptionRequired: form.prescriptionRequired,
+        gstType: form.gstType,
       };
       if (editingId) {
         await apiFetch(`/api/medicines/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
@@ -132,6 +147,7 @@ export default function MedicinesPage() {
               <th className="px-4 py-3">Manufacturer</th>
               <th className="px-4 py-3">HSN</th>
               <th className="px-4 py-3">GST %</th>
+              <th className="px-4 py-3">GST Type</th>
               <th className="px-4 py-3">Stock</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3"></th>
@@ -140,19 +156,20 @@ export default function MedicinesPage() {
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
                   Loading…
                 </td>
               </tr>
             ) : medicines.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={8} className="px-4 py-6 text-center text-slate-400">
                   No medicines found.
                 </td>
               </tr>
             ) : (
               medicines.map((m) => {
                 const stock = m.batches.reduce((s, b) => s + b.quantityAvailable, 0);
+                const gstType = (m as unknown as { gstType?: GstType }).gstType ?? 'INCLUSIVE';
                 return (
                   <tr key={m.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
@@ -166,6 +183,11 @@ export default function MedicinesPage() {
                     <td className="px-4 py-3 text-slate-600">{m.manufacturer}</td>
                     <td className="px-4 py-3 text-slate-600">{m.hsnCode}</td>
                     <td className="px-4 py-3 text-slate-600">{m.gstPercentage}%</td>
+                    <td className="px-4 py-3">
+                      <span className={`badge ${gstTypeBadgeClass(gstType)}`}>
+                        {gstType === 'EXCLUSIVE' ? 'Exclusive' : 'Inclusive'}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`badge ${stock <= 20 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                         {stock}
@@ -267,6 +289,40 @@ export default function MedicinesPage() {
                     onChange={(e) => setForm({ ...form, gstPercentage: e.target.value })}
                   />
                 </div>
+
+                {/* GST type — inclusive (MRP already has GST, common for most retail
+                    medicines) vs exclusive (GST added on top, common for B2B/hospital supply) */}
+                <div className="col-span-2">
+                  <label className="label">GST type</label>
+                  <div className="inline-flex w-full rounded-lg border border-slate-200 bg-slate-50 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, gstType: 'INCLUSIVE' })}
+                      className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${form.gstType === 'INCLUSIVE'
+                          ? 'bg-white text-brand-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                      Inclusive (MRP)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, gstType: 'EXCLUSIVE' })}
+                      className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${form.gstType === 'EXCLUSIVE'
+                          ? 'bg-white text-brand-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                      Exclusive (+GST)
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {form.gstType === 'INCLUSIVE'
+                      ? 'Selling price already includes GST — usual for MRP-based retail sales.'
+                      : 'GST will be added on top of the selling price — usual for B2B / hospital billing.'}
+                  </p>
+                </div>
+
                 <label className="col-span-2 flex items-center gap-2 text-sm text-slate-700">
                   <input
                     type="checkbox"

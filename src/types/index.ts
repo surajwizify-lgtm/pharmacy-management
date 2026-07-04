@@ -67,6 +67,26 @@ export interface Bill {
   cashier?: AppUser;
 }
 
+export interface Doctor {
+  id: number;
+  name: string;
+  registrationNo: string | null;
+  specialization: string | null;
+  phone: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+ 
+export interface Hospital {
+  id: number;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  gstin: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppUser {
   id: number;
   username: string;
