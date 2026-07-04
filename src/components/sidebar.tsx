@@ -10,6 +10,8 @@ const NAV_ITEMS = [
   { href: '/medicines', label: 'Medicines', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/batches', label: 'Batches & Stock', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/billing', label: 'Billing', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
+  { href: '/doctors', label: 'Doctors', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
+  { href: '/hospitals', label: 'Hospitals', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/users', label: 'Users', roles: ['ADMIN'] },
 ];
 
