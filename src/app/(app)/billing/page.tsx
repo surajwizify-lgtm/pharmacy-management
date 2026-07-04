@@ -406,11 +406,73 @@ export default function BillingPage() {
     resetFormState();
   }
 
+  // async function submitBill() {
+  //   if (cart.length === 0) return;
+  //   setSubmitting(true);
+  //   setError(null);
+  //   try {
+  //     const bill = await apiFetch<Bill>('/api/bills', {
+  //       method: 'POST',
+  //       body: JSON.stringify({
+  //         items: cart.map((l) => ({
+  //           medicineId: l.medicineId,
+  //           quantity: l.quantity,
+  //         })),
+
+  //         customerName: customerName || undefined,
+  //         customerPhone: customerPhone || undefined,
+  //         customerGstin: customerGstin || undefined,
+
+  //         // If an existing doctor was picked from suggestions, send its id.
+  //         // Otherwise send the free-typed name so the backend can create one.
+  //         doctorId: doctorId || undefined,
+  //         doctorName: !doctorId && doctorName.trim() ? doctorName.trim() : undefined,
+
+  //         // Same find-or-create pattern for hospital.
+  //         hospitalId: hospitalId || undefined,
+  //         hospitalName: !hospitalId && hospitalName.trim() ? hospitalName.trim() : undefined,
+  //         // Send this after uploading the file
+  //         prescriptionFile: undefined,
+
+  //         isInterState,
+  //       }),
+  //     });
+  //     setLastBill(bill);
+  //     setCart([]);
+  //     resetFormState();
+  //     loadBills();
+  //     setShowCreateBill(false);
+  //   } catch (err) {
+  //     setError(err instanceof ApiClientError ? err.message : 'Something went wrong');
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // }
   async function submitBill() {
     if (cart.length === 0) return;
     setSubmitting(true);
     setError(null);
     try {
+      // Upload prescription first (if attached), so we have a stored
+      // path/name to reference in the bill payload below.
+      let uploadedPrescription: { prescriptionFile: string; prescriptionName: string; prescriptionType: string } | undefined;
+
+      if (prescriptionFile) {
+        const formData = new FormData();
+        formData.append('file', prescriptionFile);
+
+        const uploadRes = await fetch('/api/prescriptions/upload', {
+          method: 'POST',
+          body: formData, // no Content-Type header — browser sets multipart boundary
+        });
+
+        if (!uploadRes.ok) {
+          const body = await uploadRes.json().catch(() => ({}));
+          throw new ApiClientError(uploadRes.status, body.message ?? 'Prescription upload failed');
+        }
+        uploadedPrescription = await uploadRes.json();
+      }
+
       const bill = await apiFetch<Bill>('/api/bills', {
         method: 'POST',
         body: JSON.stringify({
@@ -423,16 +485,16 @@ export default function BillingPage() {
           customerPhone: customerPhone || undefined,
           customerGstin: customerGstin || undefined,
 
-          // If an existing doctor was picked from suggestions, send its id.
-          // Otherwise send the free-typed name so the backend can create one.
           doctorId: doctorId || undefined,
           doctorName: !doctorId && doctorName.trim() ? doctorName.trim() : undefined,
 
-          // Same find-or-create pattern for hospital.
           hospitalId: hospitalId || undefined,
           hospitalName: !hospitalId && hospitalName.trim() ? hospitalName.trim() : undefined,
-          // Send this after uploading the file
-          prescriptionFile: undefined,
+
+          // Now populated from the upload step above, instead of hardcoded undefined.
+          prescriptionFile: uploadedPrescription?.prescriptionFile,
+          prescriptionName: uploadedPrescription?.prescriptionName,
+          prescriptionType: uploadedPrescription?.prescriptionType,
 
           isInterState,
         }),
