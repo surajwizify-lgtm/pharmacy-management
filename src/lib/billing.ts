@@ -47,13 +47,13 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
       const batch = item.batchId
         ? await tx.batch.findUnique({ where: { id: item.batchId } })
         : await tx.batch.findFirst({
-            where: {
-              medicineId: item.medicineId,
-              quantityAvailable: { gte: item.quantity },
-              expiryDate: { gte: new Date() },
-            },
-            orderBy: { expiryDate: 'asc' },
-          });
+          where: {
+            medicineId: item.medicineId,
+            quantityAvailable: { gte: item.quantity },
+            expiryDate: { gte: new Date() },
+          },
+          orderBy: { expiryDate: 'asc' },
+        });
 
       if (!batch) {
         throw badRequest(`No available (unexpired, sufficient-stock) batch for "${medicine.name}"`);
@@ -61,7 +61,7 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
       if (batch.quantityAvailable < item.quantity) {
         throw badRequest(
           `Insufficient stock for "${medicine.name}" batch ${batch.batchNumber}: ` +
-            `requested ${item.quantity}, available ${batch.quantityAvailable}`,
+          `requested ${item.quantity}, available ${batch.quantityAvailable}`,
         );
       }
 
