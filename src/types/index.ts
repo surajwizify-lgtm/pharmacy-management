@@ -3,6 +3,17 @@ export type MedicineStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'OTHER';
 
+// export interface Batch {
+//   id: number;
+//   medicineId: number;
+//   batchNumber: string;
+//   expiryDate: string;
+//   purchasePrice: string;
+//   sellingPrice: string;
+//   quantityAvailable: number;
+//   version: number;
+//   medicine?: Medicine;
+// }
 export interface Batch {
   id: number;
   medicineId: number;
@@ -11,8 +22,10 @@ export interface Batch {
   purchasePrice: string;
   sellingPrice: string;
   quantityAvailable: number;
+  location?: string | null;   // add this
+  createdAt: string;
+  updatedAt: string;
   version: number;
-  medicine?: Medicine;
 }
 
 export interface Medicine {
@@ -23,6 +36,7 @@ export interface Medicine {
   barcode: string | null;
   hsnCode: string;
   gstPercentage: string;
+  gstType: 'INCLUSIVE' | 'EXCLUSIVE';
   prescriptionRequired: boolean;
   status: MedicineStatus;
   version: number;
@@ -76,7 +90,7 @@ export interface Doctor {
   createdAt: string;
   updatedAt: string;
 }
- 
+
 export interface Hospital {
   id: number;
   name: string;

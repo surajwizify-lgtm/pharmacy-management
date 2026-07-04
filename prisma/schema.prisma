@@ -44,6 +44,35 @@ enum MedicineStatus {
   DISCONTINUED
 }
 
+// model Medicine {
+//   id                   Int            @id @default(autoincrement())
+//   name                 String         @db.VarChar(200)
+//   manufacturer         String         @db.VarChar(200)
+//   category             String?        @db.VarChar(100)
+//   barcode              String?        @db.VarChar(50) // GTIN/EAN, not unique per unit
+//   hsnCode              String         @unique @map("hsn_code") @db.VarChar(20)
+//   gstPercentage        Decimal        @map("gst_percentage") @db.Decimal(5, 2)
+//   prescriptionRequired Boolean        @default(false) @map("prescription_required")
+//   status               MedicineStatus @default(ACTIVE)
+//   createdAt            DateTime       @default(now()) @map("created_at")
+//   updatedAt            DateTime       @updatedAt @map("updated_at")
+//   version              Int            @default(0) // optimistic locking
+
+//   batches   Batch[]
+//   billItems BillItem[]
+
+//   @@index([name])
+//   @@index([hsnCode])
+//   @@index([status])
+//   @@index([barcode])
+//   @@map("medicines")
+// }
+
+enum GstType {
+  INCLUSIVE
+  EXCLUSIVE
+}
+
 model Medicine {
   id                   Int            @id @default(autoincrement())
   name                 String         @db.VarChar(200)
@@ -52,6 +81,7 @@ model Medicine {
   barcode              String?        @db.VarChar(50) // GTIN/EAN, not unique per unit
   hsnCode              String         @unique @map("hsn_code") @db.VarChar(20)
   gstPercentage        Decimal        @map("gst_percentage") @db.Decimal(5, 2)
+  gstType              GstType        @default(INCLUSIVE) @map("gst_type")
   prescriptionRequired Boolean        @default(false) @map("prescription_required")
   status               MedicineStatus @default(ACTIVE)
   createdAt            DateTime       @default(now()) @map("created_at")
@@ -68,6 +98,28 @@ model Medicine {
   @@map("medicines")
 }
 
+// model Batch {
+//   id                Int      @id @default(autoincrement())
+//   medicineId        Int      @map("medicine_id")
+//   medicine          Medicine @relation(fields: [medicineId], references: [id])
+//   batchNumber       String   @map("batch_number") @db.VarChar(50)
+//   expiryDate        DateTime @map("expiry_date") @db.Date
+//   purchasePrice     Decimal  @map("purchase_price") @db.Decimal(10, 2)
+//   sellingPrice      Decimal  @map("selling_price") @db.Decimal(10, 2)
+//   quantityAvailable Int      @map("quantity_available")
+//   createdAt         DateTime @default(now()) @map("created_at")
+//   updatedAt         DateTime @updatedAt @map("updated_at")
+//   version           Int      @default(0) // optimistic locking
+
+//   billItems   BillItem[]
+//   returnItems ReturnItem[]
+
+//   @@index([medicineId])
+//   @@index([expiryDate])
+//   @@index([batchNumber])
+//   @@index([medicineId, expiryDate])
+//   @@map("batches")
+// }
 model Batch {
   id                Int      @id @default(autoincrement())
   medicineId        Int      @map("medicine_id")
@@ -77,6 +129,7 @@ model Batch {
   purchasePrice     Decimal  @map("purchase_price") @db.Decimal(10, 2)
   sellingPrice      Decimal  @map("selling_price") @db.Decimal(10, 2)
   quantityAvailable Int      @map("quantity_available")
+  location          String?  @db.VarChar(50) // e.g. rack/shelf code like "R3-S2"
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
   version           Int      @default(0) // optimistic locking

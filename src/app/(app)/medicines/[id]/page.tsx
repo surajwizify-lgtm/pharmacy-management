@@ -19,6 +19,7 @@ export default function MedicineDetailPage({ params }: { params: { id: string } 
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [adjusting, setAdjusting] = useState<number | null>(null);
+  const [location, setLocation] = useState('');
 
   async function load() {
     const data = await apiFetch<Medicine>(`/api/medicines/${params.id}`);
@@ -44,6 +45,7 @@ export default function MedicineDetailPage({ params }: { params: { id: string } 
           purchasePrice: Number(batchForm.purchasePrice),
           sellingPrice: Number(batchForm.sellingPrice),
           quantityAvailable: Number(batchForm.quantityAvailable),
+          location: location || undefined,
         }),
       });
       setShowBatchForm(false);
@@ -124,6 +126,7 @@ export default function MedicineDetailPage({ params }: { params: { id: string } 
             <tr>
               <th className="py-2">Batch #</th>
               <th className="py-2">Expiry</th>
+              <th className="py-2">Location</th>
               <th className="py-2">Purchase price</th>
               <th className="py-2">Selling price</th>
               <th className="py-2">Qty available</th>
@@ -135,6 +138,7 @@ export default function MedicineDetailPage({ params }: { params: { id: string } 
               <tr key={b.id}>
                 <td className="py-2">{b.batchNumber}</td>
                 <td className="py-2">{new Date(b.expiryDate).toLocaleDateString()}</td>
+                <td className="py-2">{(b.location) ? b.location : ""}</td>
                 <td className="py-2">₹{b.purchasePrice}</td>
                 <td className="py-2">₹{b.sellingPrice}</td>
                 <td className="py-2">{b.quantityAvailable}</td>
@@ -208,6 +212,16 @@ export default function MedicineDetailPage({ params }: { params: { id: string } 
                     required
                     value={batchForm.purchasePrice}
                     onChange={(e) => setBatchForm({ ...batchForm, purchasePrice: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Location (optional)</label>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="e.g. R3-S2"
+                    className="input"
                   />
                 </div>
                 <div>

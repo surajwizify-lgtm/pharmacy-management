@@ -28,7 +28,17 @@ export async function POST(req: NextRequest) {
     const medicine = await prisma.medicine.findUnique({ where: { id: dto.medicineId } });
     if (!medicine) throw notFound(`Medicine ${dto.medicineId} not found`);
 
-    return prisma.batch.create({
+    // return prisma.batch.create({
+    //   data: {
+    //     medicineId: dto.medicineId,
+    //     batchNumber: dto.batchNumber,
+    //     expiryDate: new Date(dto.expiryDate),
+    //     purchasePrice: dto.purchasePrice,
+    //     sellingPrice: dto.sellingPrice,
+    //     quantityAvailable: dto.quantityAvailable,
+    //   },
+    // });
+    return await prisma.batch.create({
       data: {
         medicineId: dto.medicineId,
         batchNumber: dto.batchNumber,
@@ -36,6 +46,7 @@ export async function POST(req: NextRequest) {
         purchasePrice: dto.purchasePrice,
         sellingPrice: dto.sellingPrice,
         quantityAvailable: dto.quantityAvailable,
+        location: dto.location || null,
       },
     });
   });

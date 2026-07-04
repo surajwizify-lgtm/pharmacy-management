@@ -299,8 +299,8 @@ export default function MedicinesPage() {
                       type="button"
                       onClick={() => setForm({ ...form, gstType: 'INCLUSIVE' })}
                       className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${form.gstType === 'INCLUSIVE'
-                          ? 'bg-white text-brand-700 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-white text-brand-700 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                         }`}
                     >
                       Inclusive (MRP)
@@ -309,8 +309,8 @@ export default function MedicinesPage() {
                       type="button"
                       onClick={() => setForm({ ...form, gstType: 'EXCLUSIVE' })}
                       className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${form.gstType === 'EXCLUSIVE'
-                          ? 'bg-white text-brand-700 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-white text-brand-700 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                         }`}
                     >
                       Exclusive (+GST)
