@@ -506,24 +506,33 @@ export default function BillingPage() {
                 {filteredBills.length}
               </span>
             </h2>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10"
+                />
+
                 <input
-                  className="input w-68 pl-8 text-sm"
-                  placeholder="Search bill no. or customer…"
+                  className="w-68 rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Search bill no. or customer..."
                   value={billSearch}
                   onChange={(e) => setBillSearch(e.target.value)}
                 />
               </div>
+
               <select
-                className="input w-auto text-sm"
+                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as (typeof STATUS_OPTIONS)[number])}
+                onChange={(e) =>
+                  setStatusFilter(
+                    e.target.value as (typeof STATUS_OPTIONS)[number]
+                  )
+                }
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>
-                    {s === 'ALL' ? 'All statuses' : s.replace('_', ' ')}
+                    {s === "ALL" ? "All statuses" : s.replace("_", " ")}
                   </option>
                 ))}
               </select>
@@ -881,25 +890,35 @@ export default function BillingPage() {
                   </div>
 
                   <div className="relative mb-4">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Search
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"
+                    />
+
                     <input
-                      className="input pl-20"
-                      placeholder="Search medicine by name, barcode, or HSN…"
+                      type="text"
+                      className="w-full rounded-lg border border-slate-300 py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Search medicine by name, barcode, or HSN..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
+
                     {results.length > 0 && (
-                      <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                      <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
                         {results.map((m) => {
-                          const stock = m.batches.reduce((s, b) => s + b.quantityAvailable, 0);
+                          const stock = m.batches.reduce(
+                            (s, b) => s + b.quantityAvailable,
+                            0
+                          );
+
                           return (
                             <button
                               key={m.id}
-                              className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm transition-colors hover:bg-brand-50"
+                              className="flex w-full items-center justify-between px-3 py-2 hover:bg-brand-50"
                               onClick={() => addToCart(m)}
                             >
-                              <span className="font-medium text-slate-700">{m.name}</span>
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{stock} in stock</span>
+                              <span>{m.name}</span>
+                              <span>{stock} in stock</span>
                             </button>
                           );
                         })}
