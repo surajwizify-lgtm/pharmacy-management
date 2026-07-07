@@ -10,7 +10,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
     const bill = await prisma.bill.findUnique({
       where: { id },
-      include: { billItems: { include: { medicine: true } }, payments: true, cashier: true },
+      include: { billItems: { include: { product: true } }, payments: true, cashier: true },
     });
     if (!bill) throw notFound(`Bill ${id} not found`);
     return bill;

@@ -7,9 +7,10 @@ import clsx from 'clsx';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
-  { href: '/medicines', label: 'Medicines', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
+  { href: '/products', label: 'Products', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/batches', label: 'Batches & Stock', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
-  { href: '/billing', label: 'Billing', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
+  { href: '/billing', label: 'Sales', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
+  { href: '/purchase-orders/registered', label: 'Purchase', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/doctors', label: 'Doctors', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/hospitals', label: 'Hospitals', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'] },
   { href: '/users', label: 'Users', roles: ['ADMIN'] },

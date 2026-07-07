@@ -17,7 +17,7 @@ instead of a separate API + Angular frontend.
   `@nestjs/passport` + hand-rolled JWT strategy
 - **Prisma + PostgreSQL** — same schema as the NestJS version, unchanged
 - **Zod** — replaces `class-validator` DTOs
-- **Tailwind CSS** — hand-built UI (dashboard, medicines, batches, billing/POS, users)
+- **Tailwind CSS** — hand-built UI (dashboard, products, batches, billing/POS, users)
 - **decimal.js** — same GST math as the NestJS version (money handled as
   Decimal, never float)
 
@@ -42,7 +42,7 @@ sequential `BILL-YYYYMMDD-NNNN` numbering.
 
 ```
 prisma/schema.prisma        Same schema as pharmacy-nest, unchanged
-prisma/seed.ts               Same seed data (admin/pharmacist users, 2 medicines)
+prisma/seed.ts               Same seed data (admin/pharmacist users, 2 products)
 src/lib/
   prisma.ts                  Prisma client singleton
   auth.ts                    NextAuth config (Credentials provider)
@@ -52,7 +52,7 @@ src/lib/
   api-client.ts                Client-side fetch wrapper for calling our own API
 src/middleware.ts             Page-level auth guard (redirects to /login, blocks /users for non-admins)
 src/app/api/**                API routes (one folder per NestJS controller)
-src/app/(app)/**              Protected pages: dashboard, medicines, batches, billing, users
+src/app/(app)/**              Protected pages: dashboard, products, batches, billing, users
 src/app/login/                Sign-in page
 ```
 
@@ -63,11 +63,11 @@ src/app/login/                Sign-in page
 | POST | `/api/auth/[...nextauth]` (sign-in via NextAuth, not a raw `/auth/login` POST) | public |
 | GET/POST | `/api/users` | ADMIN |
 | PATCH | `/api/users/:id/deactivate` | ADMIN |
-| GET/POST | `/api/medicines` | any / ADMIN+PHARMACIST |
-| GET | `/api/medicines/low-stock?threshold=` | any |
-| GET | `/api/medicines/expiring-soon?days=` | any |
-| GET | `/api/medicines/barcode/:barcode` | any |
-| GET/PUT/DELETE | `/api/medicines/:id` | any / ADMIN+PHARMACIST / ADMIN |
+| GET/POST | `/api/products` | any / ADMIN+PHARMACIST |
+| GET | `/api/products/low-stock?threshold=` | any |
+| GET | `/api/products/expiring-soon?days=` | any |
+| GET | `/api/products/barcode/:barcode` | any |
+| GET/PUT/DELETE | `/api/products/:id` | any / ADMIN+PHARMACIST / ADMIN |
 | GET/POST | `/api/batches` | any / ADMIN+PHARMACIST |
 | GET | `/api/batches/:id` | any |
 | PATCH | `/api/batches/:id/stock` | ADMIN+PHARMACIST |

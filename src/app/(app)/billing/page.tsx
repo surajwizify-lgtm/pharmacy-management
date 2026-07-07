@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
-import type { Bill, Medicine, PaymentMethod } from '@/types';
+import type { Bill, product, PaymentMethod } from '@/types';
 import BillInvoice from '@/components/BillInvoice';
 import InvoicePrintStyles from '@/components/InvoicePrintStyles';
 import { downloadInvoicePdf } from '@/lib/invoice-pdf';
@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 
 interface CartLine {
-  medicineId: number;
+  productId: number;
   name: string;
   gstPercentage: string;
   quantity: number;
@@ -124,7 +124,7 @@ function lineAmounts(l: CartLine, mode: GstMode) {
 
 export default function BillingPage() {
   const [search, setSearch] = useState('');
-  const [results, setResults] = useState<Medicine[]>([]);
+  const [results, setResults] = useState<product[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -205,14 +205,14 @@ export default function BillingPage() {
     loadBills();
   }, []);
 
-  // Medicine search
+  // product search
   useEffect(() => {
     if (!search) {
       setResults([]);
       return;
     }
     const t = setTimeout(async () => {
-      const data = await apiFetch<Medicine[]>(`/api/medicines?search=${encodeURIComponent(search)}&status=ACTIVE`);
+      const data = await apiFetch<product[]>(`/api/products?search=${encodeURIComponent(search)}&status=ACTIVE`);
       setResults(data);
     }, 250);
     return () => clearTimeout(t);
@@ -360,21 +360,21 @@ export default function BillingPage() {
     }
   }
 
-  function addToCart(m: Medicine) {
+  function addToCart(m: product) {
     const stock = m.batches.reduce((s, b) => s + b.quantityAvailable, 0);
     if (stock <= 0) {
       alert(`${m.name} has no available stock.`);
       return;
     }
     setCart((prev) => {
-      const existing = prev.find((l) => l.medicineId === m.id);
+      const existing = prev.find((l) => l.productId === m.id);
       if (existing) {
-        return prev.map((l) => (l.medicineId === m.id ? { ...l, quantity: l.quantity + 1 } : l));
+        return prev.map((l) => (l.productId === m.id ? { ...l, quantity: l.quantity + 1 } : l));
       }
       return [
         ...prev,
         {
-          medicineId: m.id,
+          productId: m.id,
           name: m.name,
           gstPercentage: m.gstPercentage,
           quantity: 1,
@@ -387,13 +387,13 @@ export default function BillingPage() {
     setResults([]);
   }
 
-  function updateQty(medicineId: number, quantity: number) {
+  function updateQty(productId: number, quantity: number) {
     if (quantity < 1) return;
-    setCart((prev) => prev.map((l) => (l.medicineId === medicineId ? { ...l, quantity } : l)));
+    setCart((prev) => prev.map((l) => (l.productId === productId ? { ...l, quantity } : l)));
   }
 
-  function removeLine(medicineId: number) {
-    setCart((prev) => prev.filter((l) => l.medicineId !== medicineId));
+  function removeLine(productId: number) {
+    setCart((prev) => prev.filter((l) => l.productId !== productId));
   }
 
   const estimatedSubtotal = cart.reduce((sum, l) => sum + lineAmounts(l, gstMode).base, 0);
@@ -458,7 +458,7 @@ export default function BillingPage() {
         method: 'POST',
         body: JSON.stringify({
           items: cart.map((l) => ({
-            medicineId: l.medicineId,
+            productId: l.productId,
             quantity: l.quantity,
           })),
 
@@ -503,6 +503,11 @@ export default function BillingPage() {
       loadBills();
       setShowCreateBill(false);
     } catch (err) {
+      if (err instanceof ApiClientError) {
+        console.error('BILL SUBMIT ERROR:', err.message, err.details);
+      } else {
+        console.error('BILL SUBMIT ERROR:', err);
+      }
       setError(err instanceof ApiClientError ? err.message : 'Something went wrong');
     } finally {
       setSubmitting(false);
@@ -874,7 +879,7 @@ export default function BillingPage() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
-                      <th className="px-4 py-3">Medicine</th>
+                      <th className="px-4 py-3">product</th>
                       <th className="px-4 py-3">Batch</th>
                       <th className="px-4 py-3">Qty</th>
                       <th className="px-4 py-3">Unit price</th>
@@ -885,7 +890,7 @@ export default function BillingPage() {
                   <tbody className="divide-y divide-slate-100">
                     {viewingBill.billItems.map((item) => (
                       <tr key={item.id}>
-                        <td className="px-4 py-3">{item.medicine?.name ?? `#${item.medicineId}`}</td>
+                        <td className="px-4 py-3">{item.product?.name ?? `#${item.productId}`}</td>
                         <td className="px-4 py-3 text-slate-500">{item.batchNumber}</td>
                         <td className="px-4 py-3">{item.quantity}</td>
                         <td className="px-4 py-3">₹{item.unitPrice}</td>
@@ -1003,7 +1008,7 @@ export default function BillingPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold leading-tight">Create New Bill</h2>
-                  <p className="text-xs text-white/70">Patient & referral details, then medicines, then prescription</p>
+                  <p className="text-xs text-white/70">Patient & referral details, then products, then prescription</p>
                 </div>
               </div>
               <button onClick={closeModal} className="rounded-full p-2 transition-colors hover:bg-white/15">
@@ -1013,7 +1018,7 @@ export default function BillingPage() {
 
             {/* Modal body */}
             <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto p-6 lg:grid-cols-3">
-              {/* Left: patient/referral -> medicines/cart -> prescription */}
+              {/* Left: patient/referral -> products/cart -> prescription */}
               <div className="space-y-6 lg:col-span-2">
                 {/* 1. Patient & Referral Details */}
                 <div className="rounded-xl border border-slate-100 p-4">
@@ -1164,12 +1169,12 @@ export default function BillingPage() {
                   </div>
                 </div>
 
-                {/* 2. Medicine search + cart */}
+                {/* 2. product search + cart */}
                 <div>
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
                       <ShoppingCart className="h-4 w-4 text-brand-600" />
-                      Medicines
+                      products
                     </h3>
 
                     {/* GST mode toggle — affects the per-item & summary breakdown only */}
@@ -1202,7 +1207,7 @@ export default function BillingPage() {
                     <input
                       type="text"
                       className="w-full rounded-lg border border-slate-300 py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      placeholder="Search medicine by name, barcode, or HSN..."
+                      placeholder="Search product by name, barcode, or HSN..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
@@ -1210,21 +1215,31 @@ export default function BillingPage() {
                     {results.length > 0 && (
                       <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
                         {results.map((m) => {
-                          const stock = m.batches.reduce(
-                            (s, b) => s + b.quantityAvailable,
-                            0
-                          );
+                          // const stock = m.batches.reduce(
+                          //   (s, b) => s + b.quantityAvailable,
+                          //   0
+                          // );
+                          return <div>
+                            {
+                              m.batches.map((b) => {
+                                console.log(b)
+                                return (
+                                  <button
+                                    key={m.id}
+                                    className="w-full grid grid-cols-6 border-b-[1px] border-gray-300 px-3 py-2 hover:bg-brand-50"
+                                    onClick={() => addToCart(m)}
+                                  >
+                                    <span className='col-span-3 text-start'>{m.name}</span>
+                                    <span className='text-start text-xs'>{"Batch-" + b.batchNumber}</span>
+                                    <span className='text-start text-xs'>{"Exp-" + new Date(b.expiryDate).toLocaleDateString("en-IN")}</span>
+                                    <span className='text-start text-xs'>{"Stock-" + b.quantityAvailable}</span>
+                                  </button>
+                                );
+                              })
+                            }
+                          </div>
 
-                          return (
-                            <button
-                              key={m.id}
-                              className="flex w-full items-center justify-between px-3 py-2 hover:bg-brand-50"
-                              onClick={() => addToCart(m)}
-                            >
-                              <span>{m.name}</span>
-                              <span>{stock} in stock</span>
-                            </button>
-                          );
+
                         })}
                       </div>
                     )}
@@ -1233,7 +1248,7 @@ export default function BillingPage() {
                   {cart.length === 0 ? (
                     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-14 text-slate-400">
                       <ShoppingCart className="mb-2 h-8 w-8" />
-                      <p className="text-sm">Search and add medicines to start a bill.</p>
+                      <p className="text-sm">Search and add products to start a bill.</p>
                     </div>
                   ) : (
                     <div className="overflow-hidden rounded-xl border border-slate-100">
@@ -1259,13 +1274,13 @@ export default function BillingPage() {
                           {cart.map((l) => {
                             const { base, gst } = lineAmounts(l, gstMode);
                             return (
-                              <tr key={l.medicineId}>
+                              <tr key={l.productId}>
                                 <td className="px-3 py-2.5 font-medium text-slate-700">{l.name}</td>
                                 <td className="px-3 py-2.5">
                                   <div className="flex items-center gap-1">
                                     <button
                                       type="button"
-                                      onClick={() => updateQty(l.medicineId, l.quantity - 1)}
+                                      onClick={() => updateQty(l.productId, l.quantity - 1)}
                                       className="rounded-md border border-slate-200 p-1 text-slate-500 hover:bg-slate-50"
                                     >
                                       <Minus className="h-3 w-3" />
@@ -1276,11 +1291,11 @@ export default function BillingPage() {
                                       min={1}
                                       max={l.availableStock}
                                       value={l.quantity}
-                                      onChange={(e) => updateQty(l.medicineId, Number(e.target.value))}
+                                      onChange={(e) => updateQty(l.productId, Number(e.target.value))}
                                     />
                                     <button
                                       type="button"
-                                      onClick={() => updateQty(l.medicineId, l.quantity + 1)}
+                                      onClick={() => updateQty(l.productId, l.quantity + 1)}
                                       className="rounded-md border border-slate-200 p-1 text-slate-500 hover:bg-slate-50"
                                     >
                                       <Plus className="h-3 w-3" />
@@ -1294,7 +1309,7 @@ export default function BillingPage() {
                                 <td className="px-3 py-2.5 text-right">
                                   <button
                                     className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                                    onClick={() => removeLine(l.medicineId)}
+                                    onClick={() => removeLine(l.productId)}
                                     title="Remove"
                                   >
                                     <X className="h-4 w-4" />
