@@ -1,22 +1,22 @@
 export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER';
-export type MedicineStatus = 'ACTIVE' | 'DISCONTINUED';
+export type productStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'OTHER';
 
 // export interface Batch {
 //   id: number;
-//   medicineId: number;
+//   productId: number;
 //   batchNumber: string;
 //   expiryDate: string;
 //   purchasePrice: string;
 //   sellingPrice: string;
 //   quantityAvailable: number;
 //   version: number;
-//   medicine?: Medicine;
+//   product?: product;
 // }
 export interface Batch {
   id: number;
-  medicineId: number;
+  productId: number;
   batchNumber: string;
   expiryDate: string;
   purchasePrice: string;
@@ -28,7 +28,7 @@ export interface Batch {
   version: number;
 }
 
-export interface Medicine {
+export interface product {
   id: number;
   name: string;
   manufacturer: string;
@@ -38,7 +38,7 @@ export interface Medicine {
   gstPercentage: string;
   gstType: 'INCLUSIVE' | 'EXCLUSIVE';
   prescriptionRequired: boolean;
-  status: MedicineStatus;
+  status: productStatus;
   version: number;
   batches: Batch[];
   totalStock?: number;
@@ -46,7 +46,7 @@ export interface Medicine {
 
 export interface BillItem {
   id: number;
-  medicineId: number;
+  productId: number;
   batchId: number;
   batchNumber: string;
   quantity: number;
@@ -57,7 +57,7 @@ export interface BillItem {
   igstAmount: string;
   gstAmount: string;
   totalAmount: string;
-  medicine?: Medicine;
+  product?: product;
 }
 
 export interface Bill {

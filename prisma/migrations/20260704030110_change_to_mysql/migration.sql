@@ -14,7 +14,7 @@ CREATE TABLE `users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `medicines` (
+CREATE TABLE `products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(200) NOT NULL,
     `manufacturer` VARCHAR(200) NOT NULL,
@@ -28,18 +28,18 @@ CREATE TABLE `medicines` (
     `updated_at` DATETIME(3) NOT NULL,
     `version` INTEGER NOT NULL DEFAULT 0,
 
-    UNIQUE INDEX `medicines_hsn_code_key`(`hsn_code`),
-    INDEX `medicines_name_idx`(`name`),
-    INDEX `medicines_hsn_code_idx`(`hsn_code`),
-    INDEX `medicines_status_idx`(`status`),
-    INDEX `medicines_barcode_idx`(`barcode`),
+    UNIQUE INDEX `products_hsn_code_key`(`hsn_code`),
+    INDEX `products_name_idx`(`name`),
+    INDEX `products_hsn_code_idx`(`hsn_code`),
+    INDEX `products_status_idx`(`status`),
+    INDEX `products_barcode_idx`(`barcode`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `batches` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `medicine_id` INTEGER NOT NULL,
+    `product_id` INTEGER NOT NULL,
     `batch_number` VARCHAR(50) NOT NULL,
     `expiry_date` DATE NOT NULL,
     `purchase_price` DECIMAL(10, 2) NOT NULL,
@@ -49,10 +49,10 @@ CREATE TABLE `batches` (
     `updated_at` DATETIME(3) NOT NULL,
     `version` INTEGER NOT NULL DEFAULT 0,
 
-    INDEX `batches_medicine_id_idx`(`medicine_id`),
+    INDEX `batches_product_id_idx`(`product_id`),
     INDEX `batches_expiry_date_idx`(`expiry_date`),
     INDEX `batches_batch_number_idx`(`batch_number`),
-    INDEX `batches_medicine_id_expiry_date_idx`(`medicine_id`, `expiry_date`),
+    INDEX `batches_product_id_expiry_date_idx`(`product_id`, `expiry_date`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -88,7 +88,7 @@ CREATE TABLE `bills` (
 CREATE TABLE `bill_items` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `bill_id` INTEGER NOT NULL,
-    `medicine_id` INTEGER NOT NULL,
+    `product_id` INTEGER NOT NULL,
     `batch_id` INTEGER NOT NULL,
     `batch_number` VARCHAR(50) NOT NULL,
     `quantity` INTEGER NOT NULL,
@@ -158,7 +158,7 @@ CREATE TABLE `audit_logs` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `batches` ADD CONSTRAINT `batches_medicine_id_fkey` FOREIGN KEY (`medicine_id`) REFERENCES `medicines`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `batches` ADD CONSTRAINT `batches_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `bills` ADD CONSTRAINT `bills_cashier_id_fkey` FOREIGN KEY (`cashier_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -167,7 +167,7 @@ ALTER TABLE `bills` ADD CONSTRAINT `bills_cashier_id_fkey` FOREIGN KEY (`cashier
 ALTER TABLE `bill_items` ADD CONSTRAINT `bill_items_bill_id_fkey` FOREIGN KEY (`bill_id`) REFERENCES `bills`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `bill_items` ADD CONSTRAINT `bill_items_medicine_id_fkey` FOREIGN KEY (`medicine_id`) REFERENCES `medicines`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `bill_items` ADD CONSTRAINT `bill_items_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `bill_items` ADD CONSTRAINT `bill_items_batch_id_fkey` FOREIGN KEY (`batch_id`) REFERENCES `batches`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -4,17 +4,17 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
 async function getStats() {
-  const [medicineCount, activeMedicines, allMedicinesWithBatches, expiringBatches, billsToday, revenueAgg] =
+  const [productCount, activeproducts, allproductsWithBatches, expiringBatches, billsToday, revenueAgg] =
     await Promise.all([
-      prisma.medicine.count(),
-      prisma.medicine.count({ where: { status: 'ACTIVE' } }),
-      prisma.medicine.findMany({ where: { status: 'ACTIVE' }, include: { batches: true } }),
+      prisma.product.count(),
+      prisma.product.count({ where: { status: 'ACTIVE' } }),
+      prisma.product.findMany({ where: { status: 'ACTIVE' }, include: { batches: true } }),
       prisma.batch.findMany({
         where: {
           expiryDate: { lte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) },
           quantityAvailable: { gt: 0 },
         },
-        include: { medicine: true },
+        include: { product: true },
         orderBy: { expiryDate: 'asc' },
         take: 5,
       }),
@@ -25,13 +25,13 @@ async function getStats() {
       }),
     ]);
 
-  const lowStock = allMedicinesWithBatches
+  const lowStock = allproductsWithBatches
     .map((m) => ({ ...m, totalStock: m.batches.reduce((s, b) => s + b.quantityAvailable, 0) }))
     .filter((m) => m.totalStock <= 20)
     .sort((a, b) => a.totalStock - b.totalStock)
     .slice(0, 5);
 
-  return { medicineCount, activeMedicines, lowStock, expiringBatches, billsToday, revenueToday: revenueAgg._sum.totalAmount };
+  return { productCount, activeproducts, lowStock, expiringBatches, billsToday, revenueToday: revenueAgg._sum.totalAmount };
 }
 
 export default async function DashboardPage() {
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Active medicines" value={stats.activeMedicines} sub={`${stats.medicineCount} total`} />
+        <StatCard label="Active products" value={stats.activeproducts} sub={`${stats.productCount} total`} />
         <StatCard label="Bills today" value={stats.billsToday} />
         <StatCard label="Revenue today" value={`₹${Number(stats.revenueToday ?? 0).toFixed(2)}`} />
         <StatCard label="Low stock items" value={stats.lowStock.length} accent={stats.lowStock.length > 0} />
@@ -58,12 +58,12 @@ export default async function DashboardPage() {
         <div className="card p-5">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-medium text-slate-800">Low stock (≤ 20 units)</h2>
-            <Link href="/medicines" className="text-xs font-medium text-brand-600 hover:underline">
+            <Link href="/products" className="text-xs font-medium text-brand-600 hover:underline">
               View all
             </Link>
           </div>
           {stats.lowStock.length === 0 ? (
-            <p className="text-sm text-slate-400">All medicines are well stocked.</p>
+            <p className="text-sm text-slate-400">All products are well stocked.</p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {stats.lowStock.map((m) => (
@@ -90,7 +90,7 @@ export default async function DashboardPage() {
               {stats.expiringBatches.map((b) => (
                 <li key={b.id} className="flex items-center justify-between py-2 text-sm">
                   <span className="text-slate-700">
-                    {b.medicine.name} <span className="text-slate-400">· {b.batchNumber}</span>
+                    {b.product.name} <span className="text-slate-400">· {b.batchNumber}</span>
                   </span>
                   <span className="badge bg-red-100 text-red-700">
                     {new Date(b.expiryDate).toLocaleDateString()}

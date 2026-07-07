@@ -34,6 +34,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       throw conflict('Batch was modified by another request - refetch and retry (optimistic lock failure)');
     }
 
-    return prisma.batch.findUnique({ where: { id }, include: { medicine: true } });
+    return prisma.batch.findUnique({ where: { id }, include: { product: true } });
   });
 }

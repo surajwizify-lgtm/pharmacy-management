@@ -19,7 +19,7 @@ export default function BatchesPage() {
     setLoading(true);
     try {
       const data = onlyExpiring
-        ? await apiFetch<Batch[]>('/api/medicines/expiring-soon?days=90')
+        ? await apiFetch<Batch[]>('/api/products/expiring-soon?days=90')
         : await apiFetch<Batch[]>('/api/batches');
       setBatches(data);
     } finally {
@@ -49,7 +49,7 @@ export default function BatchesPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
-              <th className="px-4 py-3">Medicine</th>
+              <th className="px-4 py-3">product</th>
               <th className="px-4 py-3">Batch #</th>
               <th className="px-4 py-3">Expiry</th>
               <th className="px-4 py-3">Qty available</th>
@@ -75,8 +75,8 @@ export default function BatchesPage() {
                 return (
                   <tr key={b.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <Link href={`/medicines/${b.medicineId}`} className="font-medium text-slate-800 hover:text-brand-600">
-                        {b.medicine?.name ?? `Medicine #${b.medicineId}`}
+                      <Link href={`/products/${b.productId}`} className="font-medium text-slate-800 hover:text-brand-600">
+                        {b.product?.name ?? `product #${b.productId}`}
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{b.batchNumber}</td>

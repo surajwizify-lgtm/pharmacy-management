@@ -1,5 +1,5 @@
 // import { z } from 'zod';
-// import { Role, MedicineStatus, PaymentMethod } from '@prisma/client';
+// import { Role, productStatus, PaymentMethod } from '@prisma/client';
 
 // // ---------- auth ----------
 // export const loginSchema = z.object({
@@ -15,8 +15,8 @@
 //   role: z.nativeEnum(Role),
 // });
 
-// // ---------- medicines ----------
-// export const createMedicineSchema = z.object({
+// // ---------- products ----------
+// export const createproductSchema = z.object({
 //   name: z.string().min(1),
 //   manufacturer: z.string().min(1),
 //   category: z.string().optional(),
@@ -26,16 +26,16 @@
 //   prescriptionRequired: z.boolean().optional(),
 // });
 
-// export const updateMedicineSchema = createMedicineSchema.partial();
+// export const updateproductSchema = createproductSchema.partial();
 
-// export const medicineQuerySchema = z.object({
+// export const productQuerySchema = z.object({
 //   search: z.string().optional(),
-//   status: z.nativeEnum(MedicineStatus).optional(),
+//   status: z.nativeEnum(productStatus).optional(),
 // });
 
 // // ---------- batches ----------
 // export const createBatchSchema = z.object({
-//   medicineId: z.number().int(),
+//   productId: z.number().int(),
 //   batchNumber: z.string().min(1),
 //   expiryDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date'),
 //   purchasePrice: z.number().positive(),
@@ -50,7 +50,7 @@
 
 // // ---------- billing ----------
 // export const billItemInputSchema = z.object({
-//   medicineId: z.number().int(),
+//   productId: z.number().int(),
 //   quantity: z.number().int().positive(),
 //   batchId: z.number().int().optional(),
 // });
@@ -72,7 +72,7 @@
 // });
 
 import { z } from 'zod';
-import { Role, MedicineStatus, PaymentMethod, GstType } from '@prisma/client';
+import { Role, productStatus, PaymentMethod, GstType } from '@prisma/client';
 
 // ---------- auth ----------
 export const loginSchema = z.object({
@@ -88,8 +88,8 @@ export const createUserSchema = z.object({
   role: z.nativeEnum(Role),
 });
 
-// ---------- medicines ----------
-// export const createMedicineSchema = z.object({
+// ---------- products ----------
+// export const createproductSchema = z.object({
 //   name: z.string().min(1),
 //   manufacturer: z.string().min(1),
 //   category: z.string().optional(),
@@ -99,10 +99,10 @@ export const createUserSchema = z.object({
 //   prescriptionRequired: z.boolean().optional(),
 // });
 
-// export const updateMedicineSchema = createMedicineSchema.partial();
+// export const updateproductSchema = createproductSchema.partial();
 
 
-export const createMedicineSchema = z.object({
+export const createproductSchema = z.object({
   name: z.string().min(1),
   manufacturer: z.string().min(1),
   category: z.string().optional(),
@@ -113,16 +113,16 @@ export const createMedicineSchema = z.object({
   prescriptionRequired: z.boolean().optional(),
 });
 
-export const updateMedicineSchema = createMedicineSchema.partial();
+export const updateproductSchema = createproductSchema.partial();
 
-export const medicineQuerySchema = z.object({
+export const productQuerySchema = z.object({
   search: z.string().optional(),
-  status: z.nativeEnum(MedicineStatus).optional(),
+  status: z.nativeEnum(productStatus).optional(),
 });
 
 // ---------- batches ----------
 // export const createBatchSchema = z.object({
-//   medicineId: z.number().int(),
+//   productId: z.number().int(),
 //   batchNumber: z.string().min(1),
 //   expiryDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date'),
 //   purchasePrice: z.number().positive(),
@@ -130,7 +130,7 @@ export const medicineQuerySchema = z.object({
 //   quantityAvailable: z.number().int().min(0),
 // });
 export const createBatchSchema = z.object({
-  medicineId: z.number().int(),
+  productId: z.number().int(),
   batchNumber: z.string().min(1),
   expiryDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Invalid date'),
   purchasePrice: z.number().positive(),
@@ -146,7 +146,7 @@ export const updateStockSchema = z.object({
 
 // ---------- billing ----------
 export const billItemInputSchema = z.object({
-  medicineId: z.number().int(),
+  productId: z.number().int(),
   quantity: z.number().int().positive(),
   batchId: z.number().int().optional(),
 });

@@ -8,7 +8,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     const id = Number(params.id);
     if (Number.isNaN(id)) throw badRequest('Invalid batch id');
 
-    const batch = await prisma.batch.findUnique({ where: { id }, include: { medicine: true } });
+    const batch = await prisma.batch.findUnique({ where: { id }, include: { product: true } });
     if (!batch) throw notFound(`Batch ${id} not found`);
     return batch;
   });
