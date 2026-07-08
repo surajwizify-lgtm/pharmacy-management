@@ -142,7 +142,7 @@ export default function DoctorsPage() {
                     <div className="relative">
                         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                         <input
-                            className="input w-56 pl-8 text-sm"
+                            className="w-68 rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                             placeholder="Search name, specialization…"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}

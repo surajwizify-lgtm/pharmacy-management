@@ -4,6 +4,20 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
+import {
+    ArrowLeft,
+    PackageCheck,
+    Building2,
+    FileText,
+    Calendar,
+    ArrowLeftRight,
+    Package,
+    Hash,
+    Gift,
+    MapPin,
+    IndianRupee,
+    Percent,
+} from 'lucide-react';
 
 type ItemDetail = {
     batchNumber: string;
@@ -111,97 +125,219 @@ export default function ReceivePurchaseOrderPage() {
         }
     }
 
-    if (loading) return <p className="text-slate-400">Loading…</p>;
+    if (loading) {
+        return (
+            <div className="mx-auto max-w-4xl space-y-6">
+                <div className="h-6 w-40 animate-pulse rounded bg-slate-100" />
+                <div className="card h-32 animate-pulse p-5" />
+                <div className="card h-56 animate-pulse p-5" />
+            </div>
+        );
+    }
     if (error && !po) return <p className="text-sm text-red-600">{error}</p>;
     if (!po) return null;
 
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-4xl space-y-6">
             <div>
-                <Link href={`/purchase-orders/${id}`} className="text-xs font-medium text-brand-600 hover:underline">
-                    ← Back to purchase order
+                <Link
+                    href={`/purchase-orders/${id}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:underline"
+                >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back to purchase order
                 </Link>
-                <h1 className="mt-1 text-2xl font-semibold text-slate-900">Receive PO #{po.poNumber}</h1>
-                <p className="text-sm text-slate-500">Supplier: {po.supplier.name}</p>
+                <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold text-slate-900">
+                    <PackageCheck className="h-6 w-6 text-brand-600" />
+                    Receive PO #{po.poNumber}
+                </h1>
+                <p className="flex items-center gap-1.5 text-sm text-slate-500">
+                    <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                    {po.supplier.name}
+                </p>
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Invoice details */}
                 <div className="card space-y-4 p-5">
-                    <div className="grid grid-cols-3 gap-3">
+                    <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <FileText className="h-4 w-4 text-brand-600" />
+                        Supplier Invoice Details
+                    </h2>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <div>
-                            <label className="label">Supplier Invoice Number</label>
+                            <label className="label !flex items-center gap-1.5">
+                                <Hash className="h-3.5 w-3.5" /> Invoice number
+                            </label>
                             <input className="input" required value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} />
                         </div>
                         <div>
-                            <label className="label">Invoice Date</label>
+                            <label className="label !flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5" /> Invoice date
+                            </label>
                             <input type="date" className="input" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
                         </div>
-                        <div className="flex items-end pb-2">
-                            <label className="flex items-center gap-2 text-sm text-slate-700">
-                                <input type="checkbox" checked={isInterState} onChange={(e) => setIsInterState(e.target.checked)} />
-                                Inter-state purchase (IGST)
-                            </label>
-                        </div>
+                        <label className="mt-6 flex h-10 cursor-pointer items-center justify-between rounded-lg border border-slate-200 px-3 text-sm text-slate-700">
+                            <span className="flex items-center gap-1.5">
+                                <ArrowLeftRight className="h-3.5 w-3.5" /> Inter-state (IGST)
+                            </span>
+                            <input
+                                type="checkbox"
+                                checked={isInterState}
+                                onChange={(e) => setIsInterState(e.target.checked)}
+                                className="h-4 w-4 accent-brand-600"
+                            />
+                        </label>
                     </div>
                 </div>
 
-                {po.items.map((item: any) => {
-                    const d = details[item.productId];
-                    return (
-                        <div key={item.productId} className="card space-y-3 p-5">
-                            <h3 className="font-medium text-slate-800">
-                                {item.product.name}{' '}
-                                <span className="text-xs text-slate-400">
-                                    (Qty ordered: {item.quantity} · GST: {String(item.product.gstPercentage)}%)
-                                </span>
-                            </h3>
-                            <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="label">Batch Number</label>
-                                    <input className="input" required value={d.batchNumber} onChange={(e) => update(item.productId, 'batchNumber', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Manufacture Date (optional)</label>
-                                    <input type="date" className="input" value={d.manufactureDate} onChange={(e) => update(item.productId, 'manufactureDate', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Expiry Date</label>
-                                    <input type="date" className="input" required value={d.expiryDate} onChange={(e) => update(item.productId, 'expiryDate', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Purchase Rate</label>
-                                    <input type="number" step="0.01" className="input" value={d.purchaseRate} onChange={(e) => update(item.productId, 'purchaseRate', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">MRP</label>
-                                    <input type="number" step="0.01" className="input" required value={d.mrp} onChange={(e) => update(item.productId, 'mrp', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Selling Price</label>
-                                    <input type="number" step="0.01" className="input" required value={d.sellingPrice} onChange={(e) => update(item.productId, 'sellingPrice', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Discount %</label>
-                                    <input type="number" step="0.01" className="input" value={d.discountPercent} onChange={(e) => update(item.productId, 'discountPercent', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Free Quantity (scheme)</label>
-                                    <input type="number" className="input" value={d.freeQuantity} onChange={(e) => update(item.productId, 'freeQuantity', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Location (optional)</label>
-                                    <input className="input" placeholder="e.g. R3-S2" value={d.location} onChange={(e) => update(item.productId, 'location', e.target.value)} />
+                {/* Per-item batch details */}
+                <div className="space-y-4">
+                    <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <Package className="h-4 w-4 text-brand-600" />
+                        Batch Details
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                            {po.items.length} item{po.items.length > 1 ? 's' : ''}
+                        </span>
+                    </h2>
+
+                    {po.items.map((item: any) => {
+                        const d = details[item.productId];
+                        return (
+                            <div key={item.productId} className="card space-y-3 p-5">
+                                <h3 className="flex flex-wrap items-center gap-2 font-medium text-slate-800">
+                                    {item.product.name}
+                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                                        Qty ordered: {item.quantity}
+                                    </span>
+                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                                        GST: {String(item.product.gstPercentage)}%
+                                    </span>
+                                </h3>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <Hash className="h-3.5 w-3.5" /> Batch number
+                                        </label>
+                                        <input
+                                            className="input"
+                                            required
+                                            value={d.batchNumber}
+                                            onChange={(e) => update(item.productId, 'batchNumber', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <Calendar className="h-3.5 w-3.5" /> Manufacture date (optional)
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="input"
+                                            value={d.manufactureDate}
+                                            onChange={(e) => update(item.productId, 'manufactureDate', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <Calendar className="h-3.5 w-3.5" /> Expiry date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            className="input"
+                                            required
+                                            value={d.expiryDate}
+                                            onChange={(e) => update(item.productId, 'expiryDate', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <IndianRupee className="h-3.5 w-3.5" /> Purchase rate
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input"
+                                            value={d.purchaseRate}
+                                            onChange={(e) => update(item.productId, 'purchaseRate', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <IndianRupee className="h-3.5 w-3.5" /> MRP
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input"
+                                            required
+                                            value={d.mrp}
+                                            onChange={(e) => update(item.productId, 'mrp', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <IndianRupee className="h-3.5 w-3.5" /> Selling price
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input"
+                                            required
+                                            value={d.sellingPrice}
+                                            onChange={(e) => update(item.productId, 'sellingPrice', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <Percent className="h-3.5 w-3.5" /> Discount %
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input"
+                                            value={d.discountPercent}
+                                            onChange={(e) => update(item.productId, 'discountPercent', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <Gift className="h-3.5 w-3.5" /> Free quantity (scheme)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            className="input"
+                                            value={d.freeQuantity}
+                                            onChange={(e) => update(item.productId, 'freeQuantity', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="label !flex items-center gap-1.5">
+                                            <MapPin className="h-3.5 w-3.5" /> Location (optional)
+                                        </label>
+                                        <input
+                                            className="input"
+                                            placeholder="e.g. R3-S2"
+                                            value={d.location}
+                                            onChange={(e) => update(item.productId, 'location', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
 
-                <div className="flex justify-between pt-2">
-                    <Link href={`/purchase-orders/${id}`} className="btn-secondary">Cancel</Link>
-                    <button type="submit" className="btn-primary" disabled={saving}>
+                <div className="flex justify-between border-t border-slate-100 pt-4">
+                    <Link
+                        href={`/purchase-orders/${id}`}
+                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                    >
+                        Cancel
+                    </Link>
+                    <button type="submit" className="btn-primary inline-flex items-center gap-1.5" disabled={saving}>
+                        <PackageCheck className="h-4 w-4" />
                         {saving ? 'Receiving…' : 'Confirm Receipt & Add Stock'}
                     </button>
                 </div>

@@ -348,6 +348,18 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { product } from '@/types';
+import {
+    ArrowLeft,
+    ClipboardList,
+    Building2,
+    Hash,
+    Calendar,
+    StickyNote,
+    Package,
+    Plus,
+    Trash2,
+    IndianRupee,
+} from 'lucide-react';
 
 type Supplier = { id: number; name: string };
 
@@ -428,54 +440,88 @@ export default function NewPurchaseOrderPage() {
     const totalExpected = lines.reduce((sum, l) => sum + l.quantity * l.expectedRate, 0);
 
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-4xl space-y-6">
             <div>
-                <Link href="/purchase-orders" className="text-xs font-medium text-brand-600 hover:underline">
-                    ← Back to purchase orders
+                <Link
+                    href="/purchase-orders"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 hover:underline"
+                >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Back to purchase orders
                 </Link>
-                <h1 className="mt-1 text-2xl font-semibold text-slate-900">New Purchase Order</h1>
+                <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold text-slate-900">
+                    <ClipboardList className="h-6 w-6 text-brand-600" />
+                    New Purchase Order
+                </h1>
                 <p className="text-sm text-slate-500">This is a request to your supplier — no stock is added yet.</p>
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
+            {/* Order details */}
             <div className="card space-y-4 p-5">
-                <div className="grid grid-cols-2 gap-3">
+                <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <Building2 className="h-4 w-4 text-brand-600" />
+                    Order Details
+                </h2>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                        <label className="label">Supplier</label>
+                        <label className="label !flex items-center gap-1.5">
+                            <Building2 className="h-3.5 w-3.5" /> Supplier
+                        </label>
                         <select className="input" value={supplierId} onChange={(e) => setSupplierId(Number(e.target.value))}>
                             <option value="">Select supplier…</option>
                             {suppliers.map((s) => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
+                                <option key={s.id} value={s.id}>
+                                    {s.name}
+                                </option>
                             ))}
                         </select>
                     </div>
                     <div>
-                        <label className="label">PO Number</label>
+                        <label className="label !flex items-center gap-1.5">
+                            <Hash className="h-3.5 w-3.5" /> PO number
+                        </label>
                         <input className="input" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} />
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                        <label className="label">Expected Date (optional)</label>
+                        <label className="label !flex items-center gap-1.5">
+                            <Calendar className="h-3.5 w-3.5" /> Expected date (optional)
+                        </label>
                         <input type="date" className="input" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />
                     </div>
                     <div>
-                        <label className="label">Notes (optional)</label>
+                        <label className="label !flex items-center gap-1.5">
+                            <StickyNote className="h-3.5 w-3.5" /> Notes (optional)
+                        </label>
                         <input className="input" value={notes} onChange={(e) => setNotes(e.target.value)} />
                     </div>
                 </div>
             </div>
 
+            {/* Requested products */}
             <div className="card space-y-4 p-5">
-                <h2 className="font-medium text-slate-800">Requested products</h2>
-                <div className="grid grid-cols-3 gap-3">
+                <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <Package className="h-4 w-4 text-brand-600" />
+                    Requested Products
+                    {lines.length > 0 && (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                            {lines.length}
+                        </span>
+                    )}
+                </h2>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
-                        <label className="label">product</label>
+                        <label className="label">Product</label>
                         <select className="input" value={pickproductId} onChange={(e) => setPickproductId(Number(e.target.value))}>
                             <option value="">Select…</option>
                             {products.map((m) => (
-                                <option key={m.id} value={m.id}>{m.name}</option>
+                                <option key={m.id} value={m.id}>
+                                    {m.name}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -484,45 +530,71 @@ export default function NewPurchaseOrderPage() {
                         <input type="number" className="input" value={pickQty} onChange={(e) => setPickQty(e.target.value)} />
                     </div>
                     <div>
-                        <label className="label">Expected Rate (per unit)</label>
+                        <label className="label">Expected rate (per unit)</label>
                         <input type="number" step="0.01" className="input" value={pickRate} onChange={(e) => setPickRate(e.target.value)} />
                     </div>
                 </div>
-                <button type="button" className="btn-secondary" onClick={addLine}>+ Add product</button>
+                <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                    onClick={addLine}
+                >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add product
+                </button>
 
                 {lines.length > 0 && (
-                    <table className="w-full text-left text-sm">
-                        <thead className="border-b border-slate-100 text-xs uppercase text-slate-500">
-                            <tr>
-                                <th className="py-2">product</th>
-                                <th className="py-2">Qty</th>
-                                <th className="py-2">Expected Rate</th>
-                                <th className="py-2">Total</th>
-                                <th className="py-2"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {lines.map((l) => (
-                                <tr key={l.productId}>
-                                    <td className="py-2">{l.productName}</td>
-                                    <td className="py-2">{l.quantity}</td>
-                                    <td className="py-2">₹{l.expectedRate.toFixed(2)}</td>
-                                    <td className="py-2">₹{(l.quantity * l.expectedRate).toFixed(2)}</td>
-                                    <td className="py-2">
-                                        <button className="text-xs text-red-600" onClick={() => removeLine(l.productId)}>Remove</button>
-                                    </td>
+                    <div className="overflow-hidden rounded-xl border border-slate-100">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                                <tr>
+                                    <th className="p-3">Product</th>
+                                    <th className="p-3">Qty</th>
+                                    <th className="p-3">Expected rate</th>
+                                    <th className="p-3 text-right">Total</th>
+                                    <th className="p-3"></th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {lines.map((l) => (
+                                    <tr key={l.productId} className="hover:bg-slate-50/70">
+                                        <td className="p-3 font-medium text-slate-800">{l.productName}</td>
+                                        <td className="p-3 text-slate-600">{l.quantity}</td>
+                                        <td className="p-3 text-slate-600">₹{l.expectedRate.toFixed(2)}</td>
+                                        <td className="p-3 text-right font-medium text-slate-800">
+                                            ₹{(l.quantity * l.expectedRate).toFixed(2)}
+                                        </td>
+                                        <td className="p-3 text-right">
+                                            <button
+                                                className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                                                onClick={() => removeLine(l.productId)}
+                                                title="Remove"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
+
                 {lines.length > 0 && (
-                    <p className="text-right text-sm font-medium text-slate-700">Estimated Total: ₹{totalExpected.toFixed(2)}</p>
+                    <div className="flex items-center justify-end gap-1.5 border-t border-slate-100 pt-3 text-sm font-medium text-slate-700">
+                        <IndianRupee className="h-3.5 w-3.5 text-slate-400" />
+                        Estimated total: ₹{totalExpected.toFixed(2)}
+                    </div>
                 )}
             </div>
 
             <div className="flex justify-end gap-2">
-                <Link href="/purchase-orders" className="btn-secondary">Cancel</Link>
+                <Link
+                    href="/purchase-orders"
+                    className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                    Cancel
+                </Link>
                 <button className="btn-primary" onClick={handleSubmit} disabled={saving}>
                     {saving ? 'Saving…' : 'Create Purchase Order'}
                 </button>
