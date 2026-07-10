@@ -12,7 +12,7 @@ export default function DeleteManufacturerButton({ id, name }: { id: number; nam
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/purchase-orders/manufacturer/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/purchase-orders/manufacturers/${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok) throw new Error(json?.error || "Failed to delete");
       router.refresh();

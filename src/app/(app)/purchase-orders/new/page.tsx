@@ -402,7 +402,7 @@ export default function NewPurchaseOrderPage() {
     async function handleSubmit() {
         setError(null);
         if (!supplierId) return setError('Select a supplier');
-        if (!poNumber.trim()) return setError('PO number is required');
+        // if (!poNumber.trim()) return setError('PO number is required');
         if (!lines.length) return setError('Add at least one product');
 
         setSaving(true);
@@ -411,7 +411,7 @@ export default function NewPurchaseOrderPage() {
                 method: 'POST',
                 body: JSON.stringify({
                     supplierId,
-                    poNumber,
+                    // poNumber,
                     expectedDate: expectedDate || null,
                     notes: notes || null,
                     items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, expectedRate: l.expectedRate })),
@@ -450,9 +450,20 @@ export default function NewPurchaseOrderPage() {
                             ))}
                         </select>
                     </div>
-                    <div>
+                    {/* <div>
                         <label className="label">PO Number</label>
                         <input className="input" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} />
+                    </div> */}
+                    <div>
+                        <label className="label">Purchase Order ID</label>
+                        <input
+                            className="input bg-slate-100"
+                            value="Auto Generated"
+                            disabled
+                        />
+                        <p className="mt-1 text-xs text-slate-500">
+                            Purchase Order ID will be generated automatically when the order is created.
+                        </p>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">

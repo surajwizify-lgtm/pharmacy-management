@@ -183,6 +183,18 @@ export const createBillSchema = z
     message: 'Provide either hospitalId or hospitalName, not both',
     path: ['hospitalName'],
   });
+export const createSalesReturnSchema = z.object({
+  billId: z.number().int().positive(),
+  reason: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        batchId: z.number().int().positive(),
+        quantity: z.number().int().positive(),
+      }),
+    )
+    .min(1, 'At least one item is required'),
+});
 
 export const recordPaymentSchema = z.object({
   amount: z.number().positive(),

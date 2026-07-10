@@ -90,9 +90,18 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+        const lastPO = await prisma.purchaseOrder.findFirst({
+            orderBy: {
+                id: 'desc',
+            },
+        });
+
+        const nextNumber = (lastPO?.id ?? 0) + 1;
+
+        const poNumber = `PO-${new Date().getFullYear()}-${String(nextNumber).padStart(6, '0')}`;
         const po = await prisma.purchaseOrder.create({
             data: {
-                poNumber: body.poNumber,
+                poNumber: poNumber,
                 supplierId: body.supplierId,
                 expectedDate: body.expectedDate ? new Date(body.expectedDate) : null,
                 notes: body.notes || null,

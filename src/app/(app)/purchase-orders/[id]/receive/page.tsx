@@ -103,7 +103,7 @@ export default function ReceivePurchaseOrderPage() {
                     }),
                 }),
             });
-            router.push(`/purchase-invoices/${invoice.id}`);
+            router.push(`/purchase-orders/purchase-invoices/${invoice.id}`);
         } catch (err) {
             setError(err instanceof ApiClientError ? err.message : 'Something went wrong');
         } finally {
@@ -116,9 +116,9 @@ export default function ReceivePurchaseOrderPage() {
     if (!po) return null;
 
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto w-full space-y-6">
             <div>
-                <Link href={`/purchase-orders/${id}`} className="text-xs font-medium text-brand-600 hover:underline">
+                <Link href={`/purchase-orders`} className="text-xs font-medium text-brand-600 hover:underline">
                     ← Back to purchase order
                 </Link>
                 <h1 className="mt-1 text-2xl font-semibold text-slate-900">Receive PO #{po.poNumber}</h1>
@@ -150,49 +150,132 @@ export default function ReceivePurchaseOrderPage() {
                 {po.items.map((item: any) => {
                     const d = details[item.productId];
                     return (
-                        <div key={item.productId} className="card space-y-3 p-5">
+                        <div key={item.productId} className="card p-5 space-y-4">
                             <h3 className="font-medium text-slate-800">
-                                {item.product.name}{' '}
-                                <span className="text-xs text-slate-400">
+                                {item.product.name}
+                                <span className="ml-2 text-xs text-slate-400">
                                     (Qty ordered: {item.quantity} · GST: {String(item.product.gstPercentage)}%)
                                 </span>
                             </h3>
-                            <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label className="label">Batch Number</label>
-                                    <input className="input" required value={d.batchNumber} onChange={(e) => update(item.productId, 'batchNumber', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Manufacture Date (optional)</label>
-                                    <input type="date" className="input" value={d.manufactureDate} onChange={(e) => update(item.productId, 'manufactureDate', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Expiry Date</label>
-                                    <input type="date" className="input" required value={d.expiryDate} onChange={(e) => update(item.productId, 'expiryDate', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Purchase Rate</label>
-                                    <input type="number" step="0.01" className="input" value={d.purchaseRate} onChange={(e) => update(item.productId, 'purchaseRate', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">MRP</label>
-                                    <input type="number" step="0.01" className="input" required value={d.mrp} onChange={(e) => update(item.productId, 'mrp', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Selling Price</label>
-                                    <input type="number" step="0.01" className="input" required value={d.sellingPrice} onChange={(e) => update(item.productId, 'sellingPrice', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Discount %</label>
-                                    <input type="number" step="0.01" className="input" value={d.discountPercent} onChange={(e) => update(item.productId, 'discountPercent', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Free Quantity (scheme)</label>
-                                    <input type="number" className="input" value={d.freeQuantity} onChange={(e) => update(item.productId, 'freeQuantity', e.target.value)} />
-                                </div>
-                                <div>
-                                    <label className="label">Location (optional)</label>
-                                    <input className="input" placeholder="e.g. R3-S2" value={d.location} onChange={(e) => update(item.productId, 'location', e.target.value)} />
+
+                            <div className="overflow-x-auto">
+                                <div className="flex gap-4 min-w-max">
+
+                                    <div className="w-44">
+                                        <label className="label">Batch Number</label>
+                                        <input
+                                            className="input w-full"
+                                            required
+                                            value={d.batchNumber}
+                                            onChange={(e) =>
+                                                update(item.productId, "batchNumber", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-44">
+                                        <label className="label">Manufacture Date</label>
+                                        <input
+                                            type="date"
+                                            className="input w-full"
+                                            value={d.manufactureDate}
+                                            onChange={(e) =>
+                                                update(item.productId, "manufactureDate", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-44">
+                                        <label className="label">Expiry Date</label>
+                                        <input
+                                            type="date"
+                                            className="input w-full"
+                                            required
+                                            value={d.expiryDate}
+                                            onChange={(e) =>
+                                                update(item.productId, "expiryDate", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-36">
+                                        <label className="label">Purchase Rate</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input w-full"
+                                            value={d.purchaseRate}
+                                            onChange={(e) =>
+                                                update(item.productId, "purchaseRate", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-32">
+                                        <label className="label">MRP</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input w-full"
+                                            required
+                                            value={d.mrp}
+                                            onChange={(e) =>
+                                                update(item.productId, "mrp", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-36">
+                                        <label className="label">Selling Price</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input w-full"
+                                            required
+                                            value={d.sellingPrice}
+                                            onChange={(e) =>
+                                                update(item.productId, "sellingPrice", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-32">
+                                        <label className="label">Discount %</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="input w-full"
+                                            value={d.discountPercent}
+                                            onChange={(e) =>
+                                                update(item.productId, "discountPercent", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-36">
+                                        <label className="label">Free Qty</label>
+                                        <input
+                                            type="number"
+                                            className="input w-full"
+                                            value={d.freeQuantity}
+                                            onChange={(e) =>
+                                                update(item.productId, "freeQuantity", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="w-44">
+                                        <label className="label">Location</label>
+                                        <input
+                                            className="input w-full"
+                                            placeholder="R3-S2"
+                                            value={d.location}
+                                            onChange={(e) =>
+                                                update(item.productId, "location", e.target.value)
+                                            }
+                                        />
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -200,7 +283,7 @@ export default function ReceivePurchaseOrderPage() {
                 })}
 
                 <div className="flex justify-between pt-2">
-                    <Link href={`/purchase-orders/${id}`} className="btn-secondary">Cancel</Link>
+                    <Link href={`/purchase-orders`} className="btn-secondary">Cancel</Link>
                     <button type="submit" className="btn-primary" disabled={saving}>
                         {saving ? 'Receiving…' : 'Confirm Receipt & Add Stock'}
                     </button>

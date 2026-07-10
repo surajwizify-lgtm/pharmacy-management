@@ -24,9 +24,15 @@ const NAV_ITEMS: NavItem[] = [
 
   {
     href: '/purchase-orders/registered',
-    label: 'Purchase Registered',
+    label: 'Purchase Orders',
     description: 'Consolidated report & export',
     icon: BookOpenText,
+  },
+  {
+    href: '/purchase-orders/purchase-invoices',
+    label: 'Purchase Invoices',
+    description: 'Brand & drug license master',
+    icon: Factory,
   },
   {
     href: '/purchase-orders/manufacturers',
@@ -42,7 +48,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     href: '/purchase-orders/return',
-    label: 'Purchase Return',
+    label: 'Supplier Return',
     description: 'Vendor ledger & payment terms',
     icon: Users,
   },

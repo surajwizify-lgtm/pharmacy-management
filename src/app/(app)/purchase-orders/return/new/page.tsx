@@ -7,6 +7,7 @@ import { apiFetch, ApiClientError } from '@/lib/api-client';
 
 type Supplier = { id: number; name: string };
 type PO = { id: number; poNumber: string };
+type Invoice = { id: number; invoiceNumber: string; grnNumber: string };
 type BatchOption = {
     id: number;
     batchNumber: string;
@@ -36,6 +37,9 @@ export default function NewSupplierReturnPage() {
     const [purchaseOrders, setPurchaseOrders] = useState<PO[]>([]);
     const [purchaseOrderId, setPurchaseOrderId] = useState<number | ''>('');
 
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [purchaseInvoiceId, setPurchaseInvoiceId] = useState<number | ''>('');
+
     const [batches, setBatches] = useState<BatchOption[]>([]);
     const [pickBatchId, setPickBatchId] = useState<number | ''>('');
     const [pickQty, setPickQty] = useState('');
@@ -48,25 +52,14 @@ export default function NewSupplierReturnPage() {
         apiFetch<Supplier[]>('/api/suppliers').then(setSuppliers);
     }, []);
 
-    // when supplier changes, load their POs and the batches from those POs
-    // useEffect(() => {
-    //     if (!supplierId) {
-    //         setPurchaseOrders([]);
-    //         setBatches([]);
-    //         return;
-    //     }
-    //     apiFetch<any>(`/api/suppliers/${supplierId}`).then((data) => {
-    //         setPurchaseOrders(data.purchaseOrders || []);
-    //     });
-    //     // batches available for return = fetched via a dedicated endpoint filtered by supplier
-    //     apiFetch<BatchOption[]>(`/api/batches?supplierId=${supplierId}`).then(setBatches).catch(() => setBatches([]));
-    // }, [supplierId]);
     useEffect(() => {
         if (!supplierId) {
             setPurchaseOrders([]);
-            setPurchaseOrderId("");
+            setPurchaseOrderId('');
+            setInvoices([]);
+            setPurchaseInvoiceId('');
             setBatches([]);
-            setPickBatchId("");
+            setPickBatchId('');
             return;
         }
 
@@ -76,25 +69,37 @@ export default function NewSupplierReturnPage() {
             })
             .catch(() => setPurchaseOrders([]));
 
-        // reset when supplier changes
-        setPurchaseOrderId("");
+        setPurchaseOrderId('');
+        setInvoices([]);
+        setPurchaseInvoiceId('');
         setBatches([]);
-        setPickBatchId("");
+        setPickBatchId('');
     }, [supplierId]);
+
     useEffect(() => {
         if (!purchaseOrderId) {
             setBatches([]);
-            setPickBatchId("");
+            setPickBatchId('');
+            setInvoices([]);
+            setPurchaseInvoiceId('');
             return;
         }
 
-        apiFetch<BatchOption[]>(
-            `/api/purchase-orders/${purchaseOrderId}/batches`
-        )
+        apiFetch<BatchOption[]>(`/api/purchase-orders/${purchaseOrderId}/batches`)
             .then(setBatches)
             .catch(() => setBatches([]));
+        setPickBatchId('');
 
-        setPickBatchId("");
+        apiFetch<any>(`/api/purchase-orders/${purchaseOrderId}`)
+            .then((data) => {
+                const list: Invoice[] = data.purchaseInvoices || [];
+                setInvoices(list);
+                setPurchaseInvoiceId(list.length === 1 ? list[0].id : '');
+            })
+            .catch(() => {
+                setInvoices([]);
+                setPurchaseInvoiceId('');
+            });
     }, [purchaseOrderId]);
 
     function addLine() {
@@ -140,13 +145,17 @@ export default function NewSupplierReturnPage() {
 
         setSaving(true);
         try {
-            const ret = await apiFetch<{ id: number }>(`/api/purchase-orders/${supplierId}/returns`, {
+            // Fixed: was posting to /api/purchase-orders/${supplierId}/returns,
+            // which put a supplier id into a PO-scoped route and never hit
+            // the real supplier-returns handler.
+            await apiFetch<{ id: number }>('/api/supplier-returns', {
                 method: 'POST',
                 body: JSON.stringify({
                     supplierId,
-                    purchaseOrderId: purchaseOrderId || null,
+                    purchaseInvoiceId: purchaseInvoiceId || null,
                     returnNumber,
                     reason: reason || null,
+                    refundType: 'credit_note',
                     items: lines.map((l) => ({
                         batchId: l.batchId,
                         productId: l.productId,
@@ -155,7 +164,7 @@ export default function NewSupplierReturnPage() {
                     })),
                 }),
             });
-            router.push(`/purchase-orders/return`);
+            router.push('/purchase-orders/return');
         } catch (err) {
             setError(err instanceof ApiClientError ? err.message : 'Something went wrong');
         } finally {
@@ -174,114 +183,147 @@ export default function NewSupplierReturnPage() {
                 <h1 className="mt-1 text-2xl font-semibold text-slate-900">New Supplier Return</h1>
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {/* Wrapped everything in an actual <form> so submit-via-Enter works
+                and handleSubmit receives a real submit event, not a click cast to one. */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <div className="card space-y-4 p-5">
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="label">Supplier</label>
-                        <select className="input" value={supplierId}
-                            // onChange={(e) => setSupplierId(Number(e.target.value))}
-                            onChange={(e) => setSupplierId(Number(e.target.value))}
-                        >
-                            <option value="">Select supplier…</option>
-                            {suppliers.map((s) => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                        </select>
+                <div className="card space-y-4 p-5">
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <label className="label">Supplier</label>
+                            <select
+                                className="input"
+                                value={supplierId}
+                                onChange={(e) => setSupplierId(Number(e.target.value))}
+                                required
+                            >
+                                <option value="">Select supplier…</option>
+                                {suppliers.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="label">Related PO (optional)</label>
+                            <select
+                                className="input"
+                                value={purchaseOrderId}
+                                onChange={(e) => setPurchaseOrderId(Number(e.target.value))}
+                                disabled={!supplierId}
+                            >
+                                <option value="">None</option>
+                                {purchaseOrders.map((po) => (
+                                    <option key={po.id} value={po.id}>{po.poNumber}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="label">Invoice / GRN (optional)</label>
+                            <select
+                                className="input"
+                                value={purchaseInvoiceId}
+                                onChange={(e) => setPurchaseInvoiceId(Number(e.target.value))}
+                                disabled={!purchaseOrderId || !invoices.length}
+                            >
+                                <option value="">None</option>
+                                {invoices.map((inv) => (
+                                    <option key={inv.id} value={inv.id}>
+                                        {inv.grnNumber} (Inv #{inv.invoiceNumber})
+                                    </option>
+                                ))}
+                            </select>
+                            {purchaseOrderId && !invoices.length && (
+                                <p className="mt-1 text-xs text-slate-400">No invoice/GRN received yet for this PO.</p>
+                            )}
+                        </div>
                     </div>
                     <div>
-                        <label className="label">Related PO (optional)</label>
-                        <select
-                            className="input"
-                            value={purchaseOrderId}
-                            // onChange={(e) => setPurchaseOrderId(Number(e.target.value))}
-                            onChange={(e) => setPurchaseOrderId(Number(e.target.value))}
-                            // disabled={!purchaseOrders.length}
-                            disabled={!supplierId}
-                        >
-                            <option value="">None</option>
-                            {purchaseOrders.map((po) => (
-                                <option key={po.id} value={po.id}>{po.poNumber}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label className="label">Return Number</label>
-                    <input className="input" value={returnNumber} onChange={(e) => setReturnNumber(e.target.value)} />
-                </div>
-                <div>
-                    <label className="label">Reason (optional)</label>
-                    <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. damaged, expired, wrong item" />
-                </div>
-            </div>
-
-            <div className="card space-y-4 p-5">
-                <h2 className="font-medium text-slate-800">Items to Return</h2>
-                <div className="grid grid-cols-3 gap-3">
-                    <div>
-                        <label className="label">Batch</label>
-                        <select className="input" value={pickBatchId} onChange={(e) => setPickBatchId(Number(e.target.value))} disabled={!supplierId}>
-                            <option value="">Select batch…</option>
-                            {batches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.product.name} — {b.batchNumber} (avail: {b.quantityAvailable})
-                                </option>
-                            ))}
-                        </select>
+                        <label className="label">Return Number</label>
+                        <input className="input" value={returnNumber} onChange={(e) => setReturnNumber(e.target.value)} required />
                     </div>
                     <div>
-                        <label className="label">Quantity</label>
-                        <input type="number" className="input" value={pickQty} onChange={(e) => setPickQty(e.target.value)} />
-                    </div>
-                    <div className="flex items-end">
-                        <button type="button" className="btn-secondary w-full" onClick={addLine}>+ Add</button>
+                        <label className="label">Reason (optional)</label>
+                        <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. damaged, expired, wrong item" />
                     </div>
                 </div>
 
-                {lines.length > 0 && (
-                    <table className="w-full text-left text-sm">
-                        <thead className="border-b border-slate-100 text-xs uppercase text-slate-500">
-                            <tr>
-                                <th className="py-2">product</th>
-                                <th className="py-2">Batch #</th>
-                                <th className="py-2">Qty</th>
-                                <th className="py-2">Unit Price</th>
-                                <th className="py-2">Total</th>
-                                <th className="py-2"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {lines.map((l) => (
-                                <tr key={l.batchId}>
-                                    <td className="py-2">{l.productName}</td>
-                                    <td className="py-2">{l.batchNumber}</td>
-                                    <td className="py-2">{l.quantity}</td>
-                                    <td className="py-2">₹{l.unitPrice.toFixed(2)}</td>
-                                    <td className="py-2">₹{(l.quantity * l.unitPrice).toFixed(2)}</td>
-                                    <td className="py-2">
-                                        <button className="text-xs text-red-600" onClick={() => removeLine(l.batchId)}>Remove</button>
-                                    </td>
+                <div className="card space-y-4 p-5">
+                    <h2 className="font-medium text-slate-800">Items to Return</h2>
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <label className="label">Batch</label>
+                            <select
+                                className="input"
+                                value={pickBatchId}
+                                onChange={(e) => setPickBatchId(Number(e.target.value))}
+                                disabled={!purchaseOrderId}
+                            >
+                                <option value="">Select batch…</option>
+                                {batches.map((b) => (
+                                    <option key={b.id} value={b.id}>
+                                        {b.product.name} — {b.batchNumber} (avail: {b.quantityAvailable})
+                                    </option>
+                                ))}
+                            </select>
+                            {supplierId && !purchaseOrderId && (
+                                <p className="mt-1 text-xs text-slate-400">
+                                    Select a PO above to load its batches — batches aren't loaded from supplier alone yet.
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <label className="label">Quantity</label>
+                            <input type="number" className="input" value={pickQty} onChange={(e) => setPickQty(e.target.value)} />
+                        </div>
+                        <div className="flex items-end">
+                            <button type="button" className="btn-secondary w-full" onClick={addLine}>+ Add</button>
+                        </div>
+                    </div>
+
+                    {lines.length > 0 && (
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b border-slate-100 text-xs uppercase text-slate-500">
+                                <tr>
+                                    <th className="py-2">Product</th>
+                                    <th className="py-2">Batch #</th>
+                                    <th className="py-2">Qty</th>
+                                    <th className="py-2">Unit Price</th>
+                                    <th className="py-2">Total</th>
+                                    <th className="py-2"></th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {lines.map((l) => (
+                                    <tr key={l.batchId}>
+                                        <td className="py-2">{l.productName}</td>
+                                        <td className="py-2">{l.batchNumber}</td>
+                                        <td className="py-2">{l.quantity}</td>
+                                        <td className="py-2">₹{l.unitPrice.toFixed(2)}</td>
+                                        <td className="py-2">₹{(l.quantity * l.unitPrice).toFixed(2)}</td>
+                                        <td className="py-2">
+                                            <button type="button" className="text-xs text-red-600" onClick={() => removeLine(l.batchId)}>Remove</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
 
-                {lines.length > 0 && (
-                    <p className="text-right text-sm font-medium text-slate-700">
-                        Debit Note Total: ₹{totalAmount.toFixed(2)}
-                    </p>
-                )}
-            </div>
+                    {lines.length > 0 && (
+                        <p className="text-right text-sm font-medium text-slate-700">
+                            Debit Note Total: ₹{totalAmount.toFixed(2)}
+                        </p>
+                    )}
+                </div>
 
-            <div className="flex justify-end gap-2">
-                <Link href="/purchase-orders/registered" className="btn-secondary">Cancel</Link>
-                <button className="btn-primary" onClick={handleSubmit} disabled={saving}>
-                    {saving ? 'Saving…' : 'Create Return'}
-                </button>
-            </div>
+                <div className="flex justify-end gap-2">
+                    <Link href="/purchase-orders/return" className="btn-secondary">Cancel</Link>
+                    <button type="submit" className="btn-primary" disabled={saving}>
+                        {saving ? 'Saving…' : 'Create Return'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }
