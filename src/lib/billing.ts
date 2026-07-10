@@ -1,3 +1,4 @@
+// import { createGstLedgerEntry } from '@/lib/gst-ledger';
 // import Decimal from 'decimal.js';
 // import { Prisma } from '@prisma/client';
 // import { prisma } from './prisma';
@@ -20,6 +21,43 @@
 // }
 
 // /**
+//  * Find-or-create by exact (case-sensitive) name match within the same
+//  * transaction, so a concurrent duplicate bill can't create two rows for
+//  * the same doctor/hospital between our read and our write.
+//  */
+// async function resolveDoctorId(tx: Tx, doctorId?: number, doctorName?: string): Promise<number | undefined> {
+//   if (doctorId) {
+//     const doctor = await tx.doctor.findUnique({ where: { id: doctorId } });
+//     if (!doctor) throw notFound(`Doctor ${doctorId} not found`);
+//     return doctor.id;
+//   }
+//   if (doctorName?.trim()) {
+//     const name = doctorName.trim();
+//     const existing = await tx.doctor.findFirst({ where: { name } });
+//     if (existing) return existing.id;
+//     const created = await tx.doctor.create({ data: { name } });
+//     return created.id;
+//   }
+//   return undefined;
+// }
+
+// async function resolveHospitalId(tx: Tx, hospitalId?: number, hospitalName?: string): Promise<number | undefined> {
+//   if (hospitalId) {
+//     const hospital = await tx.hospital.findUnique({ where: { id: hospitalId } });
+//     if (!hospital) throw notFound(`Hospital ${hospitalId} not found`);
+//     return hospital.id;
+//   }
+//   if (hospitalName?.trim()) {
+//     const name = hospitalName.trim();
+//     const existing = await tx.hospital.findFirst({ where: { name } });
+//     if (existing) return existing.id;
+//     const created = await tx.hospital.create({ data: { name } });
+//     return created.id;
+//   }
+//   return undefined;
+// }
+
+// /**
 //  * Creates a bill: for each line item, resolves stock (FIFO by expiry
 //  * unless a batchId is pinned), computes GST split into CGST+SGST
 //  * (intra-state) or IGST (inter-state), deducts stock with optimistic
@@ -30,6 +68,11 @@
 //  */
 // export async function createBill(dto: CreateBillDto, cashierId: number) {
 //   return prisma.$transaction(async (tx) => {
+//     // Resolve referring doctor / hospital first (find-or-create), so a
+//     // bad doctorId/hospitalId fails fast before we touch stock at all.
+//     const resolvedDoctorId = await resolveDoctorId(tx, dto.doctorId, dto.doctorName);
+//     const resolvedHospitalId = await resolveHospitalId(tx, dto.hospitalId, dto.hospitalName);
+
 //     let subtotal = new Decimal(0);
 //     let totalCgst = new Decimal(0);
 //     let totalSgst = new Decimal(0);
@@ -116,17 +159,55 @@
 //       }
 //     }
 
+//     // const totalGst = totalCgst.add(totalSgst).add(totalIgst);
+//     // const totalAmount = subtotal.add(totalGst);
+//     // const billNumber = await generateBillNumber(tx);
+
+//     // return tx.bill.create({
+//     //   data: {
+//     //     billNumber,
+//     //     cashierId,
+//     //     customerName: dto.customerName,
+//     //     customerPhone: dto.customerPhone,
+//     //     customerGstin: dto.customerGstin,
+//     //     doctorId: resolvedDoctorId,
+//     //     hospitalId: resolvedHospitalId,
+//     //     prescriptionFile: dto.prescriptionFile,
+//     //     prescriptionName: dto.prescriptionName,
+//     //     prescriptionType: dto.prescriptionType,
+//     //     isInterState,
+//     //     subtotal: subtotal.toFixed(2),
+//     //     totalCgst: totalCgst.toFixed(2),
+//     //     totalSgst: totalSgst.toFixed(2),
+//     //     totalIgst: totalIgst.toFixed(2),
+//     //     totalGst: totalGst.toFixed(2),
+//     //     totalAmount: totalAmount.toFixed(2),
+//     //     paymentStatus: 'PENDING',
+//     //     billItems: { create: billItemsData },
+//     //   },
+//     //   include: {
+//     //     billItems: { include: { product: true } },
+//     //     cashier: true,
+//     //     doctor: true,
+//     //     hospital: true,
+//     //   },
+//     // });
 //     const totalGst = totalCgst.add(totalSgst).add(totalIgst);
 //     const totalAmount = subtotal.add(totalGst);
 //     const billNumber = await generateBillNumber(tx);
 
-//     return tx.bill.create({
+//     const bill = await tx.bill.create({
 //       data: {
 //         billNumber,
 //         cashierId,
 //         customerName: dto.customerName,
 //         customerPhone: dto.customerPhone,
 //         customerGstin: dto.customerGstin,
+//         doctorId: resolvedDoctorId,
+//         hospitalId: resolvedHospitalId,
+//         prescriptionFile: dto.prescriptionFile,
+//         prescriptionName: dto.prescriptionName,
+//         prescriptionType: dto.prescriptionType,
 //         isInterState,
 //         subtotal: subtotal.toFixed(2),
 //         totalCgst: totalCgst.toFixed(2),
@@ -137,11 +218,29 @@
 //         paymentStatus: 'PENDING',
 //         billItems: { create: billItemsData },
 //       },
-//       include: { billItems: { include: { product: true } }, cashier: true },
+//       include: {
+//         billItems: { include: { product: true } },
+//         cashier: true,
+//         doctor: true,
+//         hospital: true,
+//       },
 //     });
+
+//     // Push the GST OUTPUT entry now that the bill exists and has an id.
+//     await createGstLedgerEntry(tx, {
+//       type: 'OUTPUT',
+//       taxableValue: Number(subtotal.toFixed(2)),
+//       cgstAmount: Number(totalCgst.toFixed(2)),
+//       sgstAmount: Number(totalSgst.toFixed(2)),
+//       igstAmount: Number(totalIgst.toFixed(2)),
+//       totalGst: Number(totalGst.toFixed(2)),
+//       billId: bill.id,
+//     });
+
+//     return bill;
 //   });
 // }
-
+import { createGstLedgerEntry } from '@/lib/gst-ledger';
 import Decimal from 'decimal.js';
 import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
@@ -163,11 +262,6 @@ async function generateBillNumber(tx: Tx): Promise<string> {
   return `BILL-${dateStr}-${sequence}`;
 }
 
-/**
- * Find-or-create by exact (case-sensitive) name match within the same
- * transaction, so a concurrent duplicate bill can't create two rows for
- * the same doctor/hospital between our read and our write.
- */
 async function resolveDoctorId(tx: Tx, doctorId?: number, doctorName?: string): Promise<number | undefined> {
   if (doctorId) {
     const doctor = await tx.doctor.findUnique({ where: { id: doctorId } });
@@ -200,19 +294,8 @@ async function resolveHospitalId(tx: Tx, hospitalId?: number, hospitalName?: str
   return undefined;
 }
 
-/**
- * Creates a bill: for each line item, resolves stock (FIFO by expiry
- * unless a batchId is pinned), computes GST split into CGST+SGST
- * (intra-state) or IGST (inter-state), deducts stock with optimistic
- * locking, and persists everything atomically in one transaction.
- *
- * Direct port of the NestJS BillingService.createBill() - same Decimal.js
- * math, same FIFO batch resolution, same optimistic-locking stock deduction.
- */
 export async function createBill(dto: CreateBillDto, cashierId: number) {
   return prisma.$transaction(async (tx) => {
-    // Resolve referring doctor / hospital first (find-or-create), so a
-    // bad doctorId/hospitalId fails fast before we touch stock at all.
     const resolvedDoctorId = await resolveDoctorId(tx, dto.doctorId, dto.doctorName);
     const resolvedHospitalId = await resolveHospitalId(tx, dto.hospitalId, dto.hospitalName);
 
@@ -229,7 +312,6 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
       if (!product) throw notFound(`product ${item.productId} not found`);
       if (product.status !== 'ACTIVE') throw badRequest(`product "${product.name}" is discontinued`);
 
-      // Resolve batch: pinned batchId, or FIFO (soonest expiry with enough stock)
       const batch = item.batchId
         ? await tx.batch.findUnique({ where: { id: item.batchId } })
         : await tx.batch.findFirst({
@@ -251,7 +333,6 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
         );
       }
 
-      // ---- GST math (this is the part that matters most) ----
       const unitPrice = new Decimal(batch.sellingPrice.toString());
       const itemSubtotal = unitPrice.mul(item.quantity);
       const gstRate = new Decimal(product.gstPercentage.toString());
@@ -264,9 +345,8 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
       if (isInterState) {
         igst = totalGstForItem;
       } else {
-        // split evenly - standard practice: CGST = SGST = half the total slab
         cgst = totalGstForItem.div(2).toDecimalPlaces(2);
-        sgst = totalGstForItem.sub(cgst); // avoids rounding drift losing/gaining a paisa
+        sgst = totalGstForItem.sub(cgst);
       }
 
       const itemTotal = itemSubtotal.add(cgst).add(sgst).add(igst);
@@ -290,9 +370,6 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
         totalAmount: itemTotal.toFixed(2),
       });
 
-      // Deduct stock with optimistic locking - if another sale beat us to
-      // this batch between our read and this write, this throws and the
-      // whole transaction rolls back (no partial bill, no phantom deduction).
       const updateResult = await tx.batch.updateMany({
         where: { id: batch.id, version: batch.version },
         data: { quantityAvailable: { decrement: item.quantity }, version: { increment: 1 } },
@@ -306,7 +383,7 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
     const totalAmount = subtotal.add(totalGst);
     const billNumber = await generateBillNumber(tx);
 
-    return tx.bill.create({
+    const bill = await tx.bill.create({
       data: {
         billNumber,
         cashierId,
@@ -335,5 +412,17 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
         hospital: true,
       },
     });
+
+    await createGstLedgerEntry(tx, {
+      type: 'OUTPUT',
+      taxableValue: Number(subtotal.toFixed(2)),
+      cgstAmount: Number(totalCgst.toFixed(2)),
+      sgstAmount: Number(totalSgst.toFixed(2)),
+      igstAmount: Number(totalIgst.toFixed(2)),
+      totalGst: Number(totalGst.toFixed(2)),
+      billId: bill.id,
+    });
+
+    return bill;
   });
 }

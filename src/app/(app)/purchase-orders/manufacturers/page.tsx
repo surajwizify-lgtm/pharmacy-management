@@ -38,7 +38,7 @@ export default async function ManufacturerListPage({
                 <h1 className="text-xl font-semibold">Manufacturers</h1>
                 <Link
                     href="/purchase-orders/manufacturers/new"
-                    className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700"
+                    className="rounded-md  bg-green-700 text-white px-4 py-2 text-sm font-medium hover:bg-green-800"
                 >
                     + New Manufacturer
                 </Link>
@@ -107,8 +107,8 @@ export default async function ManufacturerListPage({
                                 </td>
                                 <td className="px-4 py-2 text-right space-x-3">
                                     <Link
-                                        href={`/purchase-orders/manufacturer/${m.id}`}
-                                        className="text-blue-600 hover:underline"
+                                        href={`/purchase-orders/manufacturers/${m.id}`}
+                                        className="text-green-600 hover:underline"
                                     >
                                         Edit
                                     </Link>

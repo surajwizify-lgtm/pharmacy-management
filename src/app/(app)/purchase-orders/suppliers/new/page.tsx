@@ -43,7 +43,7 @@ export default function NewSupplierPage() {
             }
 
             const supplier = await res.json();
-            router.push(`/suppliers/${supplier.id}`);
+            router.push(`/purchase-orders/suppliers/${supplier.id}`);
         } catch (err: any) {
             setError(err.message || "Something went wrong");
         } finally {
@@ -55,13 +55,11 @@ export default function NewSupplierPage() {
         <div className="p-6 max-w-xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Add Supplier</h1>
-                <Link href="/suppliers" className="text-blue-600">Back to list</Link>
+                <Link href="/purchase-orders/suppliers" className="text-blue-600">Back to list</Link>
             </div>
-
             {error && (
                 <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>
             )}
-
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium mb-1">
@@ -76,7 +74,6 @@ export default function NewSupplierPage() {
                         required
                     />
                 </div>
-
                 <div>
                     <label className="block text-sm font-medium mb-1">Contact Person</label>
                     <input
@@ -137,12 +134,12 @@ export default function NewSupplierPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                        className="bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50"
                     >
                         {loading ? "Saving..." : "Save Supplier"}
                     </button>
                     <Link
-                        href="/suppliers"
+                        href="/purchase-orders/suppliers"
                         className="border px-4 py-2 rounded"
                     >
                         Cancel

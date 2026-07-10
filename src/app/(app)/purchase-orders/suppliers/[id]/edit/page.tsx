@@ -72,7 +72,7 @@ export default function EditSupplierPage() {
                 throw new Error(data.error || "Failed to update supplier");
             }
 
-            router.push(`/suppliers/${id}`);
+            router.push(`/purchase-orders/suppliers/${id}`);
         } catch (err: any) {
             setError(err.message || "Something went wrong");
         } finally {
@@ -86,7 +86,7 @@ export default function EditSupplierPage() {
         <div className="p-6 max-w-xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Edit Supplier</h1>
-                <Link href={`/suppliers/${id}`} className="text-blue-600">Back to details</Link>
+                <Link href={`/purchase-orders/suppliers/${id}`} className="text-blue-600">Back to details</Link>
             </div>
 
             {error && (
@@ -181,11 +181,11 @@ export default function EditSupplierPage() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                        className="bg-green-700 text-white px-4 py-2 rounded disabled:opacity-50"
                     >
                         {saving ? "Saving..." : "Save Changes"}
                     </button>
-                    <Link href={`/suppliers/${id}`} className="border px-4 py-2 rounded">
+                    <Link href={`/purchase-orders/suppliers/${id}`} className="border px-4 py-2 rounded">
                         Cancel
                     </Link>
                 </div>

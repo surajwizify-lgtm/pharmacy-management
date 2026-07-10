@@ -7,7 +7,6 @@ export async function GET() {
     });
     return NextResponse.json(suppliers);
 }
-
 export async function POST(req: NextRequest) {
     const body = await req.json();
     const supplier = await prisma.supplier.create({

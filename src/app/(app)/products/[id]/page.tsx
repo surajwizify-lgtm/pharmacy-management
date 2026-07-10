@@ -114,11 +114,11 @@ export default function productDetailPage({ params }: { params: { id: string } }
       <div className="card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-medium text-slate-800">Batches (FIFO by expiry)</h2>
-          {canEdit && (
+          {/* {canEdit && (
             <button className="btn-primary text-sm" onClick={() => setShowBatchForm(true)}>
               + Add batch
             </button>
-          )}
+          )} */}
         </div>
 
         <table className="w-full text-left text-sm">

@@ -451,7 +451,7 @@ export default function PurchaseOrderDetailPage() {
                             {po.purchaseInvoices.map((inv: any) => (
                                 <tr key={inv.id}>
                                     <td className="py-2">
-                                        <Link href={`/purchase-invoices/${inv.id}`} className="text-brand-600 hover:underline">
+                                        <Link href={`/purchase-orders/purchase-invoices/${inv.id}`} className="text-brand-600 hover:underline">
                                             {inv.grnNumber}
                                         </Link>
                                     </td>

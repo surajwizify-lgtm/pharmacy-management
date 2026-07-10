@@ -178,13 +178,13 @@ export default function ManufacturerForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-md bg-green-700 text-white px-4 py-2 text-sm font-medium hover:bg-green-800 disabled:opacity-50"
         >
           {submitting ? "Saving..." : isEdit ? "Save Changes" : "Create Manufacturer"}
         </button>
         <button
           type="button"
-          onClick={() => router.push("/purchase-orders/manufacturer")}
+          onClick={() => router.push("/purchase-orders/manufacturers")}
           className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
         >
           Cancel

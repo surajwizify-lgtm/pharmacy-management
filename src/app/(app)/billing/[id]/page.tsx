@@ -45,7 +45,7 @@ export default function BillDetailPage({ params }: { params: { id: string } }) {
     <div className="space-y-6">
       {/* Toolbar — hidden on print via .no-print */}
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        <Link href="/billing" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline">
+        <Link href="/billing/all-sales" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline">
           <ArrowLeft className="h-4 w-4" />
           Back to billing
         </Link>
