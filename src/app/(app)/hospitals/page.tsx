@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { Hospital } from '@/types';
 import { Building2, Plus, X, Search, Pencil, Trash2, Phone, MapPin, Receipt } from 'lucide-react';
+import CreateHospital from '@/components/hospitals/CreateHospital';
 
 type ModalMode = 'create' | 'edit';
 
@@ -239,58 +240,7 @@ export default function HospitalsPage() {
                 </div>
             </div>
 
-            {showModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
-                    onClick={closeModal}
-                >
-                    <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between bg-gradient-to-r from-brand-600 to-brand-700 px-5 py-4 text-white">
-                            <div className="flex items-center gap-2">
-                                <Building2 className="h-5 w-5" />
-                                <h2 className="text-base font-semibold">{mode === 'create' ? 'Add Hospital' : 'Edit Hospital'}</h2>
-                            </div>
-                            <button onClick={closeModal} className="rounded-full p-1.5 hover:bg-white/15">
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        <div className="space-y-3 p-5">
-                            <div>
-                                <label className="label">Hospital name *</label>
-                                <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-                            </div>
-                            <div>
-                                <label className="label">Address</label>
-                                <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} />
-                            </div>
-                            <div>
-                                <label className="label">Phone</label>
-                                <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                            </div>
-                            <div>
-                                <label className="label">GSTIN</label>
-                                <input className="input uppercase" value={gstin} onChange={(e) => setGstin(e.target.value.toUpperCase())} />
-                            </div>
-
-                            {formError && <p className="text-sm text-red-600">{formError}</p>}
-
-                            <div className="flex items-center gap-2 pt-1">
-                                <button
-                                    className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                                    onClick={closeModal}
-                                    disabled={submitting}
-                                >
-                                    Cancel
-                                </button>
-                                <button className="btn-primary flex-1 justify-center" onClick={submitForm} disabled={submitting}>
-                                    {submitting ? 'Saving…' : mode === 'create' ? 'Add hospital' : 'Save changes'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {showModal && <CreateHospital onClose={closeModal} />}
         </div>
     );
 }
