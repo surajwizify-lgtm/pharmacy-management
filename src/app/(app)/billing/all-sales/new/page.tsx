@@ -1,4 +1,6 @@
+
 "use client"
+import PrintBillButton from "@/components/billing/PrintBillButton";
 import Button from "@/components/Button";
 import CreateDoctor from "@/components/doctor/CreateDoctor";
 import CreateHospital from "@/components/hospitals/CreateHospital";
@@ -9,6 +11,14 @@ import { Bill, PaymentMethod } from "@prisma/client";
 import { Building2, FileText, IndianRupee, Minus, Plus, Search, ShoppingCart, Stethoscope, UserPlus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import CreateCustomer from "@/components/customer/CreateCustomer";
+
+interface CustomerOption {
+    id: number;
+    name: string;
+    phone?: string | null;
+    gstin?: string | null;
+}
 
 type GstMode = 'EXCLUSIVE' | 'INCLUSIVE';
 interface DoctorOption {
@@ -29,36 +39,17 @@ interface CartLine {
     productId: number;
     name: string;
     gstPercentage: string;
-    quantity: number;
+    quantity: number | "";
+    genericName?: string;
     batchId?: number;
     availableStock: number;
     sellingPrice: string;
 }
 
 export default function CreateBillPage() {
-    const [form, setform] = useState({
-        billNumber: "",
-        billDate: "",
-        cashierId: "",
-        customerName: "",
-        customerPhone: "",
-        customerGstin: "",
-        doctorId: "",
-        hospitalId: "",
-        prescriptionFile: "",
-        prescriptionName: "",
-        prescriptionType: "",
-        isInterState: "",
-        subtotal: "",
-        totalCgst: "",
-        totalSgst: "",
-        totalGst: "",
-        totalAmount: "",
-        paymentStatus: "",
-        cancelled: "",
-        cancellationReason: "",
-    });
     const router = useRouter();
+    const [createdBillId, setCreatedBillId] = useState<number | null>(null);
+
     const [results, setResults] = useState<product[]>([]);
     const [search, setSearch] = useState('');
     const [cart, setCart] = useState<CartLine[]>([]);
@@ -79,41 +70,87 @@ export default function CreateBillPage() {
     const [hospitalSuggestions, setHospitalSuggestions] = useState<HospitalOption[]>([]);
     const [showHospitalSuggestions, setShowHospitalSuggestions] = useState(false);
     const hospitalBoxRef = useRef<HTMLDivElement>(null);
+
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [customerGstin, setCustomerGstin] = useState('');
     const [createPaymentMethod, setCreatePaymentMethod] = useState<PaymentMethod>('CASH');
     const [showCreateDoctor, setShowCreateDoctor] = useState(false);
     const [showCreateHospital, setShowCreateHospital] = useState(false);
+    const [ipOp, setIpOp] = useState('');
+    const [customerId, setCustomerId] = useState<number | null>(null);
+    const [customerSuggestions, setCustomerSuggestions] = useState<CustomerOption[]>([]);
+    const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+    const [showCreateCustomer, setShowCreateCustomer] = useState(false);
+    const customerBoxRef = useRef<HTMLDivElement>(null);
 
-    function updateQty(batchId: number, quantity: number) {
+    // function updateQty(batchId: number, quantity: number) {
+    //     setCart(prev =>
+    //         prev.map(item => {
+    //             if (item.batchId !== batchId)
+    //                 return item;
+
+    //             quantity = Math.max(
+    //                 1,
+    //                 Math.min(quantity, item.availableStock)
+    //             );
+
+    //             return {
+    //                 ...item,
+    //                 quantity
+    //             };
+    //         })
+    //     );
+    // }
+    function updateQty(batchId: number, quantity: number | "") {
         setCart(prev =>
             prev.map(item => {
+                if (item.batchId !== batchId) return item;
 
-                if (item.batchId !== batchId)
-                    return item;
+                if (quantity === "") {
+                    return {
+                        ...item,
+                        quantity: "",
+                    };
+                }
 
-                quantity = Math.max(
-                    1,
-                    Math.min(quantity, item.availableStock)
-                );
+                quantity = Math.min(quantity, item.availableStock);
 
                 return {
                     ...item,
-                    quantity
+                    quantity,
                 };
             })
         );
     }
+    function updateRate(batchId: number, sellingPrice: string) {
+        setCart(prev =>
+            prev.map(item =>
+                item.batchId !== batchId ? item : { ...item, sellingPrice }
+            )
+        );
+    }
+
+    function updateGst(batchId: number, gstPercentage: string) {
+        setCart(prev =>
+            prev.map(item =>
+                item.batchId !== batchId ? item : { ...item, gstPercentage }
+            )
+        );
+    }
+
     function handleHospitalNameChange(value: string) {
         setHospitalName(value);
         setHospitalId(null);
         setShowHospitalSuggestions(true);
     }
+
     const onClose = async () => {
         setShowCreateDoctor(false)
         setShowCreateHospital(false)
+        setShowCreateCustomer(false)
     }
+
     function addToCart(m: product, batch: product["batches"][number]) {
         if (batch.quantityAvailable <= 0) {
             alert(`${m.name} (${batch.batchNumber}) has no available stock.`);
@@ -128,7 +165,7 @@ export default function CreateBillPage() {
             if (existing) {
                 return prev.map((l) =>
                     l.productId === m.id && l.batchId === batch.id
-                        ? { ...l, quantity: l.quantity + 1 }
+                        ? { ...l, quantity: Number(l.quantity) + 1 }
                         : l
                 );
             }
@@ -139,6 +176,7 @@ export default function CreateBillPage() {
                     productId: m.id,
                     batchId: batch.id,
                     name: `${m.name} (${batch.batchNumber})`,
+                    genericName: m.genericName ?? undefined,
                     gstPercentage: m.gstPercentage,
                     quantity: 1,
                     availableStock: batch.quantityAvailable,
@@ -154,31 +192,41 @@ export default function CreateBillPage() {
     function removeLine(productId: number) {
         setCart((prev) => prev.filter((l) => l.productId !== productId));
     }
-    function lineAmounts(l: CartLine, mode: GstMode) {
+
+    function lineAmounts(l: CartLine, mode: GstMode, interState: boolean) {
         const price = Number(l.sellingPrice);
         const gstPct = Number(l.gstPercentage);
-        const lineTotal = price * l.quantity;
+        const lineTotal = price * Number(l.quantity);
+
+        let base: number;
+        let gst: number;
 
         if (mode === 'INCLUSIVE') {
-            const base = lineTotal / (1 + gstPct / 100);
-            const gst = lineTotal - base;
-            return { base, gst, total: lineTotal };
+            base = lineTotal / (1 + gstPct / 100);
+            gst = lineTotal - base;
+        } else {
+            base = lineTotal;
+            gst = (lineTotal * gstPct) / 100;
         }
 
-        const gst = (lineTotal * gstPct) / 100;
-        return { base: lineTotal, gst, total: lineTotal + gst };
+        const cgst = interState ? 0 : gst / 2;
+        const sgst = interState ? 0 : gst / 2;
+        const igst = interState ? gst : 0;
+
+        return { base, gst, cgst, sgst, igst, total: base + gst };
     }
+
     function selectHospital(h: HospitalOption) {
         setHospitalId(h.id);
         setHospitalName(h.name);
         setShowHospitalSuggestions(false);
     }
+
     function handleDoctorNameChange(value: string) {
         setDoctorName(value);
-        setDoctorId(null); // typing invalidates a previously selected doctor
+        setDoctorId(null);
         setShowDoctorSuggestions(true);
     }
-
 
     async function submitBill() {
         if (cart.length === 0) return;
@@ -214,6 +262,7 @@ export default function CreateBillPage() {
                     customerName: customerName || undefined,
                     customerPhone: customerPhone || undefined,
                     customerGstin: customerGstin || undefined,
+                    customerId: customerId || undefined,
                     doctorId: doctorId || undefined,
                     doctorName: !doctorId && doctorName.trim() ? doctorName.trim() : undefined,
                     hospitalId: hospitalId || undefined,
@@ -222,6 +271,7 @@ export default function CreateBillPage() {
                     prescriptionName: uploadedPrescription?.prescriptionName,
                     prescriptionType: uploadedPrescription?.prescriptionType,
                     isInterState,
+                    ipOp: ipOp || undefined,
                 }),
             });
             await apiFetch(`/api/bills/${bill.id}/payments`, {
@@ -231,12 +281,16 @@ export default function CreateBillPage() {
                     method: createPaymentMethod,
                 }),
             });
-            router.push('/billing/all-sales')
-        } catch (err) {
+            setCreatedBillId(bill.id);
+        } catch (err: any) {
+            setError(err instanceof ApiClientError ? err.message : "Something went wrong while creating the bill");
+        } finally {
+            setSubmitting(false);
         }
     }
-    const estimatedSubtotal = cart.reduce((sum, l) => sum + lineAmounts(l, gstMode).base, 0);
-    const estimatedGst = cart.reduce((sum, l) => sum + lineAmounts(l, gstMode).gst, 0);
+
+    const estimatedSubtotal = cart.reduce((sum, l) => sum + lineAmounts(l, gstMode, isInterState).base, 0);
+    const estimatedGst = cart.reduce((sum, l) => sum + lineAmounts(l, gstMode, isInterState).gst, 0);
     const estimatedCgst = isInterState ? 0 : estimatedGst / 2;
     const estimatedSgst = isInterState ? 0 : estimatedGst / 2;
     const estimatedIgst = isInterState ? estimatedGst : 0;
@@ -246,8 +300,17 @@ export default function CreateBillPage() {
         setDoctorName(d.name);
         setShowDoctorSuggestions(false);
     }
+    function handleCustomerNameChange(value: string) {
+        setCustomerName(value);
+        setCustomerId(null);
+        setShowCustomerSuggestions(true);
+    }
 
-
+    function selectCustomer(c: CustomerOption) {
+        setCustomerId(c.id);
+        setCustomerName(c.name);
+        setShowCustomerSuggestions(false);
+    }
     useEffect(() => {
         if (!search) {
             setResults([]);
@@ -259,6 +322,7 @@ export default function CreateBillPage() {
         }, 250);
         return () => clearTimeout(t);
     }, [search]);
+
     useEffect(() => {
         if (!doctorName.trim()) {
             setDoctorSuggestions([]);
@@ -274,7 +338,7 @@ export default function CreateBillPage() {
         }, 250);
         return () => clearTimeout(t);
     }, [doctorName]);
-    // Hospital suggestions (debounced)
+
     useEffect(() => {
         if (!hospitalName.trim()) {
             setHospitalSuggestions([]);
@@ -291,6 +355,21 @@ export default function CreateBillPage() {
         return () => clearTimeout(t);
     }, [hospitalName]);
 
+    useEffect(() => {
+        if (!customerName.trim()) {
+            setCustomerSuggestions([]);
+            return;
+        }
+        const t = setTimeout(async () => {
+            try {
+                const data = await apiFetch<CustomerOption[]>(`/api/customers?search=${encodeURIComponent(customerName)}`);
+                setCustomerSuggestions(data);
+            } catch {
+                setCustomerSuggestions([]);
+            }
+        }, 250);
+        return () => clearTimeout(t);
+    }, [customerName]);
 
     return (
         <div className="h-screen w-full overflow-hidden grid grid-rows-12 bg-neutral-100">
@@ -312,7 +391,7 @@ export default function CreateBillPage() {
                         <div className="relative shrink-0">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                             <Input
-                                id=""
+                                id="productSearch"
                                 label=""
                                 type="text"
                                 className="pl-9"
@@ -354,58 +433,134 @@ export default function CreateBillPage() {
                                 <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-medium uppercase tracking-wide text-neutral-500">
                                     <span>Cart · {cart.length} item{cart.length > 1 ? 's' : ''}</span>
                                     <span className="normal-case tracking-normal text-neutral-400">
-                                        Prices shown {gstMode === 'INCLUSIVE' ? 'inclusive' : 'exclusive'} of GST
+                                        Prices shown {gstMode === 'INCLUSIVE' ? 'inclusive' : 'exclusive'} of GST · {isInterState ? 'IGST' : 'CGST + SGST'}
                                     </span>
                                 </div>
                                 <div className="flex-1 min-h-0 overflow-y-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="sticky top-0 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
-                                            <tr>
+                                    <table className="w-full border border-surface-200 text-left text-[8px]">
+                                        <thead className="sticky top-0 border-b border-surface-200 bg-neutral-50 uppercase tracking-wide text-neutral-500">
+                                            <tr className="divide-x divide-surface-200">
                                                 <th className="py-2.5 px-3">Item</th>
+                                                <th className="py-2.5 px-3">Generic Name</th>
                                                 <th className="py-2.5 px-3">Qty</th>
                                                 <th className="py-2.5 px-3">Unit Price</th>
                                                 <th className="py-2.5 px-3">GST%</th>
                                                 <th className="py-2.5 px-3">Taxable Value</th>
-                                                <th className="py-2.5 px-3">GST Amt</th>
-                                                <th className="py-2.5 px-3"></th>
+                                                {isInterState ? (
+                                                    <th className="py-2.5 px-3">IGST</th>
+                                                ) : (
+                                                    <>
+                                                        <th className="py-2.5 px-3">CGST</th>
+                                                        <th className="py-2.5 px-3">SGST</th>
+                                                    </>
+                                                )}
+                                                <th className="py-2.5 px-3">Line Total</th>
+                                                <th className="py-2.5 px-3">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-neutral-100">
+                                        <tbody className="divide-y divide-surface-200">
                                             {cart.map((l) => {
-                                                const { base, gst } = lineAmounts(l, gstMode);
+                                                // console.log("Line item:", l);
+                                                const { base, cgst, sgst, igst, total } = lineAmounts(l, gstMode, isInterState);
                                                 return (
-                                                    <tr key={l.productId} className="hover:bg-neutral-50">
+                                                    <tr key={l.productId} className="divide-x divide-surface-200 hover:bg-neutral-50">
                                                         <td className="px-3 py-2.5 font-medium text-neutral-700">{l.name}</td>
+                                                        <td className="px-3 py-2.5 font-medium text-neutral-700">{l.genericName}</td>
                                                         <td className="px-3 py-2.5">
                                                             <div className="flex items-center gap-1">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateQty(l.batchId!, l.quantity - 1)}
-                                                                    className="rounded-md border border-neutral-200 p-1 text-neutral-500 transition-colors hover:bg-neutral-100"
-                                                                >
-                                                                    <Minus className="h-3 w-3" />
-                                                                </button>
-                                                                <input
+                                                                {/* <input
                                                                     className="input h-8 w-14 text-center"
                                                                     type="number"
                                                                     min={1}
                                                                     max={l.availableStock}
                                                                     value={l.quantity}
                                                                     onChange={(e) => updateQty(l.batchId!, Number(e.target.value))}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.value === "") return;
+                                                                        updateQty(l.batchId!, Number(e.target.value));
+                                                                    }}
+                                                                    
+                                                                /> */}
+                                                                <input
+                                                                    className="input h-8 w-14 text-center"
+                                                                    type="number"
+                                                                    max={l.availableStock}
+                                                                    value={l.quantity}
+                                                                    onChange={(e) => {
+                                                                        updateQty(
+                                                                            l.batchId!,
+                                                                            e.target.value === "" ? "" : Number(e.target.value)
+                                                                        );
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        if (l.quantity === "" || Number(l.quantity) < 1) {
+                                                                            updateQty(l.batchId!, 1);
+                                                                        }
+                                                                    }}
                                                                 />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => updateQty(l.batchId!, l.quantity + 1)}
-                                                                    className="rounded-md border border-neutral-200 p-1 text-neutral-500 transition-colors hover:bg-neutral-100"
-                                                                >
-                                                                    <Plus className="h-3 w-3" />
-                                                                </button>
                                                             </div>
                                                         </td>
-                                                        <td className="px-3 py-2.5 text-neutral-600">₹{l.sellingPrice}</td>
-                                                        <td className="px-3 py-2.5 text-neutral-600">{l.gstPercentage}%</td>
+                                                        {/* <td className="px-3 py-2.5 text-neutral-600">₹{l.sellingPrice}</td> */}
+                                                        <td className="px-3 py-2.5">
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-neutral-400">₹</span>
+                                                                <input
+                                                                    className="input h-8 w-20 text-center"
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min={0}
+                                                                    value={l.sellingPrice}
+                                                                    onChange={(e) => updateRate(l.batchId!, e.target.value)}
+                                                                    onBlur={() => {
+                                                                        if (l.sellingPrice === "" || Number(l.sellingPrice) < 0) {
+                                                                            updateRate(l.batchId!, "0");
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                        {/* <td className="px-3 py-2.5 text-neutral-600">{l.gstPercentage}%</td> */}
+                                                        <td className="px-3 py-2.5">
+                                                            <div className="flex items-center gap-1">
+                                                                <input
+                                                                    className="input h-8 w-14 text-center"
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min={0}
+                                                                    max={28}
+                                                                    value={l.gstPercentage}
+                                                                    onChange={(e) => updateGst(l.batchId!, e.target.value)}
+                                                                    onBlur={() => {
+                                                                        if (l.gstPercentage === "" || Number(l.gstPercentage) < 0) {
+                                                                            updateGst(l.batchId!, "0");
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <span className="text-neutral-400">%</span>
+                                                            </div>
+                                                        </td>
                                                         <td className="px-3 py-2.5 text-neutral-600">₹{base.toFixed(2)}</td>
-                                                        <td className="px-3 py-2.5 text-neutral-600">₹{gst.toFixed(2)}</td>
+                                                        {isInterState ? (
+                                                            <td className="px-3 py-2.5">
+                                                                <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                                                                    ₹{igst.toFixed(2)}
+                                                                </span>
+                                                            </td>
+                                                        ) : (
+                                                            <>
+                                                                <td className="px-3 py-2.5">
+                                                                    <span className="rounded-md bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                                                                        ₹{cgst.toFixed(2)}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-3 py-2.5">
+                                                                    <span className="rounded-md bg-secondary-50 px-2 py-0.5 text-xs font-medium text-secondary-700">
+                                                                        ₹{sgst.toFixed(2)}
+                                                                    </span>
+                                                                </td>
+                                                            </>
+                                                        )}
+                                                        <td className="px-3 py-2.5 font-medium text-neutral-800">₹{total.toFixed(2)}</td>
                                                         <td className="px-3 py-2.5 text-right">
                                                             <button
                                                                 className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
@@ -423,15 +578,101 @@ export default function CreateBillPage() {
                                 </div>
                             </div>
                         )}
+
+                        {error && (
+                            <div className="shrink-0 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-sm text-danger-700">
+                                {error}
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* -------- Right: customer / payment panel -------- */}
                 <div className="col-span-3 flex min-h-0 flex-col bg-neutral-50 p-3">
-                    <div className="flex min-h-0 flex-1 flex-col gap-3 pr-1">
-                        <Input label="Customer Name" id="" required />
-                        <Input label="Customer Mobile" id="" />
-                        {/* <Input label="Referring Doctor" id="" /> */}
+                    <div className="flex min-h-0 flex-1 flex-col gap-3 pr-1 overflow-y-auto">
+                        {/* <div className="grid grid-cols-4 gap-1">
+                            <div className="col-span-3">
+                                <Input
+                                    label="Customer Name"
+                                    id="customerName"
+                                    value={customerName}
+                                    onChange={(e) => setCustomerName(e.target.value)}
+                                />
+                            </div>
+                            <div className="col-span-1">
+                                <Input
+                                    label="IP/OP"
+                                    id="ipOp"
+                                    value={ipOp}
+                                    onChange={(e) => setIpOp(e.target.value)}
+                                />
+                            </div>
+                        </div> */}
+                        <div className="grid grid-cols-4 gap-1">
+                            <div className="relative col-span-3" ref={customerBoxRef}>
+                                <div className="mb-1 flex items-center justify-between">
+                                    <label className="label !flex m-0 items-center gap-1.5">Customer</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateCustomer(true)}
+                                        className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
+                                    >
+                                        <UserPlus className="h-3.5 w-3.5" /> New customer
+                                    </button>
+                                </div>
+                                <Input
+                                    id="customerSearch"
+                                    label=""
+                                    type="text"
+                                    placeholder="Search customer by name or phone…"
+                                    value={customerName}
+                                    onChange={(e) => handleCustomerNameChange(e.target.value)}
+                                />
+                                {customerId && <p className="mt-1 text-xs text-secondary-600">Existing customer selected ✓</p>}
+                                {showCustomerSuggestions && customerSuggestions.length > 0 && (
+                                    <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
+                                        {customerSuggestions.map((c) => (
+                                            <button
+                                                key={c.id}
+                                                type="button"
+                                                className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-primary-50"
+                                                onClick={() => selectCustomer(c)}
+                                            >
+                                                <span className="font-medium text-neutral-700">{c.name}</span>
+                                                {c.phone && <span className="text-xs text-neutral-400">{c.phone}</span>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                {showCustomerSuggestions && customerName.trim() && customerSuggestions.length === 0 && (
+                                    <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 text-xs shadow-lg">
+                                        <p className="mb-2 text-neutral-400">No customer named "{customerName.trim()}" found.</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCreateCustomer(true)}
+                                            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-50 py-1.5 font-medium text-primary-700 hover:bg-primary-100"
+                                        >
+                                            <UserPlus className="h-3.5 w-3.5" /> Create "{customerName.trim()}" as new customer
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-span-1">
+                                <Input
+                                    label="IP/OP"
+                                    id="ipOp"
+                                    value={ipOp}
+                                    onChange={(e) => setIpOp(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        {/* <Input
+                            label="Customer Mobile"
+                            id="customerPhone"
+                            value={customerPhone}
+                            onChange={(e) => setCustomerPhone(e.target.value)}
+                        /> */}
+
                         <div className="relative sm:col-span-2" ref={doctorBoxRef}>
                             <div className="mb-1 flex items-center justify-between">
                                 <label className="label !flex m-0 items-center gap-1.5">
@@ -440,50 +681,49 @@ export default function CreateBillPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateDoctor(true)}
-                                    className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                    className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
                                 >
                                     <UserPlus className="h-3.5 w-3.5" /> New doctor
                                 </button>
                             </div>
                             <Input
                                 type="text"
-                                id=""
+                                id="doctorSearch"
                                 label=""
                                 className="input"
                                 placeholder="Search doctor by name…"
                                 value={doctorName}
                                 onChange={(e) => handleDoctorNameChange(e.target.value)}
-                            // onFocus={() => doctorName.trim() && setShowDoctorSuggestions(true)}
                             />
-                            {doctorId && <p className="mt-1 text-xs text-emerald-600">Existing doctor selected ✓</p>}
+                            {doctorId && <p className="mt-1 text-xs text-secondary-600">Existing doctor selected ✓</p>}
                             {showDoctorSuggestions && doctorSuggestions.length > 0 && (
-                                <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                                <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg">
                                     {doctorSuggestions.map((d) => (
                                         <button
                                             key={d.id}
                                             type="button"
-                                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50"
+                                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-primary-50"
                                             onClick={() => selectDoctor(d)}
                                         >
-                                            <span className="font-medium text-slate-700">{d.name}</span>
-                                            {d.specialization && <span className="text-xs text-slate-400">{d.specialization}</span>}
+                                            <span className="font-medium text-neutral-700">{d.name}</span>
+                                            {d.specialization && <span className="text-xs text-neutral-400">{d.specialization}</span>}
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {showDoctorSuggestions && doctorName.trim() && doctorSuggestions.length === 0 && (
-                                <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg">
-                                    <p className="mb-2 text-slate-400">No doctor named "{doctorName.trim()}" found.</p>
+                                <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 text-xs shadow-lg">
+                                    <p className="mb-2 text-neutral-400">No doctor named "{doctorName.trim()}" found.</p>
                                     <button
                                         type="button"
-                                        // onClick={openCreateDoctor}
-                                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-50 py-1.5 font-medium text-brand-700 hover:bg-brand-100"
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-50 py-1.5 font-medium text-primary-700 hover:bg-primary-100"
                                     >
                                         <UserPlus className="h-3.5 w-3.5" /> Create "{doctorName.trim()}" as new doctor
                                     </button>
                                 </div>
                             )}
                         </div>
+
                         <div className="relative sm:col-span-2" ref={hospitalBoxRef}>
                             <div className="mb-1 flex items-center justify-between">
                                 <label className="label !flex m-0 items-center gap-1.5">
@@ -492,44 +732,42 @@ export default function CreateBillPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateHospital(true)}
-                                    className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
+                                    className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
                                 >
                                     <Plus className="h-3.5 w-3.5" /> New hospital
                                 </button>
                             </div>
                             <Input
-                                id=""
+                                id="hospitalSearch"
                                 label=""
                                 type="text"
                                 className="input"
                                 placeholder="Search hospital by name…"
                                 value={hospitalName}
                                 onChange={(e) => handleHospitalNameChange(e.target.value)}
-                            // onFocus={() => hospitalName.trim() && setShowHospitalSuggestions(true)}
                             />
-                            {hospitalId && <p className="mt-1 text-xs text-emerald-600">Existing hospital selected ✓</p>}
+                            {hospitalId && <p className="mt-1 text-xs text-secondary-600">Existing hospital selected ✓</p>}
                             {showHospitalSuggestions && hospitalSuggestions.length > 0 && (
-                                <div className="absolute z-50 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
+                                <div className="absolute z-50 mt-1 w-full rounded-lg border border-neutral-200 bg-white shadow-lg">
                                     {hospitalSuggestions.map((h) => (
                                         <button
                                             key={h.id}
                                             type="button"
-                                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-brand-50"
+                                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm transition-colors hover:bg-primary-50"
                                             onClick={() => selectHospital(h)}
                                         >
-                                            <span className="font-medium text-slate-700">{h.name}</span>
-                                            {h.address && <span className="text-xs text-slate-400">{h.address}</span>}
+                                            <span className="font-medium text-neutral-700">{h.name}</span>
+                                            {h.address && <span className="text-xs text-neutral-400">{h.address}</span>}
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {showHospitalSuggestions && hospitalName.trim() && hospitalSuggestions.length === 0 && (
-                                <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg">
-                                    <p className="mb-2 text-slate-400">No hospital named "{hospitalName.trim()}" found.</p>
+                                <div className="absolute z-20 mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 text-xs shadow-lg">
+                                    <p className="mb-2 text-neutral-400">No hospital named "{hospitalName.trim()}" found.</p>
                                     <button
                                         type="button"
-                                        // onClick={openCreateHospital}
-                                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-50 py-1.5 font-medium text-brand-700 hover:bg-brand-100"
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary-50 py-1.5 font-medium text-primary-700 hover:bg-primary-100"
                                     >
                                         <Plus className="h-3.5 w-3.5" /> Create "{hospitalName.trim()}" as new hospital
                                     </button>
@@ -604,15 +842,28 @@ export default function CreateBillPage() {
             {/* -------- Footer strip -------- */}
             <div className="row-span-1 grid grid-cols-12 items-center gap-3 w-full border-t border-neutral-200 bg-sky-100 px-5">
 
-                <div className="col-span-4 flex items-center">
-                    <label htmlFor="">Prescription</label>
-                    <Input className="text-sm" label="" id="" type="file" />
+                <div className="col-span-4 flex items-center gap-2">
+                    <label htmlFor="prescription" className="shrink-0 text-sm font-medium text-neutral-700">Prescription</label>
+                    <Input
+                        className="text-sm"
+                        label=""
+                        id="prescription"
+                        type="file"
+                        onChange={(e) => setPrescriptionFile(e.target.files?.[0] ?? null)}
+                    />
                 </div>
 
-                <div className="col-span-4 flex items-center">
-                    <label htmlFor="">GSTIN</label>
-                    <Input className="text-sm" label="" id="" />
-                </div>
+                {/* <div className="col-span-4 flex items-center gap-2">
+                    <label htmlFor="gstin" className="shrink-0 text-sm font-medium text-neutral-700">GSTIN</label>
+                    <Input
+                        className="text-sm"
+                        label=""
+                        id="gstin"
+                        value={customerGstin}
+                        onChange={(e) => setCustomerGstin(e.target.value)}
+                    />
+                </div> */}
+                <div className="col-span-4" />
 
                 <label
                     className="col-span-2 flex items-center gap-1.5 h-9 px-2.5 rounded-lg border border-neutral-200 bg-neutral-50 text-xs font-medium text-neutral-600 cursor-pointer select-none"
@@ -657,6 +908,35 @@ export default function CreateBillPage() {
             {
                 showCreateHospital && <CreateHospital onClose={onClose} />
             }
+            {
+                showCreateCustomer && <CreateCustomer onClose={onClose} initialName={customerName} />
+            }
+            {createdBillId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 no-print">
+                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl text-center">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary-100">
+                            <FileText className="h-6 w-6 text-secondary-600" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-neutral-800">Bill created</h2>
+                        <p className="mt-1 text-sm text-neutral-500">Print a copy for the customer or continue.</p>
+
+                        <div className="mt-5 flex flex-col gap-2">
+                            <PrintBillButton
+                                billId={createdBillId}
+                                label="Print Bill"
+                                className="flex items-center justify-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => router.push('/billing/all-sales')}
+                                className="rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-50"
+                            >
+                                Go to bill list
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

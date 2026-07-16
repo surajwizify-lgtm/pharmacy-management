@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
             email: body.email,
             phone: body.phone,
             address: body.address,
-            gstNumber: body.gstNumber,
+            gstin: body.gstin,
+            drugLicenseNo: body.drugLicenseNo,
         },
     });
     return NextResponse.json(supplier, { status: 201 });

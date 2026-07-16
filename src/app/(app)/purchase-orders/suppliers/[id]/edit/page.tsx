@@ -14,7 +14,7 @@ export default function EditSupplierPage() {
         email: "",
         phone: "",
         address: "",
-        gstNumber: "",
+        gstin: "",
         status: "ACTIVE",
     });
     const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ export default function EditSupplierPage() {
                     email: data.email || "",
                     phone: data.phone || "",
                     address: data.address || "",
-                    gstNumber: data.gstNumber || "",
+                    gstin: data.gstin || "",
                     status: data.status || "ACTIVE",
                 });
             })
@@ -157,8 +157,8 @@ export default function EditSupplierPage() {
                     <label className="block text-sm font-medium mb-1">GST Number</label>
                     <input
                         type="text"
-                        name="gstNumber"
-                        value={form.gstNumber}
+                        name="gstin"
+                        value={form.gstin}
                         onChange={handleChange}
                         className="w-full border rounded p-2"
                     />

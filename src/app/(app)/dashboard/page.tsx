@@ -11,6 +11,8 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
+import OverduePayablesList from '@/components/dashboard/OverduePayablesList';
+import CashFlowChart from '@/components/dashboard/CashFlowChart';
 
 async function getStats() {
   const [productCount, activeproducts, allproductsWithBatches, expiringBatches, billsToday, revenueAgg] =
@@ -155,6 +157,9 @@ export default async function DashboardPage() {
             )}
           </div>
         </div>
+        <OverduePayablesList />
+
+        <CashFlowChart />
       </div>
     </div>
   );

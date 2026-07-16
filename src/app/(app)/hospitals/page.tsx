@@ -18,12 +18,18 @@ export default function HospitalsPage() {
     const [showModal, setShowModal] = useState(false);
     const [mode, setMode] = useState<ModalMode>('create');
     const [editingId, setEditingId] = useState<number | null>(null);
-    const [name, setName] = useState('');
-    const [address, setAddress] = useState('');
-    const [phone, setPhone] = useState('');
-    const [gstin, setGstin] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [formError, setFormError] = useState<string | null>(null);
+    // const [name, setName] = useState('');
+    // const [address, setAddress] = useState('');
+    // const [phone, setPhone] = useState('');
+    // const [gstin, setGstin] = useState('');
+    // const [submitting, setSubmitting] = useState(false);
+    // const [formError, setFormError] = useState<string | null>(null);
+
+    function openCreate() {
+        setMode('create');
+        setEditingId(null);
+        setShowModal(true);
+    }
 
     async function loadHospitals() {
         setLoading(true);
@@ -41,60 +47,68 @@ export default function HospitalsPage() {
         loadHospitals();
     }, []);
 
-    function openCreate() {
-        setMode('create');
-        setEditingId(null);
-        setName('');
-        setAddress('');
-        setPhone('');
-        setGstin('');
-        setFormError(null);
-        setShowModal(true);
-    }
+    // function openCreate() {
+    //     setMode('create');
+    //     setEditingId(null);
+    //     setName('');
+    //     setAddress('');
+    //     setPhone('');
+    //     setGstin('');
+    //     setFormError(null);
+    //     setShowModal(true);
+    // }
 
+    // function openEdit(h: Hospital) {
+    //     setMode('edit');
+    //     setEditingId(h.id);
+    //     setName(h.name);
+    //     setAddress(h.address ?? '');
+    //     setPhone(h.phone ?? '');
+    //     setGstin(h.gstin ?? '');
+    //     setFormError(null);
+    //     setShowModal(true);
+    // }
     function openEdit(h: Hospital) {
         setMode('edit');
         setEditingId(h.id);
-        setName(h.name);
-        setAddress(h.address ?? '');
-        setPhone(h.phone ?? '');
-        setGstin(h.gstin ?? '');
-        setFormError(null);
         setShowModal(true);
     }
 
+    // function closeModal() {
+    //     if (submitting) return;
+    //     setShowModal(false);
+    // }
     function closeModal() {
-        if (submitting) return;
         setShowModal(false);
     }
 
-    async function submitForm() {
-        if (!name.trim()) {
-            setFormError('Hospital name is required.');
-            return;
-        }
-        setSubmitting(true);
-        setFormError(null);
-        try {
-            const payload = {
-                name: name.trim(),
-                address: address || undefined,
-                phone: phone || undefined,
-                gstin: gstin || undefined,
-            };
-            if (mode === 'create') {
-                await apiFetch<Hospital>('/api/hospitals', { method: 'POST', body: JSON.stringify(payload) });
-            } else {
-                await apiFetch<Hospital>(`/api/hospitals/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
-            }
-            setShowModal(false);
-            loadHospitals();
-        } catch (err) {
-            setFormError(err instanceof ApiClientError ? err.message : 'Something went wrong');
-        } finally {
-            setSubmitting(false);
-        }
-    }
+    // async function submitForm() {
+    //     if (!name.trim()) {
+    //         setFormError('Hospital name is required.');
+    //         return;
+    //     }
+    //     setSubmitting(true);
+    //     setFormError(null);
+    //     try {
+    //         const payload = {
+    //             name: name.trim(),
+    //             address: address || undefined,
+    //             phone: phone || undefined,
+    //             gstin: gstin || undefined,
+    //         };
+    //         if (mode === 'create') {
+    //             await apiFetch<Hospital>('/api/hospitals', { method: 'POST', body: JSON.stringify(payload) });
+    //         } else {
+    //             await apiFetch<Hospital>(`/api/hospitals/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+    //         }
+    //         setShowModal(false);
+    //         loadHospitals();
+    //     } catch (err) {
+    //         setFormError(err instanceof ApiClientError ? err.message : 'Something went wrong');
+    //     } finally {
+    //         setSubmitting(false);
+    //     }
+    // }
 
     async function deleteHospital(id: number, hospitalName: string) {
         if (!confirm(`Delete ${hospitalName}? This cannot be undone.`)) return;
@@ -119,6 +133,10 @@ export default function HospitalsPage() {
             (h.gstin ?? '').toLowerCase().includes(q)
         );
     });
+    const editingHospital =
+        mode === 'edit'
+            ? hospitals.find((h) => h.id === editingId)
+            : undefined;
 
     return (
         <div className="space-y-6">
@@ -240,7 +258,16 @@ export default function HospitalsPage() {
                 </div>
             </div>
 
-            {showModal && <CreateHospital onClose={closeModal} />}
+            {/* {showModal && <CreateHospital onClose={closeModal} />} */}
+            {showModal && (
+                <CreateHospital
+                    onClose={closeModal}
+                    hospital={editingHospital}
+                    onCreated={() => {
+                        loadHospitals();
+                    }}
+                />
+            )}
         </div>
     );
 }

@@ -28,7 +28,7 @@ type ItemRow = {
     gstPercentage: string;
     location: string;
 };
-
+type Location = { id: number; name: string; code: string | null };
 const EMPTY_ITEM: ItemRow = {
     productId: '',
     batchNumber: '',
@@ -110,7 +110,7 @@ function Cell({
 
 export default function NewPurchasePage() {
     const router = useRouter();
-
+    const [locations, setLocations] = useState<Location[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
 
@@ -154,6 +154,25 @@ export default function NewPurchasePage() {
 
     function removeItem(index: number) {
         setItems((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    function duplicateItem(index: number) {
+        setItems((prev) => {
+            const source = prev[index];
+            // Same product + pricing/GST info, but batch-specific fields reset
+            // so the user just fills in a new batch number, dates, qty.
+            const clone: ItemRow = {
+                ...source,
+                batchNumber: '',
+                manufactureDate: '',
+                expiryDate: '',
+                quantity: '',
+                freeQuantity: '0',
+            };
+            const next = [...prev];
+            next.splice(index + 1, 0, clone);
+            return next;
+        });
     }
 
     const lineCalcs = useMemo(() => items.map((it) => calcLine(it, isInterState)), [items, isInterState]);
@@ -231,6 +250,11 @@ export default function NewPurchasePage() {
             setSaving(false);
         }
     }
+    useEffect(() => {
+        apiFetch<Supplier[]>('/api/suppliers').then(setSuppliers).catch(() => { });
+        apiFetch<Product[]>('/api/products').then(setProducts).catch(() => { });
+        apiFetch<Location[]>('/api/locations').then(setLocations).catch(() => { });
+    }, []);
 
     return (
         <div className="mx-auto max-w-[1400px] pb-6">
@@ -327,25 +351,25 @@ export default function NewPurchasePage() {
                         </button>
                     </div>
 
-                    <div className="min-h-0 flex-1 overflow-auto rounded-md border border-slate-200">
-                        <table className="w-full min-w-[1600px] border-collapse text-xs">
-                            <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-wide text-slate-500">
+                    <div className="min-h-0 flex-1 overflow-y-auto rounded-md border border-slate-200">
+                        <table className="w-full table-fixed border-collapse text-[11px]">
+                            <thead className="sticky top-0 z-10 bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500">
                                 <tr>
-                                    <th className="px-2 py-2 text-left font-semibold">Product</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Batch</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Mfg date</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Expiry</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Qty</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Free</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Rate</th>
-                                    <th className="px-2 py-2 text-left font-semibold">MRP</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Sell price</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Disc %</th>
-                                    <th className="px-2 py-2 text-left font-semibold">HSN</th>
-                                    <th className="px-2 py-2 text-left font-semibold">GST %</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Rack</th>
-                                    <th className="px-2 py-2 text-right font-semibold">Total</th>
-                                    <th className="px-2 py-2"></th>
+                                    <th className="w-[14%] px-1 py-2 text-left font-semibold">Product</th>
+                                    <th className="w-[8%] px-1 py-2 text-left font-semibold">Batch</th>
+                                    <th className="w-[8%] px-1 py-2 text-left font-semibold">Mfg</th>
+                                    <th className="w-[8%] px-1 py-2 text-left font-semibold">Expiry</th>
+                                    <th className="w-[5%] px-1 py-2 text-left font-semibold">Qty</th>
+                                    <th className="w-[5%] px-1 py-2 text-left font-semibold">Free</th>
+                                    <th className="w-[7%] px-1 py-2 text-left font-semibold">Rate</th>
+                                    <th className="w-[7%] px-1 py-2 text-left font-semibold">MRP</th>
+                                    <th className="w-[7%] px-1 py-2 text-left font-semibold">Sell</th>
+                                    <th className="w-[6%] px-1 py-2 text-left font-semibold">Disc%</th>
+                                    <th className="w-[7%] px-1 py-2 text-left font-semibold">HSN</th>
+                                    <th className="w-[6%] px-1 py-2 text-left font-semibold">GST%</th>
+                                    <th className="w-[6%] px-1 py-2 text-left font-semibold">Rack</th>
+                                    <th className="w-[9%] px-1 py-2 text-right font-semibold">Total</th>
+                                    <th className="w-[4%] px-1 py-2"></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -353,9 +377,9 @@ export default function NewPurchasePage() {
                                     const c = lineCalcs[i];
                                     return (
                                         <tr key={i} className="align-top hover:bg-slate-50">
-                                            <td className="min-w-[160px] px-2 py-1.5">
+                                            <td className="px-1 py-1">
                                                 <select
-                                                    className="w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                                     value={it.productId}
                                                     onChange={(e) => onProductChange(i, Number(e.target.value))}
                                                     required
@@ -366,46 +390,164 @@ export default function NewPurchasePage() {
                                                     ))}
                                                 </select>
                                             </td>
-                                            <td className="min-w-[100px] px-2 py-1.5">
-                                                <Cell value={it.batchNumber} onChange={(v) => updateItem(i, { batchNumber: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="text"
+                                                    value={it.batchNumber}
+                                                    onChange={(e) => updateItem(i, { batchNumber: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[130px] px-2 py-1.5">
-                                                <Cell type="date" value={it.manufactureDate} onChange={(v) => updateItem(i, { manufactureDate: v })} />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="date"
+                                                    value={it.manufactureDate}
+                                                    onChange={(e) => updateItem(i, { manufactureDate: e.target.value })}
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[10px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[130px] px-2 py-1.5">
-                                                <Cell type="date" value={it.expiryDate} onChange={(v) => updateItem(i, { expiryDate: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="date"
+                                                    value={it.expiryDate}
+                                                    onChange={(e) => updateItem(i, { expiryDate: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[10px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[70px] px-2 py-1.5">
-                                                <Cell type="number" min={0} value={it.quantity} onChange={(v) => updateItem(i, { quantity: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    value={it.quantity}
+                                                    onChange={(e) => updateItem(i, { quantity: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[60px] px-2 py-1.5">
-                                                <Cell type="number" min={0} value={it.freeQuantity} onChange={(v) => updateItem(i, { freeQuantity: v })} />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    value={it.freeQuantity}
+                                                    onChange={(e) => updateItem(i, { freeQuantity: e.target.value })}
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[85px] px-2 py-1.5">
-                                                <Cell type="number" min={0} step="0.01" value={it.purchaseRate} onChange={(v) => updateItem(i, { purchaseRate: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step="0.01"
+                                                    value={it.purchaseRate}
+                                                    onChange={(e) => updateItem(i, { purchaseRate: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[85px] px-2 py-1.5">
-                                                <Cell type="number" min={0} step="0.01" value={it.mrp} onChange={(v) => updateItem(i, { mrp: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step="0.01"
+                                                    value={it.mrp}
+                                                    onChange={(e) => updateItem(i, { mrp: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[85px] px-2 py-1.5">
-                                                <Cell type="number" min={0} step="0.01" value={it.sellingPrice} onChange={(v) => updateItem(i, { sellingPrice: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step="0.01"
+                                                    value={it.sellingPrice}
+                                                    onChange={(e) => updateItem(i, { sellingPrice: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[70px] px-2 py-1.5">
-                                                <Cell type="number" min={0} max={100} step="0.01" value={it.discountPercent} onChange={(v) => updateItem(i, { discountPercent: v })} />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={100}
+                                                    step="0.01"
+                                                    value={it.discountPercent}
+                                                    onChange={(e) => updateItem(i, { discountPercent: e.target.value })}
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[85px] px-2 py-1.5">
-                                                <Cell value={it.hsnCode} onChange={(v) => updateItem(i, { hsnCode: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="text"
+                                                    value={it.hsnCode}
+                                                    onChange={(e) => updateItem(i, { hsnCode: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[70px] px-2 py-1.5">
-                                                <Cell type="number" min={0} max={28} step="0.01" value={it.gstPercentage} onChange={(v) => updateItem(i, { gstPercentage: v })} required />
+                                            <td className="px-1 py-1">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={28}
+                                                    step="0.01"
+                                                    value={it.gstPercentage}
+                                                    onChange={(e) => updateItem(i, { gstPercentage: e.target.value })}
+                                                    required
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
                                             </td>
-                                            <td className="min-w-[85px] px-2 py-1.5">
-                                                <Cell value={it.location} onChange={(v) => updateItem(i, { location: v })} />
+                                            {/* <td className="px-1 py-1">
+                                                <input
+                                                    type="text"
+                                                    value={it.location}
+                                                    onChange={(e) => updateItem(i, { location: e.target.value })}
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                />
+                                            </td> */}
+                                            <td className="px-1 py-1">
+                                                <select
+                                                    value={it.location}
+                                                    onChange={(e) => updateItem(i, { location: e.target.value })}
+                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                >
+                                                    <option value="">—</option>
+                                                    {locations.map((loc) => (
+                                                        <option key={loc.id} value={loc.name}>
+                                                            {loc.code ? `${loc.name} (${loc.code})` : loc.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                             </td>
-                                            <td className="min-w-[90px] whitespace-nowrap px-2 py-1.5 text-right font-semibold text-slate-700">
+                                            <td className="whitespace-nowrap px-1 py-1 text-right font-semibold text-slate-700">
                                                 ₹{c.totalAmount.toFixed(2)}
                                             </td>
-                                            <td className="px-2 py-1.5 text-right">
+                                            {/* <td className="px-1 py-1 text-center">
+                                                {items.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeItem(i)}
+                                                        className="text-red-500 hover:underline"
+                                                        aria-label="Remove line"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </td> */}
+                                            <td className="px-1 py-1 text-center whitespace-nowrap">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => duplicateItem(i)}
+                                                    disabled={!it.productId}
+                                                    className="mr-1.5 text-blue-500 hover:underline disabled:cursor-not-allowed disabled:text-slate-300"
+                                                    aria-label="Add another batch for this product"
+                                                    title="Add another batch for this product"
+                                                >
+                                                    ⧉
+                                                </button>
                                                 {items.length > 1 && (
                                                     <button
                                                         type="button"

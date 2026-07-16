@@ -1,11 +1,11 @@
 /*
   Warnings:
 
-  - You are about to drop the column `gstNumber` on the `suppliers` table. All the data in the column will be lost.
+  - You are about to drop the column `gstin` on the `suppliers` table. All the data in the column will be lost.
 
 */
 -- AlterTable
-ALTER TABLE `suppliers` DROP COLUMN `gstNumber`,
+ALTER TABLE `suppliers` DROP COLUMN `gstin`,
     ADD COLUMN `bank_details` VARCHAR(191) NULL,
     ADD COLUMN `current_balance` DECIMAL(12, 2) NOT NULL DEFAULT 0,
     ADD COLUMN `gstin` VARCHAR(191) NULL;

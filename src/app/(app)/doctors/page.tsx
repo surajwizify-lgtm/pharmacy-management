@@ -5,6 +5,7 @@ import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { Doctor } from '@/types';
 import { Stethoscope, Plus, X, Search, Pencil, Trash2, Phone, BadgeCheck } from 'lucide-react';
 import CreateHospital from '@/components/hospitals/CreateHospital';
+import CreateDoctor from '@/components/doctor/CreateDoctor';
 
 type ModalMode = 'create' | 'edit';
 
@@ -233,8 +234,19 @@ export default function DoctorsPage() {
                 </div>
             </div>
 
+            {/* {showModal && (
+                <CreateDoctor onClose={closeModal} />
+            )} */}
             {showModal && (
-                <CreateHospital onClose={closeModal} />
+                <CreateDoctor
+                    onClose={closeModal}
+                    doctor={
+                        mode === 'edit'
+                            ? doctors.find((d) => d.id === editingId)
+                            : undefined
+                    }
+                    onCreated={loadDoctors}
+                />
             )}
         </div>
     );

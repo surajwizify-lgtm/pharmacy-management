@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
+import Image from "next/image";
 import clsx from 'clsx';
 import {
   ChevronDown,
@@ -17,7 +18,9 @@ import {
   Users,
   LogOut,
   Sparkles,
-} from 'lucide-react';
+  PanelLeftClose,
+  PanelLeftOpen,
+} from "lucide-react";
 
 type NavChild = { href: string; label: string };
 type NavItem = {
@@ -34,13 +37,14 @@ const NAV_ITEMS: NavItem[] = [
     href: '/', label: 'Inventory', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Package, children: [
       { href: '/products', label: 'Products & Services' },
       { href: '/batches', label: 'Batches & Stock' },
+      { href: '/batches/locations', label: 'Racks/Locations' },
     ],
   },
   {
     href: '/billing', label: 'Sales & Payments', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Receipt, children: [
       { href: '/billing/all-sales', label: 'Invoices' },
       { href: '/billing/sale-returns', label: 'Sale Returns' },
-      { href: '/billing/sale-returns', label: 'Customers' },
+      { href: '/billing/customers', label: 'Customers' },
     ],
   },
   {
@@ -58,7 +62,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     href: '/gst/summary',
-    label: 'Gst',
+    label: 'GST',
     roles: ['ADMIN', 'PHARMACIST', 'CASHIER'],
     icon: FileText,
     children: [
@@ -71,12 +75,19 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const ROLE_STYLES: Record<string, string> = {
-  ADMIN: 'bg-gold-500/15 text-gold-400 ring-1 ring-gold-500/30',
-  PHARMACIST: 'bg-secondary-500/15 text-secondary-400 ring-1 ring-secondary-500/30',
-  CASHIER: 'bg-sky-500/15 text-sky-400 ring-1 ring-sky-500/30',
+  ADMIN: 'bg-gold-100 text-gold-600 ring-1 ring-gold-500/30',
+  PHARMACIST: 'bg-secondary-100 text-secondary-700 ring-1 ring-secondary-500/25',
+  CASHIER: 'bg-sky-100 text-sky-700 ring-1 ring-sky-500/25',
+};
+type SidebarProps = {
+  collapsed: boolean;
+  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export function Sidebar() {
+export function Sidebar({
+  collapsed,
+  setCollapsed,
+}: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = session?.user?.role;
@@ -84,6 +95,7 @@ export function Sidebar() {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     '/purchase-orders/registered': pathname?.startsWith('/purchase-orders') ?? false,
   });
+
 
   function toggleMenu(href: string) {
     setOpenMenus((prev) => ({ ...prev, [href]: !prev[href] }));
@@ -97,27 +109,57 @@ export function Sidebar() {
     .toUpperCase();
 
   return (
-    <aside className="fixed flex h-screen w-64 flex-col overflow-hidden bg-surface-900">
-      {/* Ambient glow accents */}
-      <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-primary-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 top-1/3 h-56 w-56 rounded-full bg-indigo-600/10 blur-3xl" />
+    // <aside className="fixed flex h-screen w-64 flex-col overflow-hidden border-r border-surface-200 bg-white">
+    <aside
+      className={clsx(
+        "fixed flex h-screen flex-col overflow-hidden border-r border-surface-200 bg-white transition-all duration-300",
+        collapsed ? "w-10" : "w-64"
+      )}
+    >
+      {/* Signature ambient wash — barely-there tint anchored to the brand mark */}
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary-500/[0.06] blur-[90px]" />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-secondary-500/[0.05] blur-[90px]" />
 
       {/* Brand */}
       <div className="relative flex items-center gap-3 px-5 py-6">
-        <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700 text-sm font-bold text-white shadow-lg shadow-primary-900/50">
+        {/* <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700 text-sm font-bold text-white shadow-md shadow-primary-500/20">
           <span className="relative z-10">Rx</span>
-          <div className="absolute inset-0 rounded-2xl bg-overlay-white" />
+        </div> */}
+        <div className="relative w-full h-[100px] flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+          <Image
+            src="/logo.png"
+            alt="Pharmacy POS Logo"
+            fill
+            className="object-cover w-full p-1"
+            priority
+          />
         </div>
-        <div>
-          <p className="text-[15px] font-semibold tracking-tight text-white">Pharmacy POS</p>
-          <p className="text-[11px] text-neutral-500">Management Console</p>
+        <div className="absolute right-3 top-3 z-50">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="rounded-lg p-2 hover:bg-neutral-100 transition"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </button>
         </div>
+        {/* <div className="min-w-0">
+          <p className="truncate text-[15px] font-semibold leading-tight tracking-tight text-neutral-900">
+            Pharmacy POS
+          </p>
+          <p className="truncate text-[11px] font-medium text-neutral-500">
+            Management Console
+          </p>
+        </div> */}
       </div>
 
-      <div className="relative mx-5 h-px bg-gradient-to-r from-transparent via-surface-200/10 to-transparent" />
+      <div className="relative mx-5 h-px bg-surface-200" />
 
       {/* Nav */}
-      <nav className="relative flex-1 space-y-0.5 overflow-auto px-3 py-4">
+      <nav className="relative flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.filter((item) => !role || item.roles.includes(role)).map((item) => {
           const active = pathname === item.href || pathname?.startsWith(item.href + '/');
           const Icon = item.icon;
@@ -128,22 +170,25 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={clsx(
-                  'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 pl-4 text-sm font-medium transition-all duration-200',
                   active
-                    ? 'bg-gradient-to-r from-primary-600/20 to-indigo-600/10 text-white ring-1 ring-primary-500/20'
-                    : 'text-neutral-400 hover:bg-overlay-white hover:text-neutral-100',
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900',
                 )}
               >
+                <span
+                  className={clsx(
+                    'absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-primary-500 to-accent-500 transition-all duration-200',
+                    active ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
                 <Icon
                   className={clsx(
                     'h-[18px] w-[18px] shrink-0 transition-colors',
-                    active ? 'text-primary-400' : 'text-neutral-500 group-hover:text-neutral-300',
+                    active ? 'text-primary-600' : 'text-neutral-400 group-hover:text-neutral-600',
                   )}
                 />
                 {item.label}
-                {active && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-400 shadow-[0_0_8px_theme(colors.primary.400)]" />
-                )}
               </Link>
             );
           }
@@ -155,75 +200,97 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={() => toggleMenu(item.href)}
+                aria-expanded={isOpen}
                 className={clsx(
-                  'group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  'group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 pl-4 text-sm font-medium transition-all duration-200',
                   active
-                    ? 'bg-gradient-to-r from-primary-600/20 to-indigo-600/10 text-white ring-1 ring-primary-500/20'
-                    : 'text-neutral-400 hover:bg-overlay-white hover:text-neutral-100',
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900',
                 )}
               >
+                <span
+                  className={clsx(
+                    'absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-gradient-to-b from-primary-500 to-accent-500 transition-all duration-200',
+                    active ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
                 <span className="flex items-center gap-3">
                   <Icon
                     className={clsx(
                       'h-[18px] w-[18px] shrink-0 transition-colors',
-                      active ? 'text-primary-400' : 'text-neutral-500 group-hover:text-neutral-300',
+                      active ? 'text-primary-600' : 'text-neutral-400 group-hover:text-neutral-600',
                     )}
                   />
                   {item.label}
                 </span>
                 <ChevronDown
                   className={clsx(
-                    'h-4 w-4 text-neutral-500 transition-transform duration-200',
-                    isOpen && 'rotate-180 text-primary-400',
+                    'h-4 w-4 text-neutral-400 transition-transform duration-200',
+                    isOpen && 'rotate-180 text-accent-600',
                   )}
                 />
               </button>
 
-              {isOpen && (
-                <div className="mt-1 ml-[26px] space-y-0.5 border-l border-surface-200/10 pl-4">
-                  {item.children.map((child) => {
-                    const childActive =
-                      pathname === child.href || pathname?.startsWith(child.href + '/');
-                    return (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={clsx(
-                          'block rounded-lg px-2.5 py-1.5 text-[13px] transition-colors',
-                          childActive
-                            ? 'font-medium text-primary-400'
-                            : 'text-neutral-500 hover:text-neutral-200',
-                        )}
-                      >
-                        {child.label}
-                      </Link>
-                    );
-                  })}
+              <div
+                className={clsx(
+                  'grid overflow-hidden transition-all duration-200 ease-out',
+                  isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+                )}
+              >
+                <div className="min-h-0">
+                  <div className="mt-1 ml-[27px] space-y-0.5 border-l border-surface-200 pl-4">
+                    {item.children.map((child) => {
+                      const childActive =
+                        pathname === child.href // || pathname?.startsWith(child.href + '/');
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={clsx(
+                            'group/child flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors',
+                            childActive
+                              ? 'font-medium text-accent-600'
+                              : 'text-neutral-500 hover:text-neutral-800',
+                          )}
+                        >
+                          <span
+                            className={clsx(
+                              'h-1 w-1 shrink-0 rounded-full transition-colors',
+                              childActive
+                                ? 'bg-accent-500'
+                                : 'bg-neutral-300 group-hover/child:bg-neutral-400',
+                            )}
+                          />
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
       </nav>
 
-      <div className="relative mx-5 h-px bg-gradient-to-r from-transparent via-surface-200/10 to-transparent" />
+      <div className="relative mx-5 h-px bg-surface-200" />
 
       {/* User / sign out */}
       <div className="relative px-4 py-4">
-        <div className="mb-3 flex items-center gap-3 rounded-xl bg-overlay-white px-3 py-2.5">
+        <div className="mb-3 flex items-center gap-3 rounded-xl bg-neutral-50 px-3 py-2.5 ring-1 ring-surface-200">
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-primary-600 text-xs font-semibold text-white">
             {initials || 'U'}
             {role === 'ADMIN' && (
-              <Sparkles className="absolute -right-1 -top-1 h-3.5 w-3.5 text-gold-400" />
+              <Sparkles className="absolute -right-1 -top-1 h-3.5 w-3.5 text-gold-500 drop-shadow-[0_0_3px_theme(colors.gold.400/0.8)]" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white">{session?.user?.fullName}</p>
+            <p className="truncate text-sm font-medium text-neutral-900">{session?.user?.fullName}</p>
             {role && (
               <span
                 className={clsx(
-                  'mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                  ROLE_STYLES[role] ?? 'bg-neutral-800 text-neutral-400',
+                  'mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                  ROLE_STYLES[role] ?? 'bg-neutral-100 text-neutral-500',
                 )}
               >
                 {role}
@@ -232,7 +299,7 @@ export function Sidebar() {
           </div>
         </div>
         <button
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-surface-200/10 bg-overlay-white px-3 py-2.5 text-xs font-medium text-neutral-300 transition-all duration-200 hover:border-danger-500/30 hover:bg-danger-600/15 hover:text-danger-400"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-xs font-medium text-neutral-500 transition-all duration-200 hover:border-danger-300 hover:bg-danger-50 hover:text-danger-600"
           onClick={() => signOut({ callbackUrl: '/login' })}
         >
           <LogOut className="h-3.5 w-3.5" />

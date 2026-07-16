@@ -11,7 +11,8 @@ export default function NewSupplierPage() {
         email: "",
         phone: "",
         address: "",
-        gstNumber: "",
+        gstin: "",
+        drugLicenseNo: "",
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -118,17 +119,30 @@ export default function NewSupplierPage() {
                         rows={3}
                     />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">GST Number</label>
+                        <input
+                            type="text"
+                            name="gstin"
+                            value={form.gstin}
+                            onChange={handleChange}
+                            className="w-full border rounded p-2"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Drug License Number</label>
+                        <input
+                            type="text"
+                            name="drugLicenseNo"
+                            value={form.drugLicenseNo}
+                            onChange={handleChange}
+                            className="w-full border rounded p-2"
+                        />
+                    </div>
 
-                <div>
-                    <label className="block text-sm font-medium mb-1">GST Number</label>
-                    <input
-                        type="text"
-                        name="gstNumber"
-                        value={form.gstNumber}
-                        onChange={handleChange}
-                        className="w-full border rounded p-2"
-                    />
                 </div>
+
 
                 <div className="flex gap-3 pt-2">
                     <button

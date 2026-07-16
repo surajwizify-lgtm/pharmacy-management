@@ -1,6 +1,7 @@
+// 'use client';
 import { ApiClientError, apiFetch } from '@/lib/api-client';
 import { Phone, Stethoscope, X } from 'lucide-react';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Input from '../Input';
 import Button from '../Button';
 
@@ -15,34 +16,101 @@ interface DoctorOption {
     specialization?: string | null;
     phone?: string | null;
 }
+type Props = {
+    onClose: () => void;
+    onCreated?: (doctor: DoctorOption) => void;
+    doctor?: DoctorOption; // edit mode
+};
 
-export default function CreateDoctor({ onClose, onCreated }: props) {
-    const [newDoctorName, setNewDoctorName] = useState('');
-    const [newDoctorSpecialization, setNewDoctorSpecialization] = useState('');
-    const [newDoctorPhone, setNewDoctorPhone] = useState('');
+export default function CreateDoctor({ onClose, onCreated, doctor }: Props) {
+    const isEdit = !!doctor;
+
+    const [newDoctorName, setNewDoctorName] = useState(
+        doctor?.name ?? ""
+    );
+
+    const [newDoctorSpecialization, setNewDoctorSpecialization] = useState(
+        doctor?.specialization ?? ""
+    );
+
+    const [newDoctorPhone, setNewDoctorPhone] = useState(
+        doctor?.phone ?? ""
+    );
     const [creatingDoctor, setCreatingDoctor] = useState(false);
     const [createDoctorError, setCreateDoctorError] = useState<string | null>(null);
 
-    async function submitCreateDoctor() {
+
+    // async function submitCreateDoctor() {
+    //     if (!newDoctorName.trim()) {
+    //         setCreateDoctorError('Doctor name is required.');
+    //         return;
+    //     }
+    //     setCreatingDoctor(true);
+    //     setCreateDoctorError(null);
+    //     try {
+    //         const created = await apiFetch<DoctorOption>('/api/doctors', {
+    //             method: 'POST',
+    //             body: JSON.stringify({
+    //                 name: newDoctorName.trim(),
+    //                 specialization: newDoctorSpecialization || undefined,
+    //                 phone: newDoctorPhone || undefined,
+    //             }),
+    //         });
+    //         onCreated?.(created);
+    //         onClose();
+    //     } catch (err) {
+    //         setCreateDoctorError(err instanceof ApiClientError ? err.message : 'Could not create doctor');
+    //     } finally {
+    //         setCreatingDoctor(false);
+    //     }
+    // }
+
+    async function submitDoctor() {
         if (!newDoctorName.trim()) {
-            setCreateDoctorError('Doctor name is required.');
+            setCreateDoctorError("Doctor name is required.");
             return;
         }
+
         setCreatingDoctor(true);
         setCreateDoctorError(null);
+
         try {
-            const created = await apiFetch<DoctorOption>('/api/doctors', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: newDoctorName.trim(),
-                    specialization: newDoctorSpecialization || undefined,
-                    phone: newDoctorPhone || undefined,
-                }),
-            });
-            onCreated?.(created);
+            let response: DoctorOption;
+
+            if (isEdit) {
+                response = await apiFetch<DoctorOption>(
+                    `/api/doctors/${doctor.id}`,
+                    {
+                        method: "PUT",
+                        body: JSON.stringify({
+                            name: newDoctorName.trim(),
+                            specialization: newDoctorSpecialization || undefined,
+                            phone: newDoctorPhone || undefined,
+                        }),
+                    }
+                );
+            } else {
+                response = await apiFetch<DoctorOption>(
+                    "/api/doctors",
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            name: newDoctorName.trim(),
+                            specialization: newDoctorSpecialization || undefined,
+                            phone: newDoctorPhone || undefined,
+                        }),
+                    }
+                );
+            }
+
+            onCreated?.(response);
             onClose();
         } catch (err) {
-            setCreateDoctorError(err instanceof ApiClientError ? err.message : 'Could not create doctor');
+            setCreateDoctorError(
+                err instanceof ApiClientError
+                    ? err.message
+                    : `Could not ${isEdit ? "update" : "create"} doctor`
+            );
         } finally {
             setCreatingDoctor(false);
         }
@@ -62,7 +130,9 @@ export default function CreateDoctor({ onClose, onCreated }: props) {
                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-overlay-white">
                             <Stethoscope className="h-4 w-4" />
                         </div>
-                        <h3 className="text-sm font-semibold">New Doctor</h3>
+                        <h3 className="text-sm font-semibold">
+                            {isEdit ? "Edit Doctor" : "New Doctor"}
+                        </h3>
                     </div>
                     <button
                         onClick={() => !creatingDoctor && onClose()}
@@ -126,12 +196,13 @@ export default function CreateDoctor({ onClose, onCreated }: props) {
                             Cancel
                         </Button>
                         <Button
-                            variant='success'
-                            className="btn-primary flex-1 justify-center"
-                            onClick={submitCreateDoctor}
+                            variant="success"
+                            onClick={submitDoctor}
                             disabled={creatingDoctor}
                         >
-                            {creatingDoctor ? 'Saving…' : 'Save doctor'}
+                            {creatingDoctor
+                                ? (isEdit ? "Updating..." : "Saving...")
+                                : (isEdit ? "Update Doctor" : "Save Doctor")}
                         </Button>
                     </div>
                 </div>
