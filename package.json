@@ -2,8 +2,8 @@
   "name": "pharmacy-nextjs",
   "version": "1.0.0",
   "private": true,
-  "description": "Pharmacy Management System - Next.js 14 (App Router) full stack. Ported from MedicPOS (Spring Boot) -> pharmacy-nest (NestJS) -> this. GST-compliant billing, batch/expiry inventory, RBAC auth, Prisma + PostgreSQL.",
-  "license": "MIT",
+  "description": "Pharmacy Management System built with Next.js 14, Prisma, MySQL, NextAuth, and Tailwind CSS.",
+  "license": "Heleo",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
