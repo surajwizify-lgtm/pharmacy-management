@@ -4,16 +4,16 @@ import { prisma } from '@/lib/prisma';
 import { requireSession, withErrorHandling, notFound } from '@/lib/api-utils';
 import { createBatchSchema } from '@/lib/schemas';
 
-// GET /api/batches?medicineId= - any authenticated role, ports BatchesService.findAll
+// GET /api/batches?productId= - any authenticated role, ports BatchesService.findAll
 export async function GET(req: NextRequest) {
   return withErrorHandling(async () => {
     await requireSession();
-    const medicineIdParam = req.nextUrl.searchParams.get('medicineId');
-    const medicineId = medicineIdParam ? Number(medicineIdParam) : undefined;
+    const productIdParam = req.nextUrl.searchParams.get('productId');
+    const productId = productIdParam ? Number(productIdParam) : undefined;
 
     return prisma.batch.findMany({
-      where: medicineId ? { medicineId } : undefined,
-      include: { medicine: true },
+      where: productId ? { productId } : undefined,
+      include: { product: true },
       orderBy: { expiryDate: 'asc' },
     });
   });
@@ -25,17 +25,18 @@ export async function POST(req: NextRequest) {
     await requireSession([Role.ADMIN, Role.PHARMACIST]);
     const dto = createBatchSchema.parse(await req.json());
 
-    const medicine = await prisma.medicine.findUnique({ where: { id: dto.medicineId } });
-    if (!medicine) throw notFound(`Medicine ${dto.medicineId} not found`);
+    const product = await prisma.product.findUnique({ where: { id: dto.productId } });
+    if (!product) throw notFound(`product ${dto.productId} not found`);
 
-    return prisma.batch.create({
+    return await prisma.batch.create({
       data: {
-        medicineId: dto.medicineId,
+        productId: dto.productId,
         batchNumber: dto.batchNumber,
         expiryDate: new Date(dto.expiryDate),
         purchasePrice: dto.purchasePrice,
         sellingPrice: dto.sellingPrice,
         quantityAvailable: dto.quantityAvailable,
+        location: dto.location || null,
       },
     });
   });

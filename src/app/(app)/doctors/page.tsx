@@ -1,0 +1,253 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { apiFetch, ApiClientError } from '@/lib/api-client';
+import type { Doctor } from '@/types';
+import { Stethoscope, Plus, X, Search, Pencil, Trash2, Phone, BadgeCheck } from 'lucide-react';
+import CreateHospital from '@/components/hospitals/CreateHospital';
+import CreateDoctor from '@/components/doctor/CreateDoctor';
+
+type ModalMode = 'create' | 'edit';
+
+export default function DoctorsPage() {
+    const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [listError, setListError] = useState<string | null>(null);
+    const [search, setSearch] = useState('');
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+
+    const [showModal, setShowModal] = useState(false);
+    const [mode, setMode] = useState<ModalMode>('create');
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [name, setName] = useState('');
+    const [registrationNo, setRegistrationNo] = useState('');
+    const [specialization, setSpecialization] = useState('');
+    const [phone, setPhone] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
+
+    async function loadDoctors() {
+        setLoading(true);
+        setListError(null);
+        try {
+            setDoctors(await apiFetch<Doctor[]>('/api/doctors'));
+        } catch (err) {
+            setListError(err instanceof ApiClientError ? err.message : 'Could not load doctors');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        loadDoctors();
+    }, []);
+
+    function openCreate() {
+        setMode('create');
+        setEditingId(null);
+        setName('');
+        setRegistrationNo('');
+        setSpecialization('');
+        setPhone('');
+        setFormError(null);
+        setShowModal(true);
+    }
+
+    function openEdit(d: Doctor) {
+        setMode('edit');
+        setEditingId(d.id);
+        setName(d.name);
+        setRegistrationNo(d.registrationNo ?? '');
+        setSpecialization(d.specialization ?? '');
+        setPhone(d.phone ?? '');
+        setFormError(null);
+        setShowModal(true);
+    }
+
+    function closeModal() {
+        if (submitting) return;
+        setShowModal(false);
+    }
+
+    async function submitForm() {
+        if (!name.trim()) {
+            setFormError('Doctor name is required.');
+            return;
+        }
+        setSubmitting(true);
+        setFormError(null);
+        try {
+            const payload = {
+                name: name.trim(),
+                registrationNo: registrationNo || undefined,
+                specialization: specialization || undefined,
+                phone: phone || undefined,
+            };
+            if (mode === 'create') {
+                await apiFetch<Doctor>('/api/doctors', { method: 'POST', body: JSON.stringify(payload) });
+            } else {
+                await apiFetch<Doctor>(`/api/doctors/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+            }
+            setShowModal(false);
+            loadDoctors();
+        } catch (err) {
+            setFormError(err instanceof ApiClientError ? err.message : 'Something went wrong');
+        } finally {
+            setSubmitting(false);
+        }
+    }
+
+    async function deleteDoctor(id: number, doctorName: string) {
+        if (!confirm(`Delete Dr. ${doctorName}? This cannot be undone.`)) return;
+        setDeletingId(id);
+        setListError(null);
+        try {
+            await apiFetch(`/api/doctors/${id}`, { method: 'DELETE' });
+            setDoctors((prev) => prev.filter((d) => d.id !== id));
+        } catch (err) {
+            setListError(err instanceof ApiClientError ? err.message : 'Could not delete doctor');
+        } finally {
+            setDeletingId(null);
+        }
+    }
+
+    const filtered = doctors.filter((d) => {
+        const q = search.toLowerCase();
+        return (
+            !q ||
+            d.name.toLowerCase().includes(q) ||
+            (d.specialization ?? '').toLowerCase().includes(q) ||
+            (d.registrationNo ?? '').toLowerCase().includes(q)
+        );
+    });
+
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h1 className="text-2xl font-semibold text-slate-900">Doctors</h1>
+                    <p className="text-sm text-slate-500">Manage referring doctors used across bills.</p>
+                </div>
+                <button onClick={openCreate} className="btn-primary inline-flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Doctor
+                </button>
+            </div>
+
+            <div className="card overflow-hidden">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+                    <h2 className="flex items-center gap-2 font-medium text-slate-800">
+                        <Stethoscope className="h-4 w-4 text-brand-600" />
+                        All Doctors
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">{filtered.length}</span>
+                    </h2>
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                        <input
+                            className="input w-56 pl-8 text-sm"
+                            placeholder="Search name, specialization…"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {listError && <p className="px-4 pt-3 text-sm text-red-600">{listError}</p>}
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <tr>
+                                <th className="p-3 text-left">Name</th>
+                                <th className="p-3 text-left">Registration No</th>
+                                <th className="p-3 text-left">Specialization</th>
+                                <th className="p-3 text-left">Phone</th>
+                                <th className="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading ? (
+                                Array.from({ length: 4 }).map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="p-3" colSpan={5}>
+                                            <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : filtered.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="p-10">
+                                        <div className="flex flex-col items-center justify-center text-slate-400">
+                                            <Stethoscope className="mb-2 h-8 w-8" />
+                                            <p className="text-sm">No doctors found.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                filtered.map((d) => (
+                                    <tr key={d.id} className="group transition-colors hover:bg-slate-50/70">
+                                        <td className="p-3 font-medium text-slate-800">Dr. {d.name}</td>
+                                        <td className="p-3 text-slate-500">
+                                            {d.registrationNo ? (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <BadgeCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                    {d.registrationNo}
+                                                </span>
+                                            ) : (
+                                                '—'
+                                            )}
+                                        </td>
+                                        <td className="p-3 text-slate-600">{d.specialization || '—'}</td>
+                                        <td className="p-3 text-slate-600">
+                                            {d.phone ? (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Phone className="h-3.5 w-3.5" /> {d.phone}
+                                                </span>
+                                            ) : (
+                                                '—'
+                                            )}
+                                        </td>
+                                        <td className="p-3">
+                                            <div className="flex items-center justify-end gap-1 opacity-70 transition-opacity group-hover:opacity-100">
+                                                <button
+                                                    title="Edit"
+                                                    onClick={() => openEdit(d)}
+                                                    className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-amber-50 hover:text-amber-600"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    title="Delete"
+                                                    disabled={deletingId === d.id}
+                                                    onClick={() => deleteDoctor(d.id, d.name)}
+                                                    className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* {showModal && (
+                <CreateDoctor onClose={closeModal} />
+            )} */}
+            {showModal && (
+                <CreateDoctor
+                    onClose={closeModal}
+                    doctor={
+                        mode === 'edit'
+                            ? doctors.find((d) => d.id === editingId)
+                            : undefined
+                    }
+                    onCreated={loadDoctors}
+                />
+            )}
+        </div>
+    );
+}

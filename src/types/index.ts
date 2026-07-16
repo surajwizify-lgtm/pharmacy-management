@@ -1,21 +1,34 @@
 export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER';
-export type MedicineStatus = 'ACTIVE' | 'DISCONTINUED';
+export type productStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'OTHER';
 
+// export interface Batch {
+//   id: number;
+//   productId: number;
+//   batchNumber: string;
+//   expiryDate: string;
+//   purchasePrice: string;
+//   sellingPrice: string;
+//   quantityAvailable: number;
+//   version: number;
+//   product?: product;
+// }
 export interface Batch {
   id: number;
-  medicineId: number;
+  productId: number;
   batchNumber: string;
   expiryDate: string;
   purchasePrice: string;
   sellingPrice: string;
   quantityAvailable: number;
+  location?: string | null;   // add this
+  createdAt: string;
+  updatedAt: string;
   version: number;
-  medicine?: Medicine;
 }
 
-export interface Medicine {
+export interface product {
   id: number;
   name: string;
   manufacturer: string;
@@ -23,8 +36,15 @@ export interface Medicine {
   barcode: string | null;
   hsnCode: string;
   gstPercentage: string;
+  gstType: 'INCLUSIVE' | 'EXCLUSIVE';
   prescriptionRequired: boolean;
-  status: MedicineStatus;
+  status: productStatus;
+  mrp: number;
+  cp: number;
+  sp: number;
+  genericName?: string;
+  createdAt: string;
+  updatedAt: string;
   version: number;
   batches: Batch[];
   totalStock?: number;
@@ -32,7 +52,7 @@ export interface Medicine {
 
 export interface BillItem {
   id: number;
-  medicineId: number;
+  productId: number;
   batchId: number;
   batchNumber: string;
   quantity: number;
@@ -43,17 +63,49 @@ export interface BillItem {
   igstAmount: string;
   gstAmount: string;
   totalAmount: string;
-  medicine?: Medicine;
+  product?: product;
 }
 
+// export interface Bill {
+//   id: number;
+//   billNumber: string;
+//   billDate: string;
+//   cashierId: number;
+//   customerName: string | null;
+//   customerPhone: string | null;
+//   customerGstin: string | null;
+//   ipOp: string | null;
+//   doctorId: number | null;
+//   hospitalId: number | null;
+//   isInterState: boolean;
+//   subtotal: string;
+//   totalCgst: string;
+//   totalSgst: string;
+//   totalIgst: string;
+//   totalGst: string;
+//   totalAmount: string;
+//   paymentStatus: PaymentStatus;
+//   billItems: BillItem[];
+//   payments?: { id: number; amount: string; method: PaymentMethod; paidAt: string }[];
+//   cashier?: AppUser;
+// }
 export interface Bill {
   id: number;
   billNumber: string;
   billDate: string;
   cashierId: number;
-  customerName: string | null;
-  customerPhone: string | null;
-  customerGstin: string | null;
+  customerId: number | null;
+  customer?: {
+    id: number;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    gstin: string | null;
+  } | null;
+  ipOp: string | null;
+  doctorId: number | null;
+  hospitalId: number | null;
   isInterState: boolean;
   subtotal: string;
   totalCgst: string;
@@ -65,6 +117,28 @@ export interface Bill {
   billItems: BillItem[];
   payments?: { id: number; amount: string; method: PaymentMethod; paidAt: string }[];
   cashier?: AppUser;
+  doctor?: { id: number; name: string; specialization: string | null; phone: string | null } | null;
+  hospital?: { id: number; name: string; address: string | null; phone: string | null } | null;
+}
+
+export interface Doctor {
+  id: number;
+  name: string;
+  registrationNo: string | null;
+  specialization: string | null;
+  phone: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Hospital {
+  id: number;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  gstin: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AppUser {
