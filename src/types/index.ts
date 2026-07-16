@@ -39,6 +39,12 @@ export interface product {
   gstType: 'INCLUSIVE' | 'EXCLUSIVE';
   prescriptionRequired: boolean;
   status: productStatus;
+  mrp: number;
+  cp: number;
+  sp: number;
+  genericName?: string;
+  createdAt: string;
+  updatedAt: string;
   version: number;
   batches: Batch[];
   totalStock?: number;
@@ -60,14 +66,46 @@ export interface BillItem {
   product?: product;
 }
 
+// export interface Bill {
+//   id: number;
+//   billNumber: string;
+//   billDate: string;
+//   cashierId: number;
+//   customerName: string | null;
+//   customerPhone: string | null;
+//   customerGstin: string | null;
+//   ipOp: string | null;
+//   doctorId: number | null;
+//   hospitalId: number | null;
+//   isInterState: boolean;
+//   subtotal: string;
+//   totalCgst: string;
+//   totalSgst: string;
+//   totalIgst: string;
+//   totalGst: string;
+//   totalAmount: string;
+//   paymentStatus: PaymentStatus;
+//   billItems: BillItem[];
+//   payments?: { id: number; amount: string; method: PaymentMethod; paidAt: string }[];
+//   cashier?: AppUser;
+// }
 export interface Bill {
   id: number;
   billNumber: string;
   billDate: string;
   cashierId: number;
-  customerName: string | null;
-  customerPhone: string | null;
-  customerGstin: string | null;
+  customerId: number | null;
+  customer?: {
+    id: number;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    gstin: string | null;
+  } | null;
+  ipOp: string | null;
+  doctorId: number | null;
+  hospitalId: number | null;
   isInterState: boolean;
   subtotal: string;
   totalCgst: string;
@@ -79,6 +117,8 @@ export interface Bill {
   billItems: BillItem[];
   payments?: { id: number; amount: string; method: PaymentMethod; paidAt: string }[];
   cashier?: AppUser;
+  doctor?: { id: number; name: string; specialization: string | null; phone: string | null } | null;
+  hospital?: { id: number; name: string; address: string | null; phone: string | null } | null;
 }
 
 export interface Doctor {

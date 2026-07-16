@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Fraunces, Inter, IBM_Plex_Mono } from 'next/font/google';
+import Image from 'next/image';
 
 const fraunces = Fraunces({ subsets: ['latin'], weight: ['500', '600'], style: ['normal', 'italic'], variable: '--font-display' });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-body' });
@@ -36,15 +37,24 @@ export default function LoginPage() {
       <div className="relative hidden w-[46%] flex-col justify-between overflow-hidden bg-[#122b23] px-14 py-12 text-[#eef3ee] lg:flex">
         {/* logo */}
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-[#eef3ee]">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#122b23" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10.5 20.5a4.95 4.95 0 0 1-7-7l8-8a4.95 4.95 0 0 1 7 7l-8 8Z" />
-              <path d="m9 8 7 7" />
-            </svg>
+          <div className="relative h-[80px] w-[120px] flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+            <Image
+              src={'/logo.png'}
+              alt="Pharmacy POS Logo"
+              fill
+              className="object-cover w-full p-1"
+              priority
+            />
           </div>
-          <span className="text-[17px] font-semibold tracking-tight" >
-            Formacy
-          </span>
+          <div>
+            <div className="text-[30px] font-semibold tracking-tight" >
+              Helio
+            </div>
+            <div className="text-[17px] text-gray-400 font-semibold tracking-tight" >
+              Pharmacy Simplified
+            </div>
+
+          </div>
         </div>
 
         {/* headline */}
@@ -156,7 +166,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-[12px] leading-relaxed text-[#a1aaa4]">
-            Demo: admin / Admin@123 · pharmacist / Pharma@123
+            {/* Demo: admin / Admin@123 · pharmacist / Pharma@123 */}
           </p>
         </div>
       </div>

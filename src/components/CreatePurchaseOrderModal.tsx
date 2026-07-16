@@ -18,6 +18,12 @@ interface Props {
     onSuccess: () => void;
 }
 
+const inputClass =
+    'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100';
+const disabledInputClass =
+    'w-full cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm text-neutral-500';
+const labelClass = 'mb-2 block text-sm font-medium text-neutral-700';
+
 export default function CreatePurchaseOrderModal({
     open,
     supplier,
@@ -135,24 +141,24 @@ export default function CreatePurchaseOrderModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="max-h-[90vh] w-full max-w-5xl  rounded-2xl bg-white shadow-2xl">
+            <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
                 {/* Header */}
 
-                <div className="flex items-center justify-between border-b px-6 py-5">
+                <div className="flex items-center justify-between border-b border-neutral-200 bg-primary-50 px-6 py-5">
                     <div>
-                        <h2 className="text-2xl font-bold">
+                        <h2 className="text-2xl font-bold text-neutral-900">
                             Create Purchase Order
                         </h2>
 
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-neutral-500">
                             Purchase order for selected supplier
                         </p>
                     </div>
 
                     <button
                         onClick={onClose}
-                        className="text-2xl text-slate-500 hover:text-black"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-2xl leading-none text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
                     >
                         ×
                     </button>
@@ -160,31 +166,39 @@ export default function CreatePurchaseOrderModal({
 
                 <div className="space-y-6 gap-5 grid grid-cols-12 p-6">
 
+                    {error && (
+                        <div className="col-span-12 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                            <span className="text-sm font-medium text-danger-700">{error}</span>
+                        </div>
+                    )}
+
                     {/* Product Selection */}
-                    <div className="rounded-xl col-span-9 border p-5">
+                    <div className="rounded-xl col-span-9 border border-neutral-200 bg-white p-5 shadow-sm">
 
-                        <h3 className="mb-5 text-lg font-semibold">
-                            Products
-                        </h3>
-                        {lines.length > 0 && (
-                            <div className="mt-5 text-right text-lg font-semibold">
-                                Estimated Total :
-                                <span className="ml-2 text-blue-700">
-                                    ₹{total.toFixed(2)}
-                                </span>
-                            </div>
-                        )}
+                        <div className="mb-5 flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-neutral-800">
+                                Products
+                            </h3>
 
-                        <div className="grid  grid-cols-4 gap-4">
+                            {lines.length > 0 && (
+                                <div className="text-lg font-semibold text-neutral-700">
+                                    Estimated Total :
+                                    <span className="ml-2 rounded-lg bg-primary-50 px-2 py-1 text-primary-700">
+                                        ₹{total.toFixed(2)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
 
+                        <div className="grid grid-cols-4 gap-4">
 
                             <div>
-                                <label className="mb-2 block text-sm">
+                                <label className={labelClass}>
                                     Product
                                 </label>
 
                                 <select
-                                    className="input"
+                                    className={inputClass}
                                     value={pickProductId}
                                     onChange={(e) =>
                                         setPickProductId(Number(e.target.value))
@@ -206,13 +220,13 @@ export default function CreatePurchaseOrderModal({
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm">
+                                <label className={labelClass}>
                                     Qty
                                 </label>
 
                                 <input
                                     type="number"
-                                    className="input"
+                                    className={inputClass}
                                     value={pickQty}
                                     onChange={(e) =>
                                         setPickQty(e.target.value)
@@ -221,13 +235,13 @@ export default function CreatePurchaseOrderModal({
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm">
+                                <label className={labelClass}>
                                     Expected Rate
                                 </label>
 
                                 <input
                                     type="number"
-                                    className="input"
+                                    className={inputClass}
                                     value={pickRate}
                                     onChange={(e) =>
                                         setPickRate(e.target.value)
@@ -239,7 +253,7 @@ export default function CreatePurchaseOrderModal({
                                 <button
                                     type="button"
                                     onClick={addLine}
-                                    className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white hover:bg-blue-700"
+                                    className="w-full rounded-lg border border-secondary-300 bg-secondary-50 py-2.5 text-sm font-medium text-secondary-700 transition hover:bg-secondary-100"
                                 >
                                     + Add Product
                                 </button>
@@ -249,26 +263,26 @@ export default function CreatePurchaseOrderModal({
 
 
                         {lines.length > 0 && (
-                            <div className="mt-6 px-5 max-h-[200px] overflow-y-auto rounded-lg border">
-                                <table className=" w-full">
+                            <div className="mt-6 max-h-[200px] overflow-y-auto rounded-lg border border-neutral-200">
+                                <table className="w-full text-left text-sm">
 
-                                    <thead className="border-b">
+                                    <thead className="sticky top-0 border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
 
                                         <tr>
 
-                                            <th className="py-3 text-left">
+                                            <th className="px-4 py-3">
                                                 Product
                                             </th>
 
-                                            <th className="text-left">
+                                            <th className="px-2 py-3">
                                                 Qty
                                             </th>
 
-                                            <th className="text-left">
+                                            <th className="px-2 py-3">
                                                 Rate
                                             </th>
 
-                                            <th className="text-left">
+                                            <th className="px-2 py-3">
                                                 Total
                                             </th>
 
@@ -278,35 +292,35 @@ export default function CreatePurchaseOrderModal({
 
                                     </thead>
 
-                                    <tbody>
+                                    <tbody className="divide-y divide-neutral-100">
 
                                         {lines.map((line) => (
 
                                             <tr
                                                 key={line.productId}
-                                                className="border-b"
+                                                className="hover:bg-neutral-50"
                                             >
 
-                                                <td className="py-3">
+                                                <td className="px-4 py-3 font-medium text-neutral-800">
                                                     {line.productName}
                                                 </td>
 
-                                                <td>
+                                                <td className="px-2 py-3 text-neutral-600">
                                                     {line.quantity}
                                                 </td>
 
-                                                <td>
+                                                <td className="px-2 py-3 text-neutral-600">
                                                     ₹{line.expectedRate.toFixed(2)}
                                                 </td>
 
-                                                <td>
+                                                <td className="px-2 py-3 font-medium text-neutral-800">
                                                     ₹{(
                                                         line.quantity *
                                                         line.expectedRate
                                                     ).toFixed(2)}
                                                 </td>
 
-                                                <td>
+                                                <td className="px-2 py-3">
 
                                                     <button
                                                         onClick={() =>
@@ -314,7 +328,7 @@ export default function CreatePurchaseOrderModal({
                                                                 line.productId
                                                             )
                                                         }
-                                                        className="text-red-600"
+                                                        className="text-xs font-medium text-danger-600 hover:text-danger-700 hover:underline"
                                                     >
                                                         Remove
                                                     </button>
@@ -337,77 +351,82 @@ export default function CreatePurchaseOrderModal({
 
                     {/* Supplier */}
 
-                    <div className='col-span-3'><div className="grid grid-cols-1 gap-5">
+                    <div className="col-span-3 flex flex-col gap-5">
 
-                        <div>
-                            <label className="mb-2 block text-sm font-medium">
-                                Supplier
-                            </label>
+                        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                            <div className="grid grid-cols-1 gap-5">
 
-                            <input
-                                disabled
-                                value={supplier?.name || ''}
-                                className="input bg-slate-100"
-                            />
+                                <div>
+                                    <label className={labelClass}>
+                                        Supplier
+                                    </label>
 
-                            {supplier?.contactPerson && (
-                                <p className="mt-2 text-xs text-slate-500">
-                                    Contact : {supplier.contactPerson}
-                                </p>
-                            )}
-                        </div>
+                                    <input
+                                        disabled
+                                        value={supplier?.name || ''}
+                                        className={disabledInputClass}
+                                    />
 
-                        <div>
-                            <label className="mb-2 block text-sm font-medium">
-                                Purchase Order ID
-                            </label>
+                                    {supplier?.contactPerson && (
+                                        <p className="mt-2 text-xs text-neutral-500">
+                                            Contact : {supplier.contactPerson}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <input
-                                disabled
-                                value="Auto Generated"
-                                className="input bg-slate-100"
-                            />
-                        </div>
+                                <div>
+                                    <label className={labelClass}>
+                                        Purchase Order ID
+                                    </label>
 
-                    </div>
+                                    <input
+                                        disabled
+                                        value="Auto Generated"
+                                        className={disabledInputClass}
+                                    />
+                                </div>
 
-                        <div className="grid grid-cols-2 gap-5">
-
-                            <div>
-                                <label className="mb-2 block text-sm font-medium">
-                                    Expected Date
-                                </label>
-
-                                <input
-                                    type="date"
-                                    className="input"
-                                    value={expectedDate}
-                                    onChange={(e) =>
-                                        setExpectedDate(e.target.value)
-                                    }
-                                />
                             </div>
 
-                            <div>
-                                <label className="mb-2 block text-sm font-medium">
-                                    Notes
-                                </label>
+                            <div className="mt-5 grid grid-cols-1 gap-5">
 
-                                <input
-                                    className="input"
-                                    value={notes}
-                                    onChange={(e) =>
-                                        setNotes(e.target.value)
-                                    }
-                                />
+                                <div>
+                                    <label className={labelClass}>
+                                        Expected Date
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        className={inputClass}
+                                        value={expectedDate}
+                                        onChange={(e) =>
+                                            setExpectedDate(e.target.value)
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className={labelClass}>
+                                        Notes
+                                    </label>
+
+                                    <input
+                                        className={inputClass}
+                                        value={notes}
+                                        onChange={(e) =>
+                                            setNotes(e.target.value)
+                                        }
+                                    />
+                                </div>
+
                             </div>
-
                         </div>
-                        <div className="flex justify-end gap-3 border-t p-6">
+
+                        <div className="flex justify-end gap-3">
 
                             <button
                                 onClick={onClose}
-                                className="rounded-lg border px-6 py-2"
+                                className="rounded-lg border border-neutral-300 bg-white px-6 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
                             >
                                 Cancel
                             </button>
@@ -415,7 +434,7 @@ export default function CreatePurchaseOrderModal({
                             <button
                                 onClick={handleSubmit}
                                 disabled={saving}
-                                className="rounded-lg bg-blue-600 px-6 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+                                className="rounded-lg bg-primary-600 px-6 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving
                                     ? 'Creating...'
@@ -424,14 +443,6 @@ export default function CreatePurchaseOrderModal({
 
                         </div>
                     </div>
-
-
-
-                    {error && (
-                        <p className="text-red-600">
-                            {error}
-                        </p>
-                    )}
 
                 </div>
 

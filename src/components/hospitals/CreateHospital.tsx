@@ -10,38 +10,75 @@ interface HospitalOption {
     address?: string | null;
     phone?: string | null;
 }
-type props = {
+
+type Props = {
     onClose: () => void;
     onCreated?: (hospital: HospitalOption) => void;
-}
+    hospital?: HospitalOption;
+};
 
-export default function CreateHospital({ onClose, onCreated }: props) {
-    const [newHospitalName, setNewHospitalName] = useState('');
-    const [newHospitalAddress, setNewHospitalAddress] = useState('');
-    const [newHospitalPhone, setNewHospitalPhone] = useState('');
+export default function CreateHospital({ onClose, onCreated, hospital }: Props) {
+    const isEdit = !!hospital;
+    const [newHospitalName, setNewHospitalName] = useState(
+        hospital?.name ?? ''
+    );
+
+    const [newHospitalAddress, setNewHospitalAddress] = useState(
+        hospital?.address ?? ''
+    );
+
+    const [newHospitalPhone, setNewHospitalPhone] = useState(
+        hospital?.phone ?? ''
+    );
     const [creatingHospital, setCreatingHospital] = useState(false);
     const [createHospitalError, setCreateHospitalError] = useState<string | null>(null);
 
-    async function submitCreateHospital() {
+    async function submitHospital() {
         if (!newHospitalName.trim()) {
             setCreateHospitalError('Hospital name is required.');
             return;
         }
+
         setCreatingHospital(true);
         setCreateHospitalError(null);
+
         try {
-            const created = await apiFetch<HospitalOption>('/api/hospitals', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: newHospitalName.trim(),
-                    address: newHospitalAddress || undefined,
-                    phone: newHospitalPhone || undefined,
-                }),
-            });
-            onCreated?.(created);
+            let response: HospitalOption;
+
+            if (isEdit) {
+                response = await apiFetch<HospitalOption>(
+                    `/api/hospitals/${hospital!.id}`,
+                    {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            name: newHospitalName.trim(),
+                            address: newHospitalAddress || undefined,
+                            phone: newHospitalPhone || undefined,
+                        }),
+                    }
+                );
+            } else {
+                response = await apiFetch<HospitalOption>(
+                    '/api/hospitals',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name: newHospitalName.trim(),
+                            address: newHospitalAddress || undefined,
+                            phone: newHospitalPhone || undefined,
+                        }),
+                    }
+                );
+            }
+
+            onCreated?.(response);
             onClose();
         } catch (err) {
-            setCreateHospitalError(err instanceof ApiClientError ? err.message : 'Could not create hospital');
+            setCreateHospitalError(
+                err instanceof ApiClientError
+                    ? err.message
+                    : `Could not ${isEdit ? 'update' : 'create'} hospital`
+            );
         } finally {
             setCreatingHospital(false);
         }
@@ -61,7 +98,9 @@ export default function CreateHospital({ onClose, onCreated }: props) {
                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-overlay-white">
                             <Building2 className="h-4 w-4" />
                         </div>
-                        <h3 className="text-sm font-semibold">New Hospital</h3>
+                        <h3 className="text-sm font-semibold">
+                            {isEdit ? 'Edit Hospital' : 'New Hospital'}
+                        </h3>
                     </div>
                     <button
                         onClick={() => !creatingHospital && onClose()}
@@ -129,10 +168,16 @@ export default function CreateHospital({ onClose, onCreated }: props) {
                         <Button
                             variant='success'
                             className="btn-primary flex-1 justify-center"
-                            onClick={submitCreateHospital}
+                            onClick={submitHospital}
                             disabled={creatingHospital}
                         >
-                            {creatingHospital ? 'Saving…' : 'Save hospital'}
+                            {creatingHospital
+                                ? isEdit
+                                    ? 'Updating...'
+                                    : 'Saving...'
+                                : isEdit
+                                    ? 'Update Hospital'
+                                    : 'Save Hospital'}
                         </Button>
                     </div>
                 </div>

@@ -49,7 +49,7 @@ CREATE TABLE `suppliers` (
     `email` VARCHAR(191) NULL,
     `phone` VARCHAR(191) NULL,
     `address` VARCHAR(191) NULL,
-    `gstNumber` VARCHAR(191) NULL,
+    `gstin` VARCHAR(191) NULL,
     `drug_license_no` VARCHAR(191) NULL,
     `payment_terms` VARCHAR(191) NULL,
     `opening_balance` DECIMAL(12, 2) NOT NULL DEFAULT 0,

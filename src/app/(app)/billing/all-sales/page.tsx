@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import SalesReturnModal from '@/components/SalesReturnModal';
-import { RotateCcw } from 'lucide-react';
+import { CloudCog, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { Bill, product, PaymentMethod } from '@/types';
@@ -35,6 +35,7 @@ import {
   Printer,
   Download,
 } from 'lucide-react';
+import PrintBillButton from '@/components/billing/PrintBillButton';
 
 interface CartLine {
   productId: number;
@@ -315,7 +316,7 @@ export default function BillingPage() {
     const matchesSearch =
       !billSearch ||
       b.billNumber.toLowerCase().includes(billSearch.toLowerCase()) ||
-      (b.customerName ?? '').toLowerCase().includes(billSearch.toLowerCase());
+      (b.customer?.name ?? '').toLowerCase().includes(billSearch.toLowerCase());
     const matchesStatus = statusFilter === 'ALL' || b.paymentStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -435,7 +436,8 @@ export default function BillingPage() {
                   </tr>
                 ) : (
                   filteredBills.map((bill) => {
-                    const name = bill.customerName || 'Walk In';
+                    // console.log('Rendering bill:', bill); // Debugging line
+                    const name = bill.customer?.name || 'Walk In';
                     return (
                       <tr key={bill.id} className="group transition-colors hover:bg-slate-50/70">
                         <td className="p-3">
@@ -491,13 +493,16 @@ export default function BillingPage() {
                             >
                               <FileText className="h-4 w-4" />
                             </button>
-                            <Link
+                            <button className="px-3 py-2.5 text-right">
+                              <PrintBillButton billId={bill.id} label="" className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700" />
+                            </button>
+                            {/* <Link
                               href={`/billing/${bill.id}?edit=1`}
                               title="Edit"
                               className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-amber-50 hover:text-amber-600"
                             >
                               <Pencil className="h-4 w-4" />
-                            </Link>
+                            </Link> */}
                             <button
                               title="Delete"
                               disabled={deletingId === bill.id}
@@ -562,11 +567,12 @@ export default function BillingPage() {
             <p className="text-sm text-red-600">{viewError}</p>
           ) : viewingBill ? (
             <>
-              {(viewingBill.customerName || viewingBill.customerPhone || viewingBill.customerGstin) && (
+              {(viewingBill.customer?.name || viewingBill.customer?.phone || viewingBill.customer?.gstin) && (
                 <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-600">
-                  {viewingBill.customerName && <p>Customer: {viewingBill.customerName}</p>}
-                  {viewingBill.customerPhone && <p>Phone: {viewingBill.customerPhone}</p>}
-                  {viewingBill.customerGstin && <p>GSTIN: {viewingBill.customerGstin}</p>}
+                  {viewingBill.customer?.name && <p>Customer: {viewingBill.customer.name}</p>}
+                  {viewingBill.ipOp && <p>Ip/Op: {viewingBill.ipOp}</p>}
+                  {viewingBill.customer?.phone && <p>Phone: {viewingBill.customer.phone}</p>}
+                  +                  {viewingBill.customer?.gstin && <p>GSTIN: {viewingBill.customer.gstin}</p>}
                   <p>{viewingBill.isInterState ? 'Inter-state sale (IGST)' : 'Intra-state sale (CGST + SGST)'}</p>
                 </div>
               )}
@@ -758,6 +764,7 @@ export default function BillingPage() {
         </div>
       )}
       {returningBillId !== null && (
+
         <SalesReturnModal
           billId={returningBillId}
           onClose={() => setReturningBillId(null)}

@@ -73,6 +73,7 @@
 
 import { z } from 'zod';
 import { Role, productStatus, PaymentMethod, GstType } from '@prisma/client';
+import { cp } from 'fs';
 
 // ---------- auth ----------
 export const loginSchema = z.object({
@@ -108,6 +109,10 @@ export const createproductSchema = z.object({
   category: z.string().optional(),
   barcode: z.string().optional(),
   hsnCode: z.string().min(1),
+  cp: z.number().positive(),
+  sp: z.number().positive(),
+  mrp: z.number().positive(),
+  genericName: z.string().optional(),
   gstPercentage: z.number().min(0).max(28),
   gstType: z.nativeEnum(GstType).optional(),
   prescriptionRequired: z.boolean().optional(),
@@ -160,6 +165,8 @@ export const createBillSchema = z
       .string()
       .regex(/^[0-9A-Z]{15}$/, 'GSTIN must be 15 alphanumeric characters')
       .optional(),
+    customerId: z.number().int().optional(),
+    ipOp: z.string().optional(),
     isInterState: z.boolean().optional(),
 
     // Referring doctor: either pick an existing one (doctorId) or

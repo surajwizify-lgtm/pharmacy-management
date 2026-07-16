@@ -251,8 +251,8 @@ export default function ProductsPage() {
               key={pill.key}
               onClick={() => setStatusFilter(pill.key)}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === pill.key
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                ? 'bg-primary-600 text-white'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
             >
               {pill.label}
@@ -273,6 +273,7 @@ export default function ProductsPage() {
               <th className="px-4 py-3 font-medium">GST type</th>
               <th className="px-4 py-3 font-medium">Stock</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 text-center font-medium">Actions</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -335,8 +336,8 @@ export default function ProductsPage() {
                     <td className="px-4 py-3.5">
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${m.status === 'ACTIVE'
-                            ? 'bg-secondary-100 text-secondary-700'
-                            : 'bg-neutral-200 text-neutral-500'
+                          ? 'bg-secondary-100 text-secondary-700'
+                          : 'bg-neutral-200 text-neutral-500'
                           }`}
                       >
                         <span

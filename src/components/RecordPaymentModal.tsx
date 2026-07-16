@@ -7,6 +7,11 @@ type Props = {
     onClose: () => void;
     onSuccess: () => Promise<void>;
 };
+
+const inputClass =
+    'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100';
+const labelClass = 'mb-1 block text-xs font-medium text-neutral-600';
+
 export default function RecordPaymentModal({
     open,
     invoice,
@@ -68,8 +73,6 @@ export default function RecordPaymentModal({
         if (!invoice) return;
 
         setPaymentForm({
-            // supplierId: invoice.supplierId,
-            // purchaseInvoiceId: invoice.id,
             amount: Number(invoice.remainingAmount).toFixed(2),
             paymentMode: "cash",
             referenceNo: "",
@@ -81,22 +84,22 @@ export default function RecordPaymentModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
+            <div className="w-full max-w-md rounded-xl bg-white shadow-2xl">
 
-                <div className="border-b p-6">
-                    <h2 className="text-lg font-semibold">
+                <div className="border-b border-neutral-200 bg-primary-50 p-6">
+                    <h2 className="text-lg font-semibold text-neutral-900">
                         Record Payment
                     </h2>
 
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-neutral-500">
                         {invoice?.supplier?.name}
                     </p>
 
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-neutral-500">
                         Invoice: {invoice?.invoiceNumber}
                     </p>
 
-                    <p className="font-semibold text-red-600">
+                    <p className="mt-2 inline-flex rounded-md bg-danger-100 px-3 py-1 text-sm font-semibold text-danger-700">
                         Balance Due ₹{Number(invoice?.remainingAmount ?? 0).toFixed(2)}
                     </p>
                 </div>
@@ -105,10 +108,10 @@ export default function RecordPaymentModal({
 
                     {/* Amount */}
                     <div>
-                        <label className="label">Amount</label>
+                        <label className={labelClass}>Amount</label>
 
                         <input
-                            className="input"
+                            className={inputClass}
                             type="number"
                             step="0.01"
                             required
@@ -124,10 +127,10 @@ export default function RecordPaymentModal({
 
                     {/* Payment Mode */}
                     <div>
-                        <label className="label">Payment Mode</label>
+                        <label className={labelClass}>Payment Mode</label>
 
                         <select
-                            className="input"
+                            className={inputClass}
                             value={paymentForm.paymentMode}
                             onChange={(e) =>
                                 setPaymentForm({
@@ -145,10 +148,10 @@ export default function RecordPaymentModal({
 
                     {/* Reference */}
                     <div>
-                        <label className="label">Reference No.</label>
+                        <label className={labelClass}>Reference No.</label>
 
                         <input
-                            className="input"
+                            className={inputClass}
                             value={paymentForm.referenceNo}
                             onChange={(e) =>
                                 setPaymentForm({
@@ -161,11 +164,11 @@ export default function RecordPaymentModal({
 
                     {/* Notes */}
                     <div>
-                        <label className="label">Notes</label>
+                        <label className={labelClass}>Notes</label>
 
                         <textarea
                             rows={3}
-                            className="input"
+                            className={inputClass}
                             value={paymentForm.notes}
                             onChange={(e) =>
                                 setPaymentForm({
@@ -177,13 +180,15 @@ export default function RecordPaymentModal({
                     </div>
 
                     {error && (
-                        <p className="text-sm text-red-600">{error}</p>
+                        <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2">
+                            <span className="text-sm font-medium text-danger-700">{error}</span>
+                        </div>
                     )}
 
                     <div className="flex justify-end gap-3">
                         <button
                             type="button"
-                            className="btn-secondary"
+                            className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
                             onClick={onClose}
                         >
                             Cancel
@@ -191,8 +196,8 @@ export default function RecordPaymentModal({
 
                         <button
                             type="submit"
-                            className="btn-primary"
                             disabled={saving}
+                            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {saving ? "Saving..." : "Save Payment"}
                         </button>

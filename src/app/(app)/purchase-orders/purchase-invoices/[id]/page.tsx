@@ -6,10 +6,14 @@ import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 
 const PAYMENT_STATUS_COLORS: Record<string, string> = {
-    DUE: 'bg-red-100 text-red-700',
+    DUE: 'bg-danger-100 text-danger-700',
     PARTIAL: 'bg-amber-100 text-amber-700',
-    PAID: 'bg-brand-100 text-brand-700',
+    PAID: 'bg-secondary-100 text-secondary-700',
 };
+
+const inputClass =
+    'w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100';
+const labelClass = 'mb-1 block text-xs font-medium text-neutral-600';
 
 export default function PurchaseInvoiceDetailPage() {
     const params = useParams();
@@ -27,7 +31,6 @@ export default function PurchaseInvoiceDetailPage() {
     async function load() {
         const data = await apiFetch<any>(`/api/purchase-invoices/${id}`);
         setInvoice(data);
-        console.log(data)
     }
 
     useEffect(() => {
@@ -67,9 +70,22 @@ export default function PurchaseInvoiceDetailPage() {
         }
     }
 
-    if (loading) return <p className="text-slate-400">Loading…</p>;
-    if (error) return <p className="text-sm text-red-600">{error}</p>;
-    if (!invoice) return <p className="text-slate-400">No data found.</p>;
+    if (loading) {
+        return (
+            <div className="flex items-center gap-2 text-sm text-neutral-400">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-300" />
+                Loading…
+            </div>
+        );
+    }
+    if (error) {
+        return (
+            <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                <span className="text-sm font-medium text-danger-700">{error}</span>
+            </div>
+        );
+    }
+    if (!invoice) return <p className="text-sm text-neutral-400">No data found.</p>;
 
     const totalPaid = invoice.payments.reduce((sum: number, p: any) => sum + Number(p.amount), 0);
     const totalReturned = invoice.supplierReturns?.reduce((sum: number, r: any) => sum + Number(r.totalAmount), 0) ?? 0;
@@ -78,19 +94,27 @@ export default function PurchaseInvoiceDetailPage() {
     return (
         <div className="mx-auto max-w-3xl space-y-6">
             <div>
-                <Link href="/purchase-orders/purchase-invoices" className="text-xs font-medium text-brand-600 hover:underline">
+                <Link
+                    href="/purchase-orders/purchase-invoices"
+                    className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
+                >
                     ← Back to purchase invoices
                 </Link>
                 <div className="mt-1 flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold text-slate-900">GRN #{invoice.grnNumber}</h1>
-                    <span className={`badge ${PAYMENT_STATUS_COLORS[invoice.paymentStatus] || ''}`}>{invoice.paymentStatus}</span>
+                    <h1 className="text-2xl font-semibold text-neutral-900">GRN No:- <span className='text-primary-700'>{invoice.grnNumber}</span></h1>
+                    <span className={`inline-flex rounded-md px-3 py-1 text-xs font-semibold ${PAYMENT_STATUS_COLORS[invoice.paymentStatus] || 'bg-neutral-100 text-neutral-600'}`}>
+                        {invoice.paymentStatus}
+                    </span>
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-neutral-500">
                     Supplier: {invoice.supplier.name} · Invoice #{invoice.invoiceNumber}
                     {invoice.purchaseOrder && (
                         <>
                             {' · '}
-                            <Link href={`/purchase-orders/${invoice.purchaseOrder.id}`} className="text-brand-600 hover:underline">
+                            <Link
+                                href={`/purchase-orders/${invoice.purchaseOrder.id}`}
+                                className="text-primary-600 hover:text-primary-700 hover:underline"
+                            >
                                 PO #{invoice.purchaseOrder.poNumber}
                             </Link>
                         </>
@@ -99,61 +123,63 @@ export default function PurchaseInvoiceDetailPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-4">
-                <div className="card p-4">
-                    <p className="label mb-1">Total Amount</p>
-                    <p className="text-xl font-semibold text-slate-900">₹{Number(invoice.totalAmount).toFixed(2)}</p>
+                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <p className="mb-1 text-xs font-medium text-neutral-500">Total Amount</p>
+                    <p className="text-xl font-semibold text-neutral-900">₹{Number(invoice.totalAmount).toFixed(2)}</p>
                 </div>
-                <div className="card p-4">
-                    <p className="label mb-1">Total Paid</p>
-                    <p className="text-xl font-semibold text-green-600">₹{totalPaid.toFixed(2)}</p>
+                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <p className="mb-1 text-xs font-medium text-neutral-500">Total Paid</p>
+                    <p className="text-xl font-semibold text-secondary-600">₹{totalPaid.toFixed(2)}</p>
                 </div>
-                <div className="card p-4">
-                    <p className="label mb-1">Returns Deducted</p>
-                    <p className="text-xl font-semibold text-orange-600">₹{totalReturned.toFixed(2)}</p>
+                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <p className="mb-1 text-xs font-medium text-neutral-500">Returns Deducted</p>
+                    <p className="text-xl font-semibold text-amber-600">₹{totalReturned.toFixed(2)}</p>
                 </div>
-                <div className="card p-4">
-                    <p className="label mb-1">Balance Due</p>
-                    <p className={`text-xl font-semibold ${balanceDue > 0 ? 'text-red-600' : 'text-slate-800'}`}>
+                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                    <p className="mb-1 text-xs font-medium text-neutral-500">Balance Due</p>
+                    <p className={`text-xl font-semibold ${balanceDue > 0 ? 'text-danger-600' : 'text-neutral-800'}`}>
                         ₹{balanceDue.toFixed(2)}
                     </p>
                 </div>
             </div>
 
-            <div className="card p-5">
-                <h2 className="mb-3 font-medium text-slate-800">GST Breakdown ({invoice.isInterState ? 'Inter-state' : 'Intra-state'})</h2>
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 font-medium text-neutral-800">
+                    GST Breakdown ({invoice.isInterState ? 'Inter-state' : 'Intra-state'})
+                </h2>
                 <div className="grid grid-cols-4 gap-4 text-sm">
                     <div>
-                        <p className="text-slate-500">Taxable Value</p>
-                        <p className="font-medium">₹{(Number(invoice.subtotal) - Number(invoice.totalDiscount)).toFixed(2)}</p>
+                        <p className="text-neutral-500">Taxable Value</p>
+                        <p className="font-medium text-neutral-800">₹{(Number(invoice.subtotal) - Number(invoice.totalDiscount)).toFixed(2)}</p>
                     </div>
                     {invoice.isInterState ? (
                         <div>
-                            <p className="text-slate-500">IGST</p>
-                            <p className="font-medium">₹{Number(invoice.totalIgst).toFixed(2)}</p>
+                            <p className="text-neutral-500">IGST</p>
+                            <p className="font-medium text-neutral-800">₹{Number(invoice.totalIgst).toFixed(2)}</p>
                         </div>
                     ) : (
                         <>
                             <div>
-                                <p className="text-slate-500">CGST</p>
-                                <p className="font-medium">₹{Number(invoice.totalCgst).toFixed(2)}</p>
+                                <p className="text-neutral-500">CGST</p>
+                                <p className="font-medium text-neutral-800">₹{Number(invoice.totalCgst).toFixed(2)}</p>
                             </div>
                             <div>
-                                <p className="text-slate-500">SGST</p>
-                                <p className="font-medium">₹{Number(invoice.totalSgst).toFixed(2)}</p>
+                                <p className="text-neutral-500">SGST</p>
+                                <p className="font-medium text-neutral-800">₹{Number(invoice.totalSgst).toFixed(2)}</p>
                             </div>
                         </>
                     )}
                     <div>
-                        <p className="text-slate-500">Total GST</p>
-                        <p className="font-medium">₹{Number(invoice.totalGst).toFixed(2)}</p>
+                        <p className="text-neutral-500">Total GST</p>
+                        <p className="font-medium text-neutral-800">₹{Number(invoice.totalGst).toFixed(2)}</p>
                     </div>
                 </div>
             </div>
 
-            <div className="card p-5">
-                <h2 className="mb-3 font-medium text-slate-800">Items Received</h2>
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 font-medium text-neutral-800">Items Received</h2>
                 <table className="w-full text-left text-sm">
-                    <thead className="border-b border-slate-100 text-xs uppercase text-slate-500">
+                    <thead className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
                         <tr>
                             <th className="py-2">product</th>
                             <th className="py-2">Batch #</th>
@@ -165,28 +191,31 @@ export default function PurchaseInvoiceDetailPage() {
                             <th className="py-2">Total</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-neutral-100">
                         {invoice.items.map((item: any) => (
-                            <tr key={item.id}>
-                                <td className="py-2">{item.product.name}</td>
-                                <td className="py-2">{item.batchNumber}</td>
-                                <td className="py-2">{new Date(item.expiryDate).toLocaleDateString()}</td>
-                                <td className="py-2">{item.quantity}</td>
-                                <td className="py-2">{item.freeQuantity}</td>
-                                <td className="py-2">₹{Number(item.purchaseRate).toFixed(2)}</td>
-                                <td className="py-2">{String(item.gstPercentage)}%</td>
-                                <td className="py-2">₹{Number(item.totalAmount).toFixed(2)}</td>
+                            <tr key={item.id} className="hover:bg-neutral-50">
+                                <td className="py-2 font-medium text-neutral-800">{item.product.name}</td>
+                                <td className="py-2 text-neutral-600">{item.batchNumber}</td>
+                                <td className="py-2 text-neutral-600">{new Date(item.expiryDate).toLocaleDateString()}</td>
+                                <td className="py-2 text-neutral-600">{item.quantity}</td>
+                                <td className="py-2 text-neutral-600">{item.freeQuantity}</td>
+                                <td className="py-2 text-neutral-600">₹{Number(item.purchaseRate).toFixed(2)}</td>
+                                <td className="py-2 text-neutral-600">{String(item.gstPercentage)}%</td>
+                                <td className="py-2 font-medium text-neutral-800">₹{Number(item.totalAmount).toFixed(2)}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
 
-            <div className="card p-5">
+            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center justify-between">
-                    <h2 className="font-medium text-slate-800">Payments</h2>
+                    <h2 className="font-medium text-neutral-800">Payments</h2>
                     {balanceDue > 0 && (
-                        <button className="btn-primary text-sm" onClick={() => setShowPaymentForm(true)}>
+                        <button
+                            className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
+                            onClick={() => setShowPaymentForm(true)}
+                        >
                             + Record Payment
                         </button>
                     )}
@@ -194,7 +223,7 @@ export default function PurchaseInvoiceDetailPage() {
 
                 {invoice.payments.length ? (
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-slate-100 text-xs uppercase text-slate-500">
+                        <thead className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
                             <tr>
                                 <th className="py-2">Date</th>
                                 <th className="py-2">Amount</th>
@@ -202,43 +231,46 @@ export default function PurchaseInvoiceDetailPage() {
                                 <th className="py-2">Reference</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-neutral-100">
                             {invoice.payments.map((p: any) => (
-                                <tr key={p.id}>
-                                    <td className="py-2">{new Date(p.paidAt).toLocaleDateString()}</td>
-                                    <td className="py-2">₹{Number(p.amount).toFixed(2)}</td>
-                                    <td className="py-2">{p.paymentMode}</td>
-                                    <td className="py-2">{p.referenceNo || '-'}</td>
+                                <tr key={p.id} className="hover:bg-neutral-50">
+                                    <td className="py-2 text-neutral-600">{new Date(p.paidAt).toLocaleDateString()}</td>
+                                    <td className="py-2 font-medium text-neutral-800">₹{Number(p.amount).toFixed(2)}</td>
+                                    <td className="py-2 text-neutral-600">{p.paymentMode}</td>
+                                    <td className="py-2 text-neutral-600">{p.referenceNo || '-'}</td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 ) : (
-                    <p className="text-sm text-slate-400">No payments recorded yet.</p>
+                    <p className="text-sm text-neutral-400">No payments recorded yet.</p>
                 )}
             </div>
 
             {invoice.supplierReturns?.length > 0 && (
-                <div className="card p-5">
-                    <h2 className="mb-3 font-medium text-slate-800">Returns Against This Invoice</h2>
+                <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                    <h2 className="mb-3 font-medium text-neutral-800">Returns Against This Invoice</h2>
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-slate-100 text-xs uppercase text-slate-500">
+                        <thead className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
                             <tr>
                                 <th className="py-2">Return #</th>
                                 <th className="py-2">Reason</th>
                                 <th className="py-2">Amount</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-neutral-100">
                             {invoice.supplierReturns.map((r: any) => (
-                                <tr key={r.id}>
+                                <tr key={r.id} className="hover:bg-neutral-50">
                                     <td className="py-2">
-                                        <Link href={`/purchase-orders/supplier-returns/${r.id}`} className="text-brand-600 hover:underline">
+                                        <Link
+                                            href={`/purchase-orders/supplier-returns/${r.id}`}
+                                            className="text-primary-600 hover:text-primary-700 hover:underline"
+                                        >
                                             {r.returnNumber}
                                         </Link>
                                     </td>
-                                    <td className="py-2">{r.reason || '-'}</td>
-                                    <td className="py-2 text-orange-600">₹{Number(r.totalAmount).toFixed(2)}</td>
+                                    <td className="py-2 text-neutral-600">{r.reason || '-'}</td>
+                                    <td className="py-2 text-amber-600">₹{Number(r.totalAmount).toFixed(2)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -247,26 +279,26 @@ export default function PurchaseInvoiceDetailPage() {
             )}
 
             {showPaymentForm && (
-                <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 p-4">
-                    <div className="card w-full max-w-md p-6">
-                        <h2 className="mb-4 text-lg font-semibold text-slate-800">Record Payment</h2>
+                <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <h2 className="mb-4 text-lg font-semibold text-neutral-800">Record Payment</h2>
                         <form onSubmit={handleAddPayment} className="space-y-3">
                             <div>
-                                <label className="label">Amount</label>
+                                <label className={labelClass}>Amount</label>
                                 <input
                                     type="number"
                                     step="0.01"
-                                    className="input"
+                                    className={inputClass}
                                     required
                                     value={paymentForm.amount}
                                     onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
                                 />
-                                <p className="mt-1 text-xs text-slate-400">Balance due: ₹{balanceDue.toFixed(2)}</p>
+                                <p className="mt-1 text-xs text-neutral-400">Balance due: ₹{balanceDue.toFixed(2)}</p>
                             </div>
                             <div>
-                                <label className="label">Payment Mode</label>
+                                <label className={labelClass}>Payment Mode</label>
                                 <select
-                                    className="input"
+                                    className={inputClass}
                                     value={paymentForm.paymentMode}
                                     onChange={(e) => setPaymentForm({ ...paymentForm, paymentMode: e.target.value })}
                                 >
@@ -277,29 +309,41 @@ export default function PurchaseInvoiceDetailPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="label">Reference No (optional)</label>
+                                <label className={labelClass}>Reference No (optional)</label>
                                 <input
-                                    className="input"
+                                    className={inputClass}
                                     value={paymentForm.referenceNo}
                                     onChange={(e) => setPaymentForm({ ...paymentForm, referenceNo: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="label">Notes (optional)</label>
+                                <label className={labelClass}>Notes (optional)</label>
                                 <input
-                                    className="input"
+                                    className={inputClass}
                                     value={paymentForm.notes}
                                     onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
                                 />
                             </div>
 
-                            {payError && <p className="text-sm text-red-600">{payError}</p>}
+                            {payError && (
+                                <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2">
+                                    <span className="text-sm font-medium text-danger-700">{payError}</span>
+                                </div>
+                            )}
 
                             <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" className="btn-secondary" onClick={() => setShowPaymentForm(false)}>
+                                <button
+                                    type="button"
+                                    className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+                                    onClick={() => setShowPaymentForm(false)}
+                                >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn-primary" disabled={paySaving}>
+                                <button
+                                    type="submit"
+                                    disabled={paySaving}
+                                    className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
                                     {paySaving ? 'Saving…' : 'Save Payment'}
                                 </button>
                             </div>
