@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma, SupplierStatus } from "@prisma/client";
 
-// GET /api/purchase-orders/manufacturer?search=&status=&page=1&pageSize=20
-// Lists manufacturers with optional search (name/contact/phone/email) and status filter.
+
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
@@ -47,8 +46,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// POST /api/purchase-orders/manufacturer
-// Creates a new manufacturer. Body: { name, contactPerson?, phone?, email?, address?, gstin?, drugLicenseNo?, status? }
+
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();

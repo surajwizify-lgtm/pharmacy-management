@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Prisma, SupplierStatus } from "@prisma/client";
 import DeleteManufacturerButton from "@/components/DeleteManufacturerButton";
+import PageHeader from "@/components/common/Header";
+import HeaderButton from "@/components/common/HeaderButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,16 +35,13 @@ export default async function ManufacturerListPage({
     });
 
     return (
-        <div className="max-w-5xl mx-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-xl font-semibold">Manufacturers</h1>
-                <Link
-                    href="/purchase-orders/manufacturers/new"
-                    className="rounded-md  bg-green-700 text-white px-4 py-2 text-sm font-medium hover:bg-green-800"
-                >
-                    + New Manufacturer
-                </Link>
-            </div>
+        <div className="">
+            <PageHeader
+                header={`Manufacturers`}
+                subheader="Manage All Manufatures Here"
+            >
+                <HeaderButton text="New Manufacturer" href='/purchase-orders/manufacturers/new' />
+            </PageHeader>
 
             <form className="flex gap-3 mb-4" method="get">
                 <input

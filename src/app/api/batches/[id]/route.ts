@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { requireSession, withErrorHandling, notFound, badRequest } from '@/lib/api-utils';
 
-// GET /api/batches/:id - any authenticated role, ports BatchesService.findOne
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   return withErrorHandling(async () => {
     await requireSession();

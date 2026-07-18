@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import { requireSession, withErrorHandling } from '@/lib/api-utils';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'prescriptions');
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 export async function POST(req: NextRequest) {

@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api-client";
 
+
 export function searchProducts(search: string) {
     return apiFetch(
         `/api/products?search=${encodeURIComponent(search)}&status=ACTIVE`
@@ -14,14 +15,14 @@ export function getBill(id: number) {
     return apiFetch(`/api/bills/${id}`);
 }
 
-export function createBill(data: CreateBillDto) {
+export function createBill(data: any) {
     return apiFetch("/api/bills", {
         method: "POST",
         body: JSON.stringify(data),
     });
 }
 
-export function updateBill(id: number, data: UpdateBillDto) {
+export function updateBill(id: number, data: any) {
     return apiFetch(`/api/bills/${id}`, {
         method: "PUT",
         body: JSON.stringify(data),

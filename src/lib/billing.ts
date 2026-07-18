@@ -382,15 +382,13 @@ export async function createBill(dto: CreateBillDto, cashierId: number) {
     const totalGst = totalCgst.add(totalSgst).add(totalIgst);
     const totalAmount = subtotal.add(totalGst);
     const billNumber = await generateBillNumber(tx);
+    console.log('CostomerId', dto.customerId)
 
     const bill = await tx.bill.create({
       data: {
         billNumber,
         cashierId,
-        // customerName: dto.customerName,
-        // customerPhone: dto.customerPhone,
         ipOp: dto.ipOp,
-        // customerGstin: dto.customerGstin,
         customerId: dto.customerId,
         doctorId: resolvedDoctorId,
         hospitalId: resolvedHospitalId,

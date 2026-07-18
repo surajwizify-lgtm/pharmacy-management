@@ -71,7 +71,7 @@ export default function PurchaseOrderDetailPage() {
             <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
                 {/* Header */}
                 <div>
-                    <Link href="/purchase-orders" className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline">
+                    <Link href="/purchase-orders/registerd" className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline">
                         ← Back to purchase orders
                     </Link>
                     <div className="mt-2 flex items-center justify-between">

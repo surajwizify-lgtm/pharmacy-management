@@ -384,11 +384,11 @@ const EMPTY_FORM: ProductFormState = {
     gstType: 'INCLUSIVE',
 };
 
-function toFormState(m: product): ProductFormState {
+function toFormState(m: any): ProductFormState {
     return {
         name: m.name,
         manufacturer: m.manufacturer,
-        category: m.category ?? "Medicines",
+        category: m.category.name ?? "Medicines",
         barcode: m.barcode ?? '',
         hsnCode: m.hsnCode,
         mrp: String(m.mrp),
@@ -411,9 +411,6 @@ type ProductFormModalProps = {
     onSuccess?: (productId: number) => void;
 };
 
-// ---------- shared field styles ----------
-// Spacing tightened throughout: smaller padding, tighter gaps/margins,
-// slightly smaller text for helper copy — all to shrink overall modal height.
 
 const labelCls = 'mb-0.5 block text-xs font-medium text-neutral-500';
 const inputCls =

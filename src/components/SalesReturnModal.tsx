@@ -112,7 +112,6 @@ export default function SalesReturnModal({
                 className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl border border-neutral-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between bg-gradient-to-r from-primary-700 to-indigo-700 px-6 py-4 text-white">
                     <div className="flex items-center gap-2">
                         <RotateCcw className="h-5 w-5" />

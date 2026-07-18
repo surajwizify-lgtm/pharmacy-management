@@ -57,7 +57,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* headline */}
         <div className="max-w-md">
           <h1 className="text-[42px] leading-[1.12] font-medium tracking-tight">
             Pharmacy billing,{' '}
@@ -91,7 +90,6 @@ export default function LoginPage() {
           v1.0 · made for Indian pharmacies
         </span>
 
-        {/* signature: capsule motif, not the generic stacked-square pattern */}
         <div className="pointer-events-none absolute -bottom-16 -right-20 h-72 w-72">
           <div className="absolute h-20 w-52 rotate-[38deg] rounded-full bg-[#1c3d33] opacity-90" />
           <div className="absolute left-10 top-16 h-20 w-52 rotate-[38deg] rounded-full border border-[#3a5c4e] bg-transparent" />
@@ -99,10 +97,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right — form */}
       <div className="flex w-full flex-1 items-center justify-center px-6 py-16 lg:w-[54%]">
         <div className="w-full max-w-[380px]">
-          {/* mobile-only brand mark */}
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#122b23]">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#eef3ee" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

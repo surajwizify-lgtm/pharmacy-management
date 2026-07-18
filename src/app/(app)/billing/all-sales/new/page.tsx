@@ -83,25 +83,6 @@ export default function CreateBillPage() {
     const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
     const [showCreateCustomer, setShowCreateCustomer] = useState(false);
     const customerBoxRef = useRef<HTMLDivElement>(null);
-
-    // function updateQty(batchId: number, quantity: number) {
-    //     setCart(prev =>
-    //         prev.map(item => {
-    //             if (item.batchId !== batchId)
-    //                 return item;
-
-    //             quantity = Math.max(
-    //                 1,
-    //                 Math.min(quantity, item.availableStock)
-    //             );
-
-    //             return {
-    //                 ...item,
-    //                 quantity
-    //             };
-    //         })
-    //     );
-    // }
     function updateQty(batchId: number, quantity: number | "") {
         setCart(prev =>
             prev.map(item => {
@@ -259,9 +240,6 @@ export default function CreateBillPage() {
                         quantity: l.quantity,
                         batchId: l.batchId
                     })),
-                    customerName: customerName || undefined,
-                    customerPhone: customerPhone || undefined,
-                    customerGstin: customerGstin || undefined,
                     customerId: customerId || undefined,
                     doctorId: doctorId || undefined,
                     doctorName: !doctorId && doctorName.trim() ? doctorName.trim() : undefined,
@@ -468,19 +446,6 @@ export default function CreateBillPage() {
                                                         <td className="px-3 py-2.5 font-medium text-neutral-700">{l.genericName}</td>
                                                         <td className="px-3 py-2.5">
                                                             <div className="flex items-center gap-1">
-                                                                {/* <input
-                                                                    className="input h-8 w-14 text-center"
-                                                                    type="number"
-                                                                    min={1}
-                                                                    max={l.availableStock}
-                                                                    value={l.quantity}
-                                                                    onChange={(e) => updateQty(l.batchId!, Number(e.target.value))}
-                                                                    onChange={(e) => {
-                                                                        if (e.target.value === "") return;
-                                                                        updateQty(l.batchId!, Number(e.target.value));
-                                                                    }}
-                                                                    
-                                                                /> */}
                                                                 <input
                                                                     className="input h-8 w-14 text-center"
                                                                     type="number"
@@ -587,27 +552,8 @@ export default function CreateBillPage() {
                     </div>
                 </div>
 
-                {/* -------- Right: customer / payment panel -------- */}
                 <div className="col-span-3 flex min-h-0 flex-col bg-neutral-50 p-3">
                     <div className="flex min-h-0 flex-1 flex-col gap-3 pr-1 overflow-y-auto">
-                        {/* <div className="grid grid-cols-4 gap-1">
-                            <div className="col-span-3">
-                                <Input
-                                    label="Customer Name"
-                                    id="customerName"
-                                    value={customerName}
-                                    onChange={(e) => setCustomerName(e.target.value)}
-                                />
-                            </div>
-                            <div className="col-span-1">
-                                <Input
-                                    label="IP/OP"
-                                    id="ipOp"
-                                    value={ipOp}
-                                    onChange={(e) => setIpOp(e.target.value)}
-                                />
-                            </div>
-                        </div> */}
                         <div className="grid grid-cols-4 gap-1">
                             <div className="relative col-span-3" ref={customerBoxRef}>
                                 <div className="mb-1 flex items-center justify-between">
@@ -666,12 +612,6 @@ export default function CreateBillPage() {
                                 />
                             </div>
                         </div>
-                        {/* <Input
-                            label="Customer Mobile"
-                            id="customerPhone"
-                            value={customerPhone}
-                            onChange={(e) => setCustomerPhone(e.target.value)}
-                        /> */}
 
                         <div className="relative sm:col-span-2" ref={doctorBoxRef}>
                             <div className="mb-1 flex items-center justify-between">
@@ -775,8 +715,6 @@ export default function CreateBillPage() {
                             )}
                         </div>
                     </div>
-
-                    {/* Summary — pinned at bottom */}
                     <div className="mt-3 shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
                         <div className="bg-gradient-to-r from-primary-700 to-indigo-700 px-4 py-3">
                             <p className="text-[11px] uppercase tracking-wide text-primary-100">Amount Payable</p>
@@ -838,8 +776,6 @@ export default function CreateBillPage() {
                     </div>
                 </div>
             </div>
-
-            {/* -------- Footer strip -------- */}
             <div className="row-span-1 grid grid-cols-12 items-center gap-3 w-full border-t border-neutral-200 bg-sky-100 px-5">
 
                 <div className="col-span-4 flex items-center gap-2">
@@ -852,17 +788,6 @@ export default function CreateBillPage() {
                         onChange={(e) => setPrescriptionFile(e.target.files?.[0] ?? null)}
                     />
                 </div>
-
-                {/* <div className="col-span-4 flex items-center gap-2">
-                    <label htmlFor="gstin" className="shrink-0 text-sm font-medium text-neutral-700">GSTIN</label>
-                    <Input
-                        className="text-sm"
-                        label=""
-                        id="gstin"
-                        value={customerGstin}
-                        onChange={(e) => setCustomerGstin(e.target.value)}
-                    />
-                </div> */}
                 <div className="col-span-4" />
 
                 <label

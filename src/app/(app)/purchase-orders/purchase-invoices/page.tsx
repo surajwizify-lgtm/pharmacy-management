@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api-client';
 import RecordPaymentModal from '@/components/RecordPaymentModal';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 const PAYMENT_STATUS_COLORS: Record<string, string> = {
     DUE: 'bg-danger-100 text-danger-700',
@@ -80,20 +82,14 @@ export default function PurchaseInvoicesPage() {
     });
 
     return (
-        <div className="mx-auto max-w-7xl space-y-6">
+        <div className="">
+            <PageHeader
+                header={`Purchase Invoices`}
+                subheader="View All Purchase Invoices"
+            >
+                <HeaderButton text="Create Invoice" href='/purchase-orders/purchase-invoices/new' />
+            </PageHeader>
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-neutral-900">
-                    Purchase Invoices
-                </h1>
-                <Link
-                    href='/purchase-orders/purchase-invoices/new'
-                    className='rounded-lg bg-secondary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-secondary-700'
-                >
-                    Create Invoice
-                </Link>
-            </div>
 
             {/* Filters */}
             <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">

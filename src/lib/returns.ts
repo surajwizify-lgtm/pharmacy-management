@@ -19,14 +19,7 @@ async function generateReturnNumber(tx: Tx): Promise<string> {
     return `SRET-${dateStr}-${sequence}`;
 }
 
-/**
- * Creates a sales return against an existing bill: for each returned
- * line, validates the quantity against what was actually billed on that
- * batch (minus anything already returned), adds stock back, reverses
- * the GST proportionally, and writes one OUTPUT ledger entry linked via
- * returnId (the summary report subtracts returnId-linked OUTPUT rows
- * from billId-linked OUTPUT rows - see /api/gst/summary).
- */
+
 export async function createSalesReturn(dto: CreateSalesReturnDto) {
     return prisma.$transaction(async (tx) => {
         const bill = await tx.bill.findUnique({
@@ -49,8 +42,6 @@ export async function createSalesReturn(dto: CreateSalesReturnDto) {
                 throw badRequest(`Batch ${item.batchId} was not sold on bill ${bill.billNumber}`);
             }
 
-            // Sum whatever's already been returned against this same batch on
-            // this bill, so a second partial return can't exceed what remains.
             const alreadyReturned = bill.returns
                 .flatMap((r) => r.returnItems)
                 .filter((ri) => ri.batchId === item.batchId)
@@ -67,7 +58,6 @@ export async function createSalesReturn(dto: CreateSalesReturnDto) {
                 throw badRequest(`Return quantity for batch ${item.batchId} must be greater than zero`);
             }
 
-            // Scale the original line's price/GST by the fraction being returned.
             const fraction = new Decimal(item.quantity).div(billItem.quantity);
             const refundAmount = new Decimal(billItem.totalAmount.toString()).mul(fraction).toDecimalPlaces(2);
             const cgst = new Decimal(billItem.cgstAmount.toString()).mul(fraction).toDecimalPlaces(2);
@@ -85,7 +75,6 @@ export async function createSalesReturn(dto: CreateSalesReturnDto) {
                 refundAmount: refundAmount.toFixed(2),
             });
 
-            // Add stock back to the same batch it came from.
             await tx.batch.update({
                 where: { id: item.batchId },
                 data: { quantityAvailable: { increment: item.quantity }, version: { increment: 1 } },
@@ -105,9 +94,6 @@ export async function createSalesReturn(dto: CreateSalesReturnDto) {
             },
         });
 
-        // Reverse the OUTPUT GST. Same type as the original bill's entry -
-        // the summary query nets returnId-linked rows against billId-linked
-        // rows for the same type, rather than storing a negative amount here.
         const taxableValue = totalRefund.sub(totalCgst).sub(totalSgst).sub(totalIgst);
         await createGstLedgerEntry(tx, {
             type: 'OUTPUT',

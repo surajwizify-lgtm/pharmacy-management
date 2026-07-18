@@ -6,7 +6,6 @@ function parseId(idParam: string) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-// GET /api/purchase-orders/manufacturer/:id
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const id = parseId(params.id);
   if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -23,8 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-// PUT /api/purchase-orders/manufacturer/:id
-// Body: any subset of { name, contactPerson, phone, email, address, gstin, drugLicenseNo, status }
+
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const id = parseId(params.id);
   if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -63,7 +61,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-// DELETE /api/purchase-orders/manufacturer/:id
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const id = parseId(params.id);
   if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -75,7 +72,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     if (err?.code === "P2025") {
       return NextResponse.json({ error: "Manufacturer not found" }, { status: 404 });
     }
-    // P2003: FK constraint - manufacturer is referenced by products
+
     if (err?.code === "P2003") {
       return NextResponse.json(
         { error: "Cannot delete: this manufacturer is linked to existing products" },

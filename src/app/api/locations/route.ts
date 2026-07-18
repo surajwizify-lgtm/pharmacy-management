@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/locations — list all
 export async function GET() {
     const locations = await prisma.location.findMany({
         orderBy: { name: "asc" },
@@ -10,7 +9,6 @@ export async function GET() {
     return NextResponse.json(locations);
 }
 
-// POST /api/locations — create
 export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, code, type, description, active } = body;

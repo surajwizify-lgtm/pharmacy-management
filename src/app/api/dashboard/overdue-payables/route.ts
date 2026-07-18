@@ -1,4 +1,4 @@
-// src/app/api/dashboard/overdue-payables/route.ts
+
 import { prisma } from '@/lib/prisma';
 import { requireSession, withErrorHandling } from '@/lib/api-utils';
 

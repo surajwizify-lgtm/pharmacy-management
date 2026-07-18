@@ -1,36 +1,9 @@
 @import "tailwindcss";
 
 
-/* Print isolation: only the invoice renders when printing */
-@media print {
-  body * {
-    visibility: hidden;
-  }
 
-  #bill-print-area,
-  #bill-print-area * {
-    visibility: visible;
-  }
-
-  #bill-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  @page {
-    size: A4;
-    margin: 12mm;
-  }
-}
 
 @theme {
-  /* ---------- Neutrals (cool slate, professional base) ---------- */
   --color-neutral-50: #f8fafc;
   --color-neutral-100: #f1f5f9;
   --color-neutral-200: #e2e8f0;
@@ -43,7 +16,6 @@
   --color-neutral-900: #0f172a;
   --color-neutral-950: #020617;
 
-  /* ---------- Primary — deep, trustworthy indigo-blue ---------- */
   --color-primary-50: #eff6ff;
   --color-primary-100: #dbeafe;
   --color-primary-200: #bfdbfe;
@@ -56,7 +28,6 @@
   --color-primary-900: #163574;
   --color-primary-950: #0f2249;
 
-  /* ---------- Secondary — refined emerald green ---------- */
   --color-secondary-50: #ecfdf5;
   --color-secondary-100: #d1fae5;
   --color-secondary-200: #a7f3d0;
@@ -69,7 +40,6 @@
   --color-secondary-900: #094631;
   --color-secondary-950: #04271b;
 
-  /* ---------- Accent — teal (calm, modern highlight) ---------- */
   --color-accent-50: #f0fdfa;
   --color-accent-100: #ccfbf1;
   --color-accent-200: #99f6e4;
@@ -81,7 +51,6 @@
   --color-accent-800: #115e59;
   --color-accent-900: #134e4a;
 
-  /* ---------- Purple — rich violet, tasteful pop ---------- */
   --color-purple-50: #f5f3ff;
   --color-purple-100: #ede9fe;
   --color-purple-200: #ddd6fe;
@@ -93,7 +62,6 @@
   --color-purple-800: #5b21b6;
   --color-purple-900: #4c1d95;
 
-  /* ---------- Amber — warm, confident warning tone ---------- */
   --color-amber-50: #fffbeb;
   --color-amber-100: #fef3c7;
   --color-amber-200: #fde68a;
@@ -105,7 +73,6 @@
   --color-amber-800: #92400e;
   --color-amber-900: #78350f;
 
-  /* ---------- Danger — clear, unambiguous red ---------- */
   --color-danger-50: #fef2f2;
   --color-danger-100: #fee2e2;
   --color-danger-200: #fecaca;
@@ -117,7 +84,6 @@
   --color-danger-800: #991b1b;
   --color-danger-900: #7f1d1d;
 
-  /* ---------- Sky — light informational blue ---------- */
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;
   --color-sky-200: #bae6fd;
@@ -129,7 +95,6 @@
   --color-sky-800: #075985;
   --color-sky-900: #0c4a6e;
 
-  /* ---------- Rose — for subtle destructive/highlight accents ---------- */
   --color-rose-50: #fff1f2;
   --color-rose-100: #ffe4e6;
   --color-rose-200: #fecdd3;
@@ -148,7 +113,6 @@
   --color-surface-900: #0d0f13;
   --color-surface-950: #08090c;
 
-  /* ---------- Indigo — a second "brand" tone, cooler than primary ---------- */
   --color-indigo-50: #eef2ff;
   --color-indigo-100: #e0e7ff;
   --color-indigo-200: #c7d2fe;
@@ -160,7 +124,6 @@
   --color-indigo-800: #3730a3;
   --color-indigo-900: #312e81;
 
-  /* ---------- Gold — premium accent for highlights/badges ---------- */
   --color-gold-50: #fefce8;
   --color-gold-100: #fef9c3;
   --color-gold-300: #fde047;
@@ -168,7 +131,6 @@
   --color-gold-500: #eab308;
   --color-gold-600: #ca8a04;
 
-  /* ---------- Success/Info/Warning — explicit semantic aliases ---------- */
   --color-success-500: #0eab6f;
   --color-success-600: #078857;
   --color-info-500: #0ea5e9;
@@ -176,93 +138,16 @@
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
 
-  /* ---------- Glow / overlay tints for glassmorphism effects ---------- */
   --color-overlay-white: rgba(255, 255, 255, 0.06);
   --color-overlay-black: rgba(0, 0, 0, 0.4);
 }
 
-/* @media print {
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-} */
-.print-area {
+
+/* .print-area {
   display: none;
 }
 
-/* @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  .print-area,
-  .print-area * {
-    visibility: visible;
-  }
-
-  .print-area {
-    display: block !important;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-} */
-/* 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-
-  #bill-print-area,
-  #bill-print-area * {
-    visibility: visible;
-  }
-
-  #bill-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-
-  .print-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 6px;
-  }
-
-  .print-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 10px;
-    border-top: 1px solid #ccc;
-    padding-top: 6px;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  @page {
-    size: A4;
-    margin: 20mm 12mm;
-     extra top/bottom margin so content doesn't overlap header/footer */
-/* }
-/* } */
+ */
 
 
 @media print {

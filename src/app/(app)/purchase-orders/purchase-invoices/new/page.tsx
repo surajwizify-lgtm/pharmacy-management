@@ -50,7 +50,6 @@ function num(v: string) {
     return Number.isFinite(n) ? n : 0;
 }
 
-// taxable value + gst split for one line, honoring inter-state (IGST) vs intra-state (CGST+SGST)
 function calcLine(item: ItemRow, isInterState: boolean) {
     const qty = num(item.quantity);
     const rate = num(item.purchaseRate);
@@ -71,7 +70,6 @@ function calcLine(item: ItemRow, isInterState: boolean) {
     return { taxableValue, gstAmount, cgstAmount, sgstAmount, igstAmount, totalAmount };
 }
 
-// compact input used throughout the items table — no label wrapper, tiny padding
 function Cell({
     type = 'text',
     value,
@@ -159,8 +157,6 @@ export default function NewPurchasePage() {
     function duplicateItem(index: number) {
         setItems((prev) => {
             const source = prev[index];
-            // Same product + pricing/GST info, but batch-specific fields reset
-            // so the user just fills in a new batch number, dates, qty.
             const clone: ItemRow = {
                 ...source,
                 batchNumber: '',
@@ -259,7 +255,6 @@ export default function NewPurchasePage() {
     return (
         <div className="mx-auto max-w-[1400px] pb-6">
             <form onSubmit={handleSubmit} className="flex h-[calc(100vh-2rem)] flex-col">
-                {/* Sticky top bar: title + submit, always visible, no scrolling needed to save */}
                 <div className="flex shrink-0 items-center justify-between border-b border-slate-200 pb-3">
                     <div>
                         <h1 className="text-xl font-bold text-slate-900">New purchase</h1>
@@ -284,7 +279,6 @@ export default function NewPurchasePage() {
                     </div>
                 </div>
 
-                {/* PO + Invoice fields, compact single row, no section cards */}
                 <div className="grid shrink-0 grid-cols-2 gap-x-6 gap-y-2 border-b border-slate-200 py-3 lg:grid-cols-4 xl:grid-cols-8">
                     <div className="xl:col-span-2">
                         <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Supplier</label>
@@ -340,7 +334,6 @@ export default function NewPurchasePage() {
                     </div>
                 </div>
 
-                {/* Items table — scrolls internally, everything else on the page stays fixed */}
                 <div className="flex min-h-0 flex-1 flex-col py-3">
                     <div className="mb-2 flex shrink-0 items-center justify-between">
                         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
@@ -500,14 +493,6 @@ export default function NewPurchasePage() {
                                                     className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                                 />
                                             </td>
-                                            {/* <td className="px-1 py-1">
-                                                <input
-                                                    type="text"
-                                                    value={it.location}
-                                                    onChange={(e) => updateItem(i, { location: e.target.value })}
-                                                    className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                />
-                                            </td> */}
                                             <td className="px-1 py-1">
                                                 <select
                                                     value={it.location}
@@ -516,7 +501,7 @@ export default function NewPurchasePage() {
                                                 >
                                                     <option value="">—</option>
                                                     {locations.map((loc) => (
-                                                        <option key={loc.id} value={loc.name}>
+                                                        <option key={loc.id} value={loc.id}>
                                                             {loc.code ? `${loc.name} (${loc.code})` : loc.name}
                                                         </option>
                                                     ))}
@@ -525,18 +510,6 @@ export default function NewPurchasePage() {
                                             <td className="whitespace-nowrap px-1 py-1 text-right font-semibold text-slate-700">
                                                 ₹{c.totalAmount.toFixed(2)}
                                             </td>
-                                            {/* <td className="px-1 py-1 text-center">
-                                                {items.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeItem(i)}
-                                                        className="text-red-500 hover:underline"
-                                                        aria-label="Remove line"
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                )}
-                                            </td> */}
                                             <td className="px-1 py-1 text-center whitespace-nowrap">
                                                 <button
                                                     type="button"
@@ -566,8 +539,6 @@ export default function NewPurchasePage() {
                         </table>
                     </div>
                 </div>
-
-                {/* Totals — compact strip, always visible above the sticky action bar */}
                 <div className="flex shrink-0 items-center justify-end gap-6 border-t border-slate-200 pt-3 text-xs">
                     <span className="text-slate-500">Subtotal <span className="font-medium text-slate-700">₹{totals.subtotal.toFixed(2)}</span></span>
                     {isInterState ? (
