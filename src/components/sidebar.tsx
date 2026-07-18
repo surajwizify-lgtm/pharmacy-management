@@ -109,22 +109,15 @@ export function Sidebar({
     .toUpperCase();
 
   return (
-    // <aside className="fixed flex h-screen w-64 flex-col overflow-hidden border-r border-surface-200 bg-white">
     <aside
       className={clsx(
-        "fixed flex h-screen flex-col overflow-hidden border-r border-surface-200 bg-white transition-all duration-300",
+        "fixed flex h-screen flex-col p-2 overflow-hidden border-r border-surface-200 bg-white transition-all duration-300",
         collapsed ? "w-10" : "w-64"
       )}
     >
-      {/* Signature ambient wash — barely-there tint anchored to the brand mark */}
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary-500/[0.06] blur-[90px]" />
       <div className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-secondary-500/[0.05] blur-[90px]" />
-
-      {/* Brand */}
-      <div className="relative flex items-center gap-3 px-5 py-6">
-        {/* <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700 text-sm font-bold text-white shadow-md shadow-primary-500/20">
-          <span className="relative z-10">Rx</span>
-        </div> */}
+      <div className="relative flex items-center gap-3">
         <div className="relative w-full h-[100px] flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
           <Image
             src="/logo.png"
@@ -146,20 +139,10 @@ export function Sidebar({
             )}
           </button>
         </div>
-        {/* <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold leading-tight tracking-tight text-neutral-900">
-            Pharmacy POS
-          </p>
-          <p className="truncate text-[11px] font-medium text-neutral-500">
-            Management Console
-          </p>
-        </div> */}
       </div>
 
       <div className="relative mx-5 h-px bg-surface-200" />
-
-      {/* Nav */}
-      <nav className="relative flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+      <nav className="relative flex-1 space-y-0.5 overflow-y-auto py-4">
         {NAV_ITEMS.filter((item) => !role || item.roles.includes(role)).map((item) => {
           const active = pathname === item.href || pathname?.startsWith(item.href + '/');
           const Icon = item.icon;
@@ -192,9 +175,7 @@ export function Sidebar({
               </Link>
             );
           }
-
           const isOpen = openMenus[item.href] ?? active;
-
           return (
             <div key={item.href}>
               <button
@@ -241,7 +222,7 @@ export function Sidebar({
                   <div className="mt-1 ml-[27px] space-y-0.5 border-l border-surface-200 pl-4">
                     {item.children.map((child) => {
                       const childActive =
-                        pathname === child.href // || pathname?.startsWith(child.href + '/');
+                        pathname === child.href
                       return (
                         <Link
                           key={child.href}
@@ -272,10 +253,7 @@ export function Sidebar({
           );
         })}
       </nav>
-
       <div className="relative mx-5 h-px bg-surface-200" />
-
-      {/* User / sign out */}
       <div className="relative px-4 py-4">
         <div className="mb-3 flex items-center gap-3 rounded-xl bg-neutral-50 px-3 py-2.5 ring-1 ring-surface-200">
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-primary-600 text-xs font-semibold text-white">

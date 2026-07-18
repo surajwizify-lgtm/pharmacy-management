@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// If your Next.js version is 15+, `params` is a Promise — change the
-// signatures below to: { params }: { params: Promise<{ id: string }> }
-// and do `const { id } = await params;` inside each handler.
-
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const id = Number(params.id);
   const doctor = await prisma.doctor.findUnique({ where: { id } });
@@ -47,7 +43,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Failed to delete doctor:', err);
-    // Likely a foreign-key constraint (doctor is linked to existing bills)
     return NextResponse.json(
       { message: 'Could not delete doctor. It may be linked to existing bills.' },
       { status: 409 },

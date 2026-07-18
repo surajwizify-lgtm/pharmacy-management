@@ -7,13 +7,15 @@ import { updateproductSchema } from '@/lib/schemas';
 async function findOrThrow(id: number) {
   const product = await prisma.product.findUnique({
     where: { id },
-    include: { batches: { orderBy: { expiryDate: 'asc' } } },
+    include: {
+      batches: { orderBy: { expiryDate: 'asc' } },
+      category: true,
+    },
   });
   if (!product) throw notFound(`product ${id} not found`);
   return product;
 }
 
-// GET /api/products/:id - any authenticated role
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   return withErrorHandling(async () => {
     await requireSession();
@@ -23,31 +25,53 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   });
 }
 
-// PUT /api/products/:id - ADMIN/PHARMACIST, ports productsService.update
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   return withErrorHandling(async () => {
     await requireSession([Role.ADMIN, Role.PHARMACIST]);
     const id = Number(params.id);
     if (Number.isNaN(id)) throw badRequest('Invalid product id');
     const dto = updateproductSchema.parse(await req.json());
+    const { category, ...rest } = dto;
+
+    console.log('RAW BODY category:', JSON.stringify(category));
+    console.log('typeof category:', typeof category);
 
     await findOrThrow(id);
-    return prisma.product.update({
+
+    const updated = await prisma.product.update({
       where: { id },
-      data: { ...dto, version: { increment: 1 } },
+      data: {
+        ...rest,
+        version: { increment: 1 },
+        ...(category !== undefined && {
+          category: category
+            ? { connectOrCreate: { where: { name: category }, create: { name: category } } }
+            : { disconnect: true },
+        }),
+      },
+      include: { category: true },
     });
+
+    console.log('UPDATED product.categoryId:', updated.categoryId);
+    console.log('UPDATED product.category:', updated.category);
+
+    return updated;
   });
 }
 
-// DELETE /api/products/:id - ADMIN only. Soft delete (DISCONTINUED status),
-// matching MedicPOS's pattern rather than a hard delete.
+
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   return withErrorHandling(async () => {
     await requireSession([Role.ADMIN]);
     const id = Number(params.id);
     if (Number.isNaN(id)) throw badRequest('Invalid product id');
 
-    await findOrThrow(id);
-    return prisma.product.update({ where: { id }, data: { status: 'DISCONTINUED' } });
+    const product = await findOrThrow(id);
+    const newStatus = product.status === 'ACTIVE' ? 'DISCONTINUED' : 'ACTIVE';
+
+    return prisma.product.update({
+      where: { id },
+      data: { status: newStatus },
+    });
   });
 }

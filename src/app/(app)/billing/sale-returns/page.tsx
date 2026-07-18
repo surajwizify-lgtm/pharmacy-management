@@ -3,6 +3,8 @@ import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import { RotateCcw, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 interface ReturnItemRow {
     id: number;
@@ -65,16 +67,13 @@ export default function SalesReturnsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900">Sales Returns</h1>
-                    <p className="text-sm text-slate-500">All returns processed against sales bills.</p>
-                </div>
-                <div className="rounded-lg bg-slate-50 px-4 py-2 text-sm">
-                    <span className="text-slate-500">Total refunded: </span>
-                    <span className="font-semibold text-slate-800">₹{totalRefunded.toFixed(2)}</span>
-                </div>
-            </div>
+            <PageHeader
+                header={`Sales Returns`}
+                subheader="All returns processed against sales bills."
+            >
+                <span>Total refunded: </span>
+                <span>{`₹${totalRefunded.toFixed(2)}`}</span>
+            </PageHeader>
 
             <div className="card overflow-hidden">
                 <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">

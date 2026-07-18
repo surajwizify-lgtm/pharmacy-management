@@ -36,6 +36,8 @@ import {
   Download,
 } from 'lucide-react';
 import PrintBillButton from '@/components/billing/PrintBillButton';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 interface CartLine {
   productId: number;
@@ -108,8 +110,6 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-// Computes taxable value / GST amount for one cart line, depending on
-// whether the selling price is treated as GST-inclusive or GST-exclusive.
 function lineAmounts(l: CartLine, mode: GstMode) {
   const price = Number(l.sellingPrice);
   const gstPct = Number(l.gstPercentage);
@@ -148,24 +148,20 @@ export default function BillingPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
-  // ---- View bill (inline, shown below the lists) — read-only ----
   const [viewingBill, setViewingBill] = useState<Bill | null>(null);
   const [loadingViewBill, setLoadingViewBill] = useState(false);
   const [viewError, setViewError] = useState<string | null>(null);
   const [showViewBill, setShowViewBill] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
-  // ---- Invoice popup (separate from inline view, opened via the Invoice icon) — read-only ----
   const [showInvoicePopup, setShowInvoicePopup] = useState(false);
 
-  // ---- Doctor autocomplete ----
   const [doctorId, setDoctorId] = useState<number | null>(null);
   const [doctorName, setDoctorName] = useState('');
   const [doctorSuggestions, setDoctorSuggestions] = useState<DoctorOption[]>([]);
   const [showDoctorSuggestions, setShowDoctorSuggestions] = useState(false);
   const doctorBoxRef = useRef<HTMLDivElement>(null);
 
-  // ---- Hospital autocomplete ----
   const [hospitalId, setHospitalId] = useState<number | null>(null);
   const [hospitalName, setHospitalName] = useState('');
   const [hospitalSuggestions, setHospitalSuggestions] = useState<HospitalOption[]>([]);
@@ -187,7 +183,6 @@ export default function BillingPage() {
     loadBills();
   }, []);
 
-  // product search
   useEffect(() => {
     if (!search) {
       setResults([]);
@@ -200,8 +195,6 @@ export default function BillingPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Doctor suggestions (debounced
-  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (doctorBoxRef.current && !doctorBoxRef.current.contains(e.target as Node)) {
@@ -249,9 +242,8 @@ export default function BillingPage() {
     }
   }
 
-  // ---- Inline view (below the lists) — read-only ----
   async function openViewBill(id: number) {
-    setShowInvoicePopup(false); // ensure the popup isn't also open at the same time
+    setShowInvoicePopup(false);
     setShowViewBill(true);
     setViewError(null);
     setLoadingViewBill(true);
@@ -272,9 +264,9 @@ export default function BillingPage() {
     setViewError(null);
   }
 
-  // ---- Invoice popup (separate from inline view) — read-only ----
+
   async function openInvoicePopup(id: number) {
-    setShowViewBill(false); // ensure the inline view isn't also open at the same time
+    setShowViewBill(false);
     setShowInvoicePopup(true);
     setViewError(null);
     setLoadingViewBill(true);
@@ -329,7 +321,7 @@ export default function BillingPage() {
       }
       setReturningBillId(billId);
     } catch {
-      setReturningBillId(billId); // fall back to opening the modal, which will show its own message
+      setReturningBillId(billId);
     }
   }
 
@@ -342,24 +334,13 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Billing</h1>
-          <p className="text-sm text-slate-500">Manage all pharmacy bills.</p>
-        </div>
-
-        <Link href={'/billing/all-sales/new'}
-          // onClick={() => setShowCreateBill(true)}
-          className="rounded-md py-2 my-auto font-medium  transition-colors disabled:cursor-not-allowed px-5 disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700"
-        >
-          + Create New Bill
-        </Link>
-      </div>
-
-      {/* Main layout: bills table (left) + recent bills (right) */}
+      <PageHeader
+        header={`Invoices`}
+        subheader="Manage all pharmacy bills."
+      >
+        <HeaderButton text="Add Location" href="/billing/all-sales/new" />
+      </PageHeader>
       <div className="w-full">
-        {/* All bills */}
         <div className="card overflow-hidden lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
             <h2 className="flex items-center gap-2 font-medium text-slate-800">
@@ -436,7 +417,6 @@ export default function BillingPage() {
                   </tr>
                 ) : (
                   filteredBills.map((bill) => {
-                    // console.log('Rendering bill:', bill); // Debugging line
                     const name = bill.customer?.name || 'Walk In';
                     return (
                       <tr key={bill.id} className="group transition-colors hover:bg-slate-50/70">
@@ -496,13 +476,6 @@ export default function BillingPage() {
                             <button className="px-3 py-2.5 text-right">
                               <PrintBillButton billId={bill.id} label="" className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700" />
                             </button>
-                            {/* <Link
-                              href={`/billing/${bill.id}?edit=1`}
-                              title="Edit"
-                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-amber-50 hover:text-amber-600"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Link> */}
                             <button
                               title="Delete"
                               disabled={deletingId === bill.id}
@@ -523,8 +496,6 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Bill detail — inline, All Bills list ke niche, jab koi bill select ho (Eye icon).
-          READ-ONLY: sirf totals + payment status/history, koi payment record karne ka form nahi. */}
       {showViewBill && (
         <div className="card space-y-6 p-6">
           <div className="flex items-start justify-between">
@@ -693,7 +664,6 @@ export default function BillingPage() {
       )}
 
 
-      {/* Invoice popup — READ-ONLY, sirf invoice. Koi payment card/form nahi. */}
       {showInvoicePopup && (
         <div
           id="view-bill-overlay"

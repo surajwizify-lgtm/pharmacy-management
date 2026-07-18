@@ -11,8 +11,7 @@ interface PrintBillButtonProps {
     className?: string;
 }
 
-// Raw shape returned by /api/bills/:id — field names differ from what
-// BillPrintTemplate expects, so we map explicitly rather than casting.
+
 interface RawBillItem {
     id: number;
     productId: number;
@@ -32,9 +31,7 @@ interface RawBill {
     id: number;
     billNumber: string;
     billDate: string;
-    customerName?: string | null;
-    customerPhone?: string | null;
-    customerGstin?: string | null;
+    customer?: any;
     ipOp?: string | null;
     doctor?: { name: string } | null;
     hospital?: { name: string } | null;
@@ -55,9 +52,7 @@ function toBillPrintData(raw: RawBill): BillPrintData {
         id: raw.id,
         billNumber: raw.billNumber,
         billDate: raw.billDate,
-        customerName: raw.customerName,
-        customerPhone: raw.customerPhone,
-        customerGstin: raw.customerGstin,
+        customer: raw.customer,
         ipOp: raw.ipOp,
         doctorName: raw.doctor?.name ?? null,
         hospitalName: raw.hospital?.name ?? null,
@@ -87,25 +82,6 @@ function toBillPrintData(raw: RawBill): BillPrintData {
 export default function PrintBillButton({ billId, label = "Print", className }: PrintBillButtonProps) {
     const [bill, setBill] = useState<BillPrintData | null>(null);
     const [loading, setLoading] = useState(false);
-
-    // async function handlePrint() {
-    //     setLoading(true);
-    //     try {
-    //         const data = await apiFetch<RawBill>(`/api/bills/${billId}?include=full`);
-    //         setBill(toBillPrintData(data));
-    //         // Wait a tick so the print template actually mounts before print() fires
-    //         requestAnimationFrame(() => {
-    //             requestAnimationFrame(() => {
-    //                 window.print();
-    //             });
-    //         });
-    //     } catch (err) {
-    //         console.error("Failed to load bill for printing", err);
-    //         alert("Could not load bill for printing.");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }
     useEffect(() => {
         const handleAfterPrint = () => setBill(null);
         window.addEventListener("afterprint", handleAfterPrint);
@@ -117,6 +93,7 @@ export default function PrintBillButton({ billId, label = "Print", className }: 
         try {
             const data = await apiFetch<RawBill>(`/api/bills/${billId}?include=full`);
             setBill(toBillPrintData(data));
+            console.log(data)
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     window.print();
@@ -130,30 +107,6 @@ export default function PrintBillButton({ billId, label = "Print", className }: 
         }
     }
 
-    // return (
-    //     <>
-    //         <button
-    //             type="button"
-    //             onClick={handlePrint}
-    //             disabled={loading}
-    //             className={className ?? "flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"}
-    //         >
-    //             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
-    //             {label}
-    //         </button>
-    //         {/*
-    //           Portal this out of the current DOM subtree and into <body>.
-    //           PrintBillButton is often rendered inside a `.no-print` modal —
-    //           if BillPrintTemplate stayed nested inside that modal, it would
-    //           inherit `display: none` from the ancestor during print, no
-    //           matter what print:block says on itself. Rendering it directly
-    //           under <body> avoids that entirely.
-    //         */}
-    //         {bill && typeof document !== "undefined"
-    //             ? createPortal(<BillPrintTemplate bill={bill} />, document.body)
-    //             : null}
-    //     </>
-    // );
     return (
         <>
             <button

@@ -1,5 +1,7 @@
 "use client";
 
+import PageHeader from "@/components/common/Header";
+import HeaderButton from "@/components/common/HeaderButton";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 
@@ -123,19 +125,13 @@ export default function CustomersPage() {
     }
 
     return (
-        <div className="p-6 max-w-6xl mx-auto bg-neutral-50 min-h-screen">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-neutral-900">Customers</h1>
-                    <p className="text-sm text-neutral-500">Manage customer records used across billing.</p>
-                </div>
-                <button
-                    onClick={openCreateModal}
-                    className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-colors"
-                >
-                    + Add Customer
-                </button>
-            </div>
+        <div className="">
+            <PageHeader
+                header={`Customers`}
+                subheader="Manage customer records used across billing."
+            >
+                <HeaderButton text="Add Location" onClick={openCreateModal} />
+            </PageHeader>
 
             <div className="mb-4">
                 <input
@@ -196,8 +192,8 @@ export default function CustomersPage() {
                                     <td className="px-4 py-2">
                                         <span
                                             className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.active
-                                                    ? "bg-secondary-100 text-secondary-800"
-                                                    : "bg-neutral-100 text-neutral-500"
+                                                ? "bg-secondary-100 text-secondary-800"
+                                                : "bg-neutral-100 text-neutral-500"
                                                 }`}
                                         >
                                             {c.active ? "Active" : "Inactive"}

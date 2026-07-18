@@ -1,5 +1,7 @@
 "use client";
 
+import PageHeader from "@/components/common/Header";
+import HeaderButton from "@/components/common/HeaderButton";
 import { useEffect, useState, useCallback } from "react";
 
 type LocationType = "RACK" | "SHELF" | "BIN" | "COLD_STORAGE" | "WAREHOUSE" | "OTHER";
@@ -23,6 +25,10 @@ const emptyForm = {
     description: "",
     active: true,
 };
+
+const inputClass =
+    "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100";
+const labelClass = "mb-1 block text-xs font-medium text-neutral-600";
 
 export default function LocationsPage() {
     const [locations, setLocations] = useState<Location[]>([]);
@@ -116,57 +122,64 @@ export default function LocationsPage() {
     }
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-semibold text-gray-900">Locations</h1>
-                <button
-                    onClick={openCreateModal}
-                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md"
-                >
-                    + Create Location
-                </button>
-            </div>
+        <div className="">
 
-            {loading && <p className="text-gray-500 text-sm">Loading locations...</p>}
-            {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+            <PageHeader
+                header={`Locations`}
+                subheader="Add rack, shelves, coldstorage"
+            >
+                <HeaderButton text="Add Location" onClick={openCreateModal} />
+            </PageHeader>
+
+            {loading && (
+                <div className="flex items-center gap-2 text-sm text-neutral-400">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-300" />
+                    Loading locations...
+                </div>
+            )}
+            {error && (
+                <div className="mb-4 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                    <span className="text-sm font-medium text-danger-700">{error}</span>
+                </div>
+            )}
 
             {!loading && !error && (
-                <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
                     <table className="w-full text-sm">
-                        <thead className="bg-gray-50 text-gray-600 text-left">
+                        <thead className="bg-neutral-50 text-left text-neutral-600">
                             <tr>
                                 <th className="px-4 py-2 font-medium">Name</th>
                                 <th className="px-4 py-2 font-medium">Code</th>
                                 <th className="px-4 py-2 font-medium">Type</th>
                                 <th className="px-4 py-2 font-medium">Batches</th>
                                 <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium text-right">Actions</th>
+                                <th className="px-4 py-2 text-right font-medium">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y">
+                        <tbody className="divide-y divide-neutral-100">
                             {locations.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-6 text-center text-gray-400">
+                                    <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
                                         No locations yet.
                                     </td>
                                 </tr>
                             )}
                             {locations.map((loc) => (
-                                <tr key={loc.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-2 font-medium text-gray-900">
+                                <tr key={loc.id} className="hover:bg-neutral-50">
+                                    <td className="px-4 py-2 font-medium text-neutral-900">
                                         {loc.name}
                                         {loc.description && (
-                                            <div className="text-xs text-gray-400">{loc.description}</div>
+                                            <div className="text-xs text-neutral-400">{loc.description}</div>
                                         )}
                                     </td>
-                                    <td className="px-4 py-2 text-gray-600">{loc.code || "—"}</td>
-                                    <td className="px-4 py-2 text-gray-600">{loc.type}</td>
-                                    <td className="px-4 py-2 text-gray-600">{loc._count.batches}</td>
+                                    <td className="px-4 py-2 text-neutral-600">{loc.code || "—"}</td>
+                                    <td className="px-4 py-2 text-neutral-600">{loc.type}</td>
+                                    <td className="px-4 py-2 text-neutral-600">{loc._count.batches}</td>
                                     <td className="px-4 py-2">
                                         <span
-                                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${loc.active
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-gray-100 text-gray-500"
+                                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${loc.active
+                                                ? "bg-secondary-100 text-secondary-700"
+                                                : "bg-neutral-100 text-neutral-500"
                                                 }`}
                                         >
                                             {loc.active ? "Active" : "Inactive"}
@@ -175,13 +188,13 @@ export default function LocationsPage() {
                                     <td className="px-4 py-2 text-right space-x-3">
                                         <button
                                             onClick={() => openEditModal(loc)}
-                                            className="text-blue-600 hover:underline text-sm"
+                                            className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
                                         >
                                             Edit
                                         </button>
                                         <button
                                             onClick={() => handleDelete(loc)}
-                                            className="text-red-600 hover:underline text-sm"
+                                            className="text-sm text-danger-600 hover:text-danger-700 hover:underline"
                                         >
                                             Delete
                                         </button>
@@ -194,43 +207,47 @@ export default function LocationsPage() {
             )}
 
             {modalOpen && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                        <h2 className="text-lg font-semibold mb-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <h2 className="mb-4 text-lg font-semibold text-neutral-800">
                             {editingId ? "Edit Location" : "Create Location"}
                         </h2>
 
-                        {formError && <p className="text-red-600 text-sm mb-3">{formError}</p>}
+                        {formError && (
+                            <div className="mb-3 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2">
+                                <span className="text-sm font-medium text-danger-700">{formError}</span>
+                            </div>
+                        )}
 
                         <div className="space-y-3">
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className={labelClass}>
                                     Name *
                                 </label>
                                 <input
                                     type="text"
                                     value={form.name}
                                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                    className="w-full border rounded-md px-3 py-2 text-sm"
+                                    className={inputClass}
                                     placeholder="e.g. Rack A1"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className={labelClass}>
                                     Code
                                 </label>
                                 <input
                                     type="text"
                                     value={form.code}
                                     onChange={(e) => setForm({ ...form, code: e.target.value })}
-                                    className="w-full border rounded-md px-3 py-2 text-sm"
+                                    className={inputClass}
                                     placeholder="e.g. A1-03"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className={labelClass}>
                                     Type
                                 </label>
                                 <select
@@ -238,7 +255,7 @@ export default function LocationsPage() {
                                     onChange={(e) =>
                                         setForm({ ...form, type: e.target.value as LocationType })
                                     }
-                                    className="w-full border rounded-md px-3 py-2 text-sm"
+                                    className={inputClass}
                                 >
                                     {LOCATION_TYPES.map((t) => (
                                         <option key={t} value={t}>
@@ -249,38 +266,39 @@ export default function LocationsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className={labelClass}>
                                     Description
                                 </label>
                                 <textarea
                                     value={form.description}
                                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                    className="w-full border rounded-md px-3 py-2 text-sm"
+                                    className={inputClass}
                                     rows={2}
                                 />
                             </div>
 
-                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <label className="flex items-center gap-2 text-sm text-neutral-700">
                                 <input
                                     type="checkbox"
                                     checked={form.active}
                                     onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                                    className="h-3.5 w-3.5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
                                 />
                                 Active
                             </label>
                         </div>
 
-                        <div className="flex justify-end gap-2 mt-6">
+                        <div className="mt-6 flex justify-end gap-2">
                             <button
                                 onClick={() => setModalOpen(false)}
-                                className="px-4 py-2 text-sm rounded-md border text-gray-600 hover:bg-gray-50"
+                                className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving ? "Saving..." : editingId ? "Save Changes" : "Create"}
                             </button>

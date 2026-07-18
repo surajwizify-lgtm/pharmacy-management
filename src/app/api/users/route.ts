@@ -7,7 +7,7 @@ import { createUserSchema } from '@/lib/schemas';
 
 const USER_SELECT = { id: true, username: true, fullName: true, role: true, active: true, createdAt: true };
 
-// GET /api/users - ADMIN only, ports UsersController.findAll
+
 export async function GET() {
   return withErrorHandling(async () => {
     await requireSession([Role.ADMIN]);
@@ -15,7 +15,6 @@ export async function GET() {
   });
 }
 
-// POST /api/users - ADMIN only, ports UsersController.create / UsersService.create
 export async function POST(req: NextRequest) {
   return withErrorHandling(async () => {
     await requireSession([Role.ADMIN]);
