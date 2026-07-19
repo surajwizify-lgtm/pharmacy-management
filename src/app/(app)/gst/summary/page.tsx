@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import GstSummaryPrintButton from "@/components/common/GstSummaryPrintButton";
 import GstSummaryPrint from "@/components/print/GstSummaryPrint";
 import Button from '@/components/Button';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 type GstSummary = {
     from: string;
@@ -87,7 +88,6 @@ export default function GstSummaryPage() {
     useEffect(() => {
         fetchSummary();
         fetchPeriods();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     async function handleSnapshot() {
@@ -137,11 +137,6 @@ export default function GstSummaryPage() {
             setError(err.message);
         }
     }
-    //   useEffect(() => {
-    //     if (!id) return;
-    //     fetchSupplier();
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [id]);
     useEffect(() => {
         if (!showPrint) return;
 
@@ -165,13 +160,19 @@ export default function GstSummaryPage() {
     }, []);
 
     return (
-        <div className="mx-auto max-w-5xl space-y-6 p-6">
-            <h1 className="text-2xl font-semibold text-neutral-900">GST Summary</h1>
-
-
-
-            {/* Date range picker */}
-
+        <div className="">
+            <PageHeader
+                header={`GST Summary`}
+                subheader="View Gst Summary Here"
+            >
+                <Button
+                    onClick={() => setShowPrint(true)}
+                    variant='success'
+                    size='sm'
+                >
+                    Print summary
+                </Button>
+            </PageHeader>
             <div className="flex w-full items-end justify-between">
                 <div className="flex flex-wrap items-end gap-3">
                     <div>
@@ -206,16 +207,9 @@ export default function GstSummaryPage() {
                     >
                         {saving ? 'Saving…' : 'Snapshot as filing period'}
                     </button>
-                    {/* <div className='w-[]'></div> */}
                 </div>
 
-                <Button
-                    onClick={() => setShowPrint(true)}
-                    variant='success'
-                // className="rounded-md bg-primary-600 px-4 py-2 text-white"
-                >
-                    🖨 Print summary
-                </Button>
+
             </div>
 
             {error && (
@@ -224,7 +218,6 @@ export default function GstSummaryPage() {
                 </div>
             )}
 
-            {/* Summary cards */}
             {summary && (
                 <div className="grid grid-cols-3 gap-4">
                     <SummaryCard label="Total Output GST" value={summary.totalOutputGst} sub="Collected from sales" />
@@ -238,7 +231,6 @@ export default function GstSummaryPage() {
                 </div>
             )}
 
-            {/* Breakdown */}
             {summary && (
                 <div className="grid grid-cols-2 gap-4">
                     <BreakdownTable title="Output (Sales)" data={summary.breakdown.output} />
@@ -246,7 +238,6 @@ export default function GstSummaryPage() {
                 </div>
             )}
 
-            {/* Filing periods */}
             <div>
                 <h2 className="mb-3 text-lg font-semibold text-neutral-900">Filing History</h2>
                 <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
@@ -313,20 +304,6 @@ export default function GstSummaryPage() {
                     </table>
                 </div>
             </div>
-            {/* {showPrint && summary && (
-                <div className="print-area">
-                    <GstSummaryPrint
-                        from={summary.from}
-                        to={summary.to}
-                        totalOutputGst={summary.totalOutputGst}
-                        totalInputGst={summary.totalInputGst}
-                        netPayable={summary.netPayable}
-                        output={summary.breakdown.output}
-                        input={summary.breakdown.input}
-                        periods={periods}
-                    />
-                </div>
-            )} */}
             {showPrint && summary && (
                 <GstSummaryPrint
                     from={summary.from}

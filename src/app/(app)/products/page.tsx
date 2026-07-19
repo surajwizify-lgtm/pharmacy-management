@@ -6,11 +6,14 @@ import Link from 'next/link';
 import { apiFetch } from '@/lib/api-client';
 import type { product } from '@/types';
 import { ProductFormModal } from '@/components/products/ProductFormModal';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
+import Input from '@/components/Input';
+import Button from '@/components/Button';
 
 type GstType = 'INCLUSIVE' | 'EXCLUSIVE';
 type StatusFilter = 'ALL' | 'ACTIVE' | 'DISCONTINUED';
 
-// ---------- helpers ----------
 
 function gstTypeBadgeClass(type?: GstType) {
   return type === 'EXCLUSIVE'
@@ -19,9 +22,9 @@ function gstTypeBadgeClass(type?: GstType) {
 }
 
 function stockBadge(qty: number) {
-  if (qty <= 0) return { label: 'Out of stock', cls: 'bg-danger-100 text-danger-700' };
+  if (qty <= 0) return { label: '0', cls: 'bg-danger-100 text-danger-700' };
   if (qty <= 20) return { label: `${qty} left`, cls: 'bg-amber-100 text-amber-700' };
-  return { label: `${qty} in stock`, cls: 'bg-secondary-100 text-secondary-700' };
+  return { label: `${qty}`, cls: 'bg-secondary-100 text-secondary-700' };
 }
 
 function getGstType(m: product): GstType {
@@ -32,7 +35,6 @@ function getStock(m: product) {
   return m.batches.reduce((s, b) => s + b.quantityAvailable, 0);
 }
 
-// ---------- icons (inline, no new deps) ----------
 
 const SearchIcon = () => (
   <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.75">
@@ -67,8 +69,6 @@ const EmptyIcon = () => (
   </svg>
 );
 
-// ---------- stat card ----------
-
 function StatCard({
   label,
   value,
@@ -94,26 +94,34 @@ function StatCard({
   );
 }
 
-// ---------- confirm discontinue dialog ----------
 
 function ConfirmDialog({
   open,
   productName,
+  isActive,
   onCancel,
   onConfirm,
 }: {
   open: boolean;
   productName: string;
+  isActive: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
   if (!open) return null;
+
+  const actionLabel = isActive ? 'Discontinue' : 'Activate';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 px-4">
       <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-        <h3 className="text-sm font-semibold text-neutral-900">Discontinue product</h3>
+        <h3 className="text-sm font-semibold text-neutral-900">
+          {isActive ? 'Discontinue product' : 'Activate product'}
+        </h3>
         <p className="mt-1.5 text-sm text-neutral-500">
-          {productName} will be marked discontinued and hidden from new sales. This can be reversed later from the product record.
+          {isActive
+            ? `${productName} will be marked discontinued and hidden from new sales. This can be reversed later from the product record.`
+            : `${productName} will be marked active again and available for new sales.`}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <button
@@ -123,18 +131,17 @@ function ConfirmDialog({
             Cancel
           </button>
           <button
-            className="rounded-lg bg-danger-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-danger-700"
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium text-white ${isActive ? 'bg-danger-600 hover:bg-danger-700' : 'bg-success-600 hover:bg-success-700'
+              }`}
             onClick={onConfirm}
           >
-            Discontinue
+            {actionLabel}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
-// ---------- main page ----------
 
 export default function ProductsPage() {
   const { data: session } = useSession();
@@ -163,7 +170,6 @@ export default function ProductsPage() {
   useEffect(() => {
     const t = setTimeout(load, 300);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const filtered = useMemo(
@@ -206,24 +212,12 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Products</h1>
-          <p className="text-sm text-neutral-500">Catalog, GST slabs, and stock overview.</p>
-        </div>
-        {canEdit && (
-          <button
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-            onClick={openCreate}
-          >
-            <PlusIcon />
-            Add product
-          </button>
-        )}
-      </div>
-
-      {/* Stats */}
+      <PageHeader
+        header={`Products`}
+        subheader="Catalog, GST slabs, and stock overview."
+      >
+        <HeaderButton text="Add product" onClick={openCreate} />
+      </PageHeader>
       <div className="flex flex-wrap gap-3">
         <StatCard label="Total products" value={stats.total} tone="primary" />
         <StatCard label="Active" value={stats.active} tone="secondary" />
@@ -231,14 +225,13 @@ export default function ProductsPage() {
         <StatCard label="Prescription only" value={stats.rx} tone="purple" />
       </div>
 
-      {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative max-w-sm flex-1">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-400">
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400">
             <SearchIcon />
           </span>
-          <input
-            className="w-full rounded-lg border border-neutral-200 bg-white py-2 pl-9 pr-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+          <Input
+            // className="w-full rounded-lg border border-neutral-200 bg-white py-2 pl-9 pr-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
             placeholder="Search by name, barcode, or HSN code…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -261,7 +254,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-400">
@@ -349,21 +341,21 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {canEdit && (
-                        <div className="flex justify-end gap-1">
-                          <button
-                            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                        <div className="grid grid-cols-3 gap-1">
+                          <Button
                             onClick={() => openEdit(m)}
+                            variant='ghost'
                           >
                             <EditIcon />
-                            Edit
-                          </button>
-                          {m.status === 'ACTIVE' && role === 'ADMIN' && (
+                          </Button>
+                          {role === 'ADMIN' && (
                             <button
-                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-danger-600 hover:bg-danger-50"
+                              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium  hover:bg-danger-50 col-span-2 ${m.status === 'ACTIVE' ? "text-danger-600" : "text-success-600"}`}
                               onClick={() => setPendingDiscontinue(m)}
                             >
-                              <BanIcon />
-                              Discontinue
+                              {m.status === 'ACTIVE' && <BanIcon />}
+                              {m.status === 'ACTIVE' ? "Discontinue" : "Activate"}
+
                             </button>
                           )}
                         </div>
@@ -376,17 +368,16 @@ export default function ProductsPage() {
           </tbody>
         </table>
       </div>
-
       <ProductFormModal
         open={showForm}
         onClose={() => setShowForm(false)}
         product={editingProduct}
         onSuccess={load}
       />
-
       <ConfirmDialog
         open={!!pendingDiscontinue}
         productName={pendingDiscontinue?.name ?? ''}
+        isActive={pendingDiscontinue?.status === 'ACTIVE'}
         onCancel={() => setPendingDiscontinue(null)}
         onConfirm={confirmDiscontinue}
       />

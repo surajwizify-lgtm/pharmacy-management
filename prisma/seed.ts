@@ -28,6 +28,16 @@ async function main() {
       role: Role.PHARMACIST,
     },
   });
+  const pharmacist2 = await prisma.user.upsert({
+    where: { username: 'pharmacist2' },
+    update: {},
+    create: {
+      username: 'pharmacist2',
+      passwordHash: await bcrypt.hash('Pharma@123', 10),
+      fullName: 'Second Pharmacist',
+      role: Role.PHARMACIST,
+    },
+  });
 
   // hsnCode is no longer unique on Product, so upsert-by-hsnCode won't work.
   // Use findFirst + create instead (fine for dev seeding).
@@ -351,6 +361,7 @@ async function main() {
   console.log({
     admin: admin.username,
     pharmacist: pharmacist.username,
+    pharmacist2: pharmacist2.username
     // paracetamol: paracetamol.name,
     // amoxicillin: amoxicillin.name,
   });

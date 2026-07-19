@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// If your Next.js version is 15+, `params` is a Promise — change the
-// signatures below to: { params }: { params: Promise<{ id: string }> }
-// and do `const { id } = await params;` inside each handler.
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const id = Number(params.id);

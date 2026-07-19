@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/gst/filing-periods — list all periods, most recent first
 export async function GET() {
     try {
         const periods = await prisma.gstFilingPeriod.findMany({
@@ -13,8 +12,6 @@ export async function GET() {
     }
 }
 
-// POST /api/gst/filing-periods
-// body: { periodStart, periodEnd } — snapshots the current summary into a locked record
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
@@ -22,7 +19,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'periodStart and periodEnd are required' }, { status: 400 });
         }
 
-        // Reuse the same aggregation as /api/gst/summary
         const summaryRes = await fetch(
             `${process.env.NEXT_PUBLIC_APP_URL}/api/gst/summary?from=${body.periodStart}&to=${body.periodEnd}`
         );

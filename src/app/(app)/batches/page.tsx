@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/api-client';
 import type { Batch } from '@/types';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 // Extend the shared Batch type for this page
 type BatchWithProduct = Batch & {
@@ -118,14 +120,16 @@ export default function BatchesPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onlyExpiring]);
-
   const sorted = useMemo(
     () =>
-      [...batches].sort(
-        (a, b) => daysUntil(a.expiryDate) - daysUntil(b.expiryDate)
-      ),
+      [...batches].sort((a, b) => {
+        const nameCompare = (a.product?.name ?? '').localeCompare(b.product?.name ?? '');
+        if (nameCompare !== 0) return nameCompare;
+        return daysUntil(a.expiryDate) - daysUntil(b.expiryDate);
+      }),
     [batches]
   );
+
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sorted;
@@ -167,14 +171,12 @@ export default function BatchesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-primary-600 to-primary-500 p-6 text-white shadow-lg">
-        <h1 className="text-3xl font-bold">Batches & Stock</h1>
-        <p className="mt-2 text-sm text-brand-100">
-          Monitor inventory batches, expiry dates and maintain FIFO stock
-          movement.
-        </p>
-      </div>
+      <PageHeader
+        header={`Batches & Stock`}
+        subheader="Monitor inventory batches, expiry dates and maintain FIFO stock
+          movement."
+      >
+      </PageHeader>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">

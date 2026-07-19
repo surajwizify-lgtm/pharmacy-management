@@ -8,8 +8,6 @@ function round2(n: number) {
 
 export async function POST(req: NextRequest) {
     const body = await req.json();
-    // body: { supplierId, purchaseInvoiceId?, returnNumber, reason, refundType?, items: [{ batchId, productId, quantity, unitPrice }] }
-
     if (!body.items?.length) {
         return NextResponse.json({ error: 'At least one item is required' }, { status: 400 });
     }
@@ -81,11 +79,6 @@ export async function POST(req: NextRequest) {
                 },
                 include: { items: true },
             });
-
-            // Reverses ITC already claimed on the original purchase.
-            // Stored as positive here — the summary route subtracts
-            // supplierReturn-linked INPUT entries from purchase-linked
-            // INPUT entries, so this must stay positive, not negative.
             await createGstLedgerEntry(tx, {
                 type: 'INPUT',
                 taxableValue: round2(totalTaxable),

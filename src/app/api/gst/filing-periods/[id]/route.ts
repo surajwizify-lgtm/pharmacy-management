@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// PATCH /api/gst/filing-periods/[id]
-// body: { filed?: boolean, amountPaid?: number }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const body = await req.json();

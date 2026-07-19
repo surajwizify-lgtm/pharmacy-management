@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma';
 import { requireSession, withErrorHandling, notFound, badRequest } from '@/lib/api-utils';
 import { recordPaymentSchema } from '@/lib/schemas';
 
-// POST /api/bills/:id/payments - ADMIN/PHARMACIST/CASHIER, ports BillingService.recordPayment
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   return withErrorHandling(async () => {
     await requireSession([Role.ADMIN, Role.PHARMACIST, Role.CASHIER]);

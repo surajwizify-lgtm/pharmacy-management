@@ -20,8 +20,8 @@ export default function AppShell({
 
             <main
                 className={clsx(
-                    "flex-1 overflow-y-auto pr-2 py-3 transition-all duration-300",
-                    collapsed ? "ml-20" : "ml-64"
+                    "flex-1 overflow-y-auto transition-all duration-300",
+                    collapsed ? "ml-10" : "ml-64"
                 )}
             >
                 {children}

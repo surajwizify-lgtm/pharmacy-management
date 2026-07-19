@@ -543,17 +543,6 @@ export default function SupplierDetailPage() {
                     </div>
                 </div>
             )}
-            {/* {showPrint && (
-                <div className="print-area">
-                    <SupplierLedgerPrint
-                        supplier={supplier}
-                        totalPOAmount={totalPOAmount}
-                        totalPaid={totalPaid}
-                        totalReturns={totalReturns}
-                        balanceDue={balanceDue}
-                    />
-                </div>
-            )} */}
             {showPrint && (
                 <SupplierLedgerPrint
                     supplier={supplier}

@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, RotateCcw } from 'lucide-react';
 import { SupplierReturnRow } from '@/components/purchase-orders/SupplierReturnRow';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 interface Supplier {
     id: number;
@@ -51,27 +53,13 @@ export default function SupplierReturnsPage() {
     }, []);
 
     return (
-        <div className="p-6 space-y-6">
-
-            <div className="flex items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-primary-700 to-indigo-700 px-6 py-6 shadow-sm">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-overlay-white">
-                        <RotateCcw className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-semibold text-white">Supplier Returns</h1>
-                        <p className="text-sm text-primary-100">Goods returned to suppliers and their refunds.</p>
-                    </div>
-                </div>
-
-                <Link
-                    href="/purchase-orders/return/new"
-                    className="flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-primary-700 shadow-sm transition-colors hover:bg-primary-50"
-                >
-                    <Plus className="h-4 w-4" />
-                    New Return
-                </Link>
-            </div>
+        <div className="">
+            <PageHeader
+                header={`Supplier Returns`}
+                subheader="Goods returned to suppliers and their refunds."
+            >
+                <HeaderButton text="New Return" href='/purchase-orders/suppliers/new' />
+            </PageHeader>
 
             {loading ? (
                 <div className="flex items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 py-16 text-sm text-neutral-400">

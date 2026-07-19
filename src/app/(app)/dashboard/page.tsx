@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import OverduePayablesList from '@/components/dashboard/OverduePayablesList';
 import CashFlowChart from '@/components/dashboard/CashFlowChart';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
 
 async function getStats() {
   const [productCount, activeproducts, allproductsWithBatches, expiringBatches, billsToday, revenueAgg] =
@@ -50,26 +52,13 @@ export default async function DashboardPage() {
   const stats = await getStats();
 
   return (
-    <div className="space-y-8 p-2">
-
-      {/* -------- Header -------- */}
-      <div className="flex items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-primary-700 to-indigo-700 px-6 py-6 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">
-            Welcome back, {session?.user?.fullName?.split(' ')[0]}
-          </h1>
-          <p className="text-sm text-primary-100">Here&apos;s what&apos;s happening at the pharmacy today.</p>
-        </div>
-        <Link
-          href="/billing/all-sales/new"
-          className="flex items-center gap-1.5 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-primary-700 shadow-sm transition-colors hover:bg-primary-50"
-        >
-          <Plus className="h-4 w-4" />
-          Create New Bill
-        </Link>
-      </div>
-
-      {/* -------- Stat cards -------- */}
+    <div className="space-y-8">
+      <PageHeader
+        header={`Welcome back, ${session?.user?.fullName?.split(' ')[0]}`}
+        subheader="Track your key metrics, recent activity, and team performance in one place."
+      >
+        <HeaderButton text="Create New Bill" href="/billing/all-sales/new" />
+      </PageHeader>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
           label="Active products"

@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CreatePurchaseOrderModal from '@/components/CreatePurchaseOrderModal';
+import PageHeader from "@/components/common/Header";
+import HeaderButton from "@/components/common/HeaderButton";
 
 export default function SuppliersPage() {
 
@@ -22,13 +24,13 @@ export default function SuppliersPage() {
     }, []);
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Suppliers</h1>
-                <Link href="/purchase-orders/suppliers/new" className="bg-green-700 text-white px-4 py-2 rounded">
-                    + Add Supplier
-                </Link>
-            </div>
+        <div className="">
+            <PageHeader
+                header={`Suppliers`}
+                subheader="Manage All Supplier Here"
+            >
+                <HeaderButton text="Add Supplier" href='/purchase-orders/suppliers/new' />
+            </PageHeader>
             <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <table className="w-full">
                     <thead className="border-b bg-slate-50">

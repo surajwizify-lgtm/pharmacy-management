@@ -1,90 +1,4 @@
-// import { NextRequest, NextResponse } from "next/server";
-// import { prisma } from "@/lib/prisma";
 
-// // POST /api/bills/:id/returns
-// // body: { reason?: string, items: [{ billItemId: number, quantity: number }] }
-// export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-//     const billId = Number(params.id);
-//     if (!Number.isInteger(billId) || billId <= 0) {
-//         return NextResponse.json({ error: "Invalid bill id" }, { status: 400 });
-//     }
-
-//     const body = await req.json();
-//     const reason: string | null = body.reason || null;
-//     const lines: { billItemId: number; quantity: number }[] = Array.isArray(body.items) ? body.items : [];
-
-//     const toReturn = lines.filter((l) => Number(l.quantity) > 0);
-//     if (toReturn.length === 0) {
-//         return NextResponse.json({ error: "Select at least one item with a quantity > 0" }, { status: 400 });
-//     }
-
-//     try {
-//         const bill = await prisma.bill.findUnique({
-//             where: { id: billId },
-//             include: { billItems: true },
-//         });
-//         if (!bill) return NextResponse.json({ error: "Bill not found" }, { status: 404 });
-
-//         // Validate every requested line against the original bill item
-//         for (const line of toReturn) {
-//             const original = bill.billItems.find((bi) => bi.id === line.billItemId);
-//             if (!original) {
-//                 return NextResponse.json(
-//                     { error: `Bill item ${line.billItemId} does not belong to this bill` },
-//                     { status: 400 }
-//                 );
-//             }
-//             if (line.quantity > original.quantity) {
-//                 return NextResponse.json(
-//                     { error: `Cannot return more than ${original.quantity} units of "${original.batchNumber}"` },
-//                     { status: 400 }
-//                 );
-//             }
-//         }
-
-//         const result = await prisma.$transaction(async (tx) => {
-//             let totalRefund = 0;
-//             const returnItemsData: { batchId: number; quantity: number; refundAmount: number }[] = [];
-
-//             for (const line of toReturn) {
-//                 const original = bill.billItems.find((bi) => bi.id === line.billItemId)!;
-//                 // Per-unit refund = original line's gst-inclusive unit price
-//                 const perUnit = Number(original.totalAmount) / original.quantity;
-//                 const refundAmount = Number((perUnit * line.quantity).toFixed(2));
-
-//                 returnItemsData.push({
-//                     batchId: original.batchId,
-//                     quantity: line.quantity,
-//                     refundAmount,
-//                 });
-//                 totalRefund += refundAmount;
-
-//                 // Stock goes back to the batch
-//                 await tx.batch.update({
-//                     where: { id: original.batchId },
-//                     data: { quantityAvailable: { increment: line.quantity } },
-//                 });
-//             }
-
-//             const salesReturn = await tx.return.create({
-//                 data: {
-//                     billId,
-//                     reason,
-//                     totalRefund: Number(totalRefund.toFixed(2)),
-//                     returnItems: { create: returnItemsData },
-//                 },
-//                 include: { returnItems: true },
-//             });
-
-//             return salesReturn;
-//         });
-
-//         return NextResponse.json({ data: result }, { status: 201 });
-//     } catch (err) {
-//         console.error(`POST /api/bills/${params.id}/returns failed`, err);
-//         return NextResponse.json({ error: "Failed to process return" }, { status: 500 });
-//     }
-// }
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createGstLedgerEntry } from '@/lib/gst-ledger';
@@ -92,8 +6,6 @@ import { createGstLedgerEntry } from '@/lib/gst-ledger';
 function round2(n: number) {
     return Math.round(n * 100) / 100;
 }
-
-// GET — how much of each billItem is still returnable (sold - already returned)
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     const billId = Number(params.id);
 
@@ -104,9 +16,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (!bill) {
         return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
     }
-
-    // Sum everything already returned against this bill, grouped by batch —
-    // ReturnItem only stores batchId, not billItemId, so we match on that.
     const priorReturnItems = await prisma.returnItem.findMany({
         where: { return: { billId } },
     });
@@ -127,11 +36,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ remainingByBillItemId, fullyReturned });
 }
 
-// POST — create the return, reverse the GST, restore stock
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
     const billId = Number(params.id);
     const body = await req.json();
-    // body: { reason, items: [{ billItemId, quantity }] }
 
     if (!body.items?.length) {
         return NextResponse.json({ error: 'At least one item is required' }, { status: 400 });
@@ -195,9 +102,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 totalCgst += cgstAmount;
                 totalSgst += sgstAmount;
                 totalIgst += igstAmount;
-
-                // update running total so a second line against the same batch
-                // in this same request also gets checked correctly
                 returnedByBatch.set(billItem.batchId, alreadyReturned + reqItem.quantity);
             }
 
@@ -214,11 +118,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 },
                 include: { returnItems: true },
             });
-
-            // Reverses output tax already collected on the sale.
-            // Positive magnitude — /api/gst/summary subtracts return-linked
-            // OUTPUT entries from bill-linked OUTPUT entries, same convention
-            // as the supplier-return side.
             await createGstLedgerEntry(tx, {
                 type: 'OUTPUT',
                 taxableValue: round2(totalTaxable),
@@ -229,7 +128,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 returnId: saleReturn.id,
             });
 
-            // Stock comes back into the batch (opposite of a supplier return).
             for (const item of preparedItems) {
                 await tx.batch.update({
                     where: { id: item.batchId },

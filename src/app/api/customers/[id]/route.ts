@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// PUT /api/customers/:id — update
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
     const id = Number(params.id);
     if (Number.isNaN(id)) {
@@ -39,7 +38,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-// DELETE /api/customers/:id — delete
+
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
     const id = Number(params.id);
     if (Number.isNaN(id)) {
@@ -64,7 +63,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
         return NextResponse.json({ error: 'Failed to delete customer' }, { status: 500 });
     }
 }
-// GET /api/customers/:id — full detail with bills + payment history
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
     const id = Number(params.id);
     if (Number.isNaN(id)) {
