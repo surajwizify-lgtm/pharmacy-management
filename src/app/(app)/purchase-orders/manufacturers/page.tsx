@@ -4,7 +4,10 @@ import { Prisma, SupplierStatus } from "@prisma/client";
 import DeleteManufacturerButton from "@/components/DeleteManufacturerButton";
 import PageHeader from "@/components/common/Header";
 import HeaderButton from "@/components/common/HeaderButton";
+import Container from "@/components/common/Container";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 export const dynamic = "force-dynamic";
 
 export default async function ManufacturerListPage({
@@ -43,81 +46,103 @@ export default async function ManufacturerListPage({
                 <HeaderButton text="New Manufacturer" href='/purchase-orders/manufacturers/new' />
             </PageHeader>
 
-            <form className="flex gap-3 mb-4" method="get">
-                <input
-                    type="text"
-                    name="search"
-                    defaultValue={search}
-                    placeholder="Search name, contact, phone, email..."
-                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
-                />
-                <select
-                    name="status"
-                    defaultValue={status || ""}
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm"
-                >
-                    <option value="">All Status</option>
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                </select>
-                <button
-                    type="submit"
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                >
-                    Filter
-                </button>
-            </form>
+            <Container>
+                <form className="flex gap-3 mb-4" method="get">
+                    <input
+                        type="text"
+                        name="search"
+                        defaultValue={search}
+                        placeholder="Search name, contact, phone, email..."
+                        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    />
+                    <select
+                        name="status"
+                        defaultValue={status || ""}
+                        className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    >
+                        <option value="">All Status</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+                    </select>
+                    <button
+                        type="submit"
+                        className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                    >
+                        Filter
+                    </button>
+                </form>
 
-            <div className="overflow-x-auto border rounded-md">
-                <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-left">
-                        <tr>
-                            <th className="px-4 py-2 font-medium">Name</th>
-                            <th className="px-4 py-2 font-medium">Contact Person</th>
-                            <th className="px-4 py-2 font-medium">Phone</th>
-                            <th className="px-4 py-2 font-medium">Email</th>
-                            <th className="px-4 py-2 font-medium">Status</th>
-                            <th className="px-4 py-2 font-medium text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {manufacturers.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                                    No manufacturers found.
-                                </td>
-                            </tr>
-                        )}
-                        {manufacturers.map((m) => (
-                            <tr key={m.id} className="border-t">
-                                <td className="px-4 py-2">{m.name}</td>
-                                <td className="px-4 py-2">{m.contactPerson || "-"}</td>
-                                <td className="px-4 py-2">{m.phone || "-"}</td>
-                                <td className="px-4 py-2">{m.email || "-"}</td>
-                                <td className="px-4 py-2">
-                                    <span
-                                        className={`inline-block rounded-full px-2 py-0.5 text-xs ${m.status === "ACTIVE"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-gray-100 text-gray-600"
-                                            }`}
-                                    >
-                                        {m.status}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-2 text-right space-x-3">
-                                    <Link
-                                        href={`/purchase-orders/manufacturers/${m.id}`}
-                                        className="text-green-600 hover:underline"
-                                    >
-                                        Edit
-                                    </Link>
-                                    <DeleteManufacturerButton id={m.id} name={m.name} />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                <div className="overflow-x-auto border rounded-md">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Contact Person</TableHead>
+                                <TableHead>Phone</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
+                            {manufacturers.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={6}>
+                                        No manufacturers found.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                manufacturers.map((m) => (
+                                    <TableRow key={m.id}>
+                                        <TableCell>
+                                            {m.name}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {m.contactPerson || "-"}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {m.phone || "-"}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {m.email || "-"}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <span
+                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs ${m.status === "ACTIVE"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-gray-100 text-gray-600"
+                                                    }`}
+                                            >
+                                                {m.status}
+                                            </span>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <div className="flex items-center gap-2">
+                                                <Button variant="link" >
+                                                    <Link href={`/purchase-orders/manufacturers/${m.id}`}>
+                                                        Edit
+                                                    </Link>
+                                                </Button>
+
+                                                <DeleteManufacturerButton
+                                                    id={m.id}
+                                                    name={m.name}
+                                                />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </Container>
         </div>
     );
 }

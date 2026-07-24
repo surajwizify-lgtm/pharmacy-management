@@ -13,8 +13,8 @@ const PHARMACY = {
 // prescription fields. This extends it loosely so the invoice can render them
 // when present, without requiring you to touch the shared type immediately.
 export interface InvoiceBill extends Bill {
-  doctor?: { name: string } | null;
-  hospital?: { name: string; address?: string | null } | null;
+  // doctor?: { name: string, id: number, } | null;
+  // hospital?: { name: string; address?: string | null } | null;
   prescriptionNotes?: string | null;
 }
 
@@ -61,9 +61,9 @@ export default function BillInvoice({ bill, className = '' }: { bill: InvoiceBil
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-wide text-slate-400">Bill to</p>
-          <p className="font-semibold text-slate-900">{bill.customerName || 'Walk In'}</p>
-          {bill.customerPhone && <p className="text-sm text-slate-500">{bill.customerPhone}</p>}
-          {bill.customerGstin && <p className="text-sm text-slate-500">{bill.customerGstin}</p>}
+          <p className="font-semibold text-slate-900">{bill?.customer?.name || 'Walk In'}</p>
+          {bill?.customer?.phone && <p className="text-sm text-slate-500">{bill?.customer?.phone}</p>}
+          {bill?.customer?.gstin && <p className="text-sm text-slate-500">{bill?.customer?.gstin}</p>}
         </div>
         <div className="sm:text-right">
           {bill.doctor?.name && (

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { Printer, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import BillPrintTemplate, { BillPrintData } from "./BillPrintTemplate";
+import { Button } from "../ui/button";
 
 interface PrintBillButtonProps {
     billId: number;
@@ -109,7 +110,8 @@ export default function PrintBillButton({ billId, label = "Print", className }: 
 
     return (
         <>
-            <button
+            <Button
+                variant={'ghost'}
                 type="button"
                 onClick={handlePrint}
                 disabled={loading}
@@ -117,7 +119,7 @@ export default function PrintBillButton({ billId, label = "Print", className }: 
             >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
                 {label}
-            </button>
+            </Button>
             {bill && typeof document !== "undefined"
                 ? createPortal(<BillPrintTemplate bill={bill} />, document.body)
                 : null}

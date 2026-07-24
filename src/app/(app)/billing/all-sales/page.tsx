@@ -9,6 +9,8 @@ import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { Bill, product, PaymentMethod } from '@/types';
 import BillInvoice from '@/components/BillInvoice';
 import InvoicePrintStyles from '@/components/InvoicePrintStyles';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { downloadInvoicePdf } from '@/lib/invoice-pdf';
 import {
   Plus,
@@ -38,6 +40,10 @@ import {
 import PrintBillButton from '@/components/billing/PrintBillButton';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface CartLine {
   productId: number;
@@ -338,330 +344,350 @@ export default function BillingPage() {
         header={`Invoices`}
         subheader="Manage all pharmacy bills."
       >
-        <HeaderButton text="Add Location" href="/billing/all-sales/new" />
+        <HeaderButton text="Costomer Bill" href="/billing/all-sales/new" />
       </PageHeader>
-      <div className="w-full">
-        <div className="card overflow-hidden lg:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
-            <h2 className="flex items-center gap-2 font-medium text-slate-800">
-              <Receipt className="h-4 w-4 text-brand-600" />
-              All Bills
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-                {filteredBills.length}
-              </span>
-            </h2>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10"
-                />
+      <Container>
+        <div className="w-full">
+          <div className="card overflow-hidden lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
+              <h2 className="flex items-center gap-2 font-medium text-slate-800">
+                <Receipt className="h-4 w-4 text-brand-600" />
+                All Bills
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                  {filteredBills.length}
+                </span>
+              </h2>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 z-10"
+                  />
 
-                <input
-                  className="w-68 rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Search bill no. or customer..."
-                  value={billSearch}
-                  onChange={(e) => setBillSearch(e.target.value)}
-                />
+                  <input
+                    className="w-68 rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Search bill no. or customer..."
+                    value={billSearch}
+                    onChange={(e) => setBillSearch(e.target.value)}
+                  />
+                </div>
+
+                <select
+                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  value={statusFilter}
+                  onChange={(e) =>
+                    setStatusFilter(
+                      e.target.value as (typeof STATUS_OPTIONS)[number]
+                    )
+                  }
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s === "ALL" ? "All statuses" : s.replace("_", " ")}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              <select
-                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(
-                    e.target.value as (typeof STATUS_OPTIONS)[number]
-                  )
-                }
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s === "ALL" ? "All statuses" : s.replace("_", " ")}
-                  </option>
-                ))}
-              </select>
             </div>
-          </div>
 
-          {listError && <p className="px-4 pt-3 text-sm text-red-600">{listError}</p>}
+            {listError && <p className="px-4 pt-3 text-sm text-red-600">{listError}</p>}
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="p-3 text-left">Bill</th>
-                  <th className="p-3 text-left">Customer</th>
-                  <th className="p-3 text-left">Date</th>
-                  <th className="p-3 text-left">Amount</th>
-                  <th className="p-3 text-left">Status</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
+            <Table>
+              <TableHeader>
+                <TableRow className='grid grid-cols-[2fr_1fr_1fr_1fr_1fr_3fr]'>
+                  <TableHead className=''>Bill</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className='text-center'>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody >
                 {loadingBills ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      <td className="p-3" colSpan={6}>
-                        <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
-                      </td>
-                    </tr>
+                    <TableRow key={i}>
+                      <TableCell colSpan={4}>
+                        <div />
+                      </TableCell>
+                    </TableRow>
                   ))
                 ) : filteredBills.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-10">
-                      <div className="flex flex-col items-center justify-center text-slate-400">
-                        <Receipt className="mb-2 h-8 w-8" />
-                        <p className="text-sm">No bills found.</p>
+                  <TableRow>
+                    <TableCell colSpan={4}>
+                      <div>
+                        <Receipt />
+                        <p>No bills found.</p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   filteredBills.map((bill) => {
-                    const name = bill.customer?.name || 'Walk In';
+                    const name = bill.customer ? bill.customer.name : "Walk In";
+
                     return (
-                      <tr key={bill.id} className="group transition-colors hover:bg-slate-50/70">
-                        <td className="p-3">
-                          <span className="font-medium text-slate-800">{bill.billNumber}</span>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${avatarColor(name)}`}
-                            >
-                              {initials(name)}
-                            </span>
-                            <span className="text-slate-600">{name}</span>
+                      <TableRow className='grid grid-cols-[2fr_1fr_1fr_1fr_1fr_3fr]' key={bill.id}>
+                        <TableCell>
+                          <Link href={cn('/billing/', bill.id)} >{bill.billNumber}</Link>
+                        </TableCell>
+
+                        <TableCell>
+                          <div>
+                            <span>{initials(name)}</span>
+                            <span>{name}</span>
                           </div>
-                        </td>
-                        <td className="p-3 text-slate-500">{new Date(bill.billDate).toLocaleDateString()}</td>
-                        <td className="p-3 font-medium text-slate-800">₹{bill.totalAmount}</td>
-                        <td className="p-3">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(bill.paymentStatus)}`}
-                          >
-                            <span className={`h-1.5 w-1.5 rounded-full ${statusDotClass(bill.paymentStatus)}`} />
-                            {bill.paymentStatus.replace('_', ' ')}
+                        </TableCell>
+
+                        <TableCell>
+                          {new Date(bill.billDate).toLocaleDateString()}
+                        </TableCell>
+
+                        <TableCell>
+                          ₹{bill.totalAmount}
+                        </TableCell>
+
+                        <TableCell>
+                          <span>
+                            <span />
+                            {bill.paymentStatus.replace("_", " ")}
                           </span>
-                        </td>
-                        <td className="p-3">
-                          <div className="flex items-center justify-end gap-1 opacity-70 transition-opacity group-hover:opacity-100">
-                            {/* <Link
-                              title="Return"
-                              onClick={() => setReturningBillId(bill.id)}
-                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-orange-50 hover:text-orange-600"
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </button> */}
-                            <button
-                              title="Return"
-                              onClick={() => handleReturnClick(bill.id)}
-                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-orange-50 hover:text-orange-600"
-                            >
-                              <RotateCcw className="h-4 w-4" />
-                            </button>
-                            <button
-                              title="View"
-                              onClick={() => openViewBill(bill.id)}
-                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button
-                              title="Invoice"
-                              onClick={() => openInvoicePopup(bill.id)}
-                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-purple-50 hover:text-purple-600"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </button>
-                            <button className="px-3 py-2.5 text-right">
-                              <PrintBillButton billId={bill.id} label="" className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700" />
-                            </button>
-                            <button
-                              title="Delete"
-                              disabled={deletingId === bill.id}
-                              onClick={() => deleteBill(bill.id, bill.billNumber)}
-                              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+
+                        <TableCell className='flex justify-center' >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Return"
+                            onClick={() => handleReturnClick(bill.id)}
+                          >
+                            <RotateCcw />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="View"
+                            onClick={() => openViewBill(bill.id)}
+                          >
+                            <Eye />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Invoice"
+                            onClick={() => openInvoicePopup(bill.id)}
+                          >
+                            <FileText />
+                          </Button>
+
+                          <PrintBillButton
+                            billId={bill.id}
+                            label=""
+                          // variant="ghost"
+                          />
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Delete"
+                            disabled={deletingId === bill.id}
+                            onClick={() => deleteBill(bill.id, bill.billNumber)}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
-      </div>
 
-      {showViewBill && (
-        <div className="card space-y-6 p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                {viewingBill ? viewingBill.billNumber : 'Loading bill…'}
-              </h1>
-              {viewingBill && (
-                <p className="text-sm text-slate-500">
-                  {new Date(viewingBill.billDate).toLocaleString()} · Cashier:{' '}
-                  {viewingBill.cashier?.fullName ?? viewingBill.cashierId}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {viewingBill && (
-                <span
-                  className={`badge ${viewingBill.paymentStatus === 'PAID'
-                    ? 'bg-brand-100 text-brand-700'
-                    : viewingBill.paymentStatus === 'PARTIALLY_PAID'
-                      ? 'bg-amber-100 text-amber-700'
-                      : 'bg-slate-100 text-slate-600'
-                    }`}
+        {showViewBill && (
+          <div className="card space-y-6 p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-slate-900">
+                  {viewingBill ? viewingBill.billNumber : 'Loading bill…'}
+                </h1>
+                {viewingBill && (
+                  <p className="text-sm text-slate-500">
+                    {new Date(viewingBill.billDate).toLocaleString()} · Cashier:{' '}
+                    {viewingBill.cashier?.fullName ?? viewingBill.cashierId}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {viewingBill && (
+                  <span
+                    className={`badge ${viewingBill.paymentStatus === 'PAID'
+                      ? 'bg-brand-100 text-brand-700'
+                      : viewingBill.paymentStatus === 'PARTIALLY_PAID'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-slate-100 text-slate-600'
+                      }`}
+                  >
+                    {viewingBill.paymentStatus}
+                  </span>
+                )}
+                <button
+                  onClick={closeViewBill}
+                  className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 >
-                  {viewingBill.paymentStatus}
-                </span>
-              )}
-              <button
-                onClick={closeViewBill}
-                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-          </div>
 
-          {loadingViewBill ? (
-            <div className="flex h-40 items-center justify-center text-slate-400">Loading bill…</div>
-          ) : viewError ? (
-            <p className="text-sm text-red-600">{viewError}</p>
-          ) : viewingBill ? (
-            <>
-              {(viewingBill.customer?.name || viewingBill.customer?.phone || viewingBill.customer?.gstin) && (
-                <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-600">
-                  {viewingBill.customer?.name && <p>Customer: {viewingBill.customer.name}</p>}
-                  {viewingBill.ipOp && <p>Ip/Op: {viewingBill.ipOp}</p>}
-                  {viewingBill.customer?.phone && <p>Phone: {viewingBill.customer.phone}</p>}
-                  +                  {viewingBill.customer?.gstin && <p>GSTIN: {viewingBill.customer.gstin}</p>}
-                  <p>{viewingBill.isInterState ? 'Inter-state sale (IGST)' : 'Intra-state sale (CGST + SGST)'}</p>
-                </div>
-              )}
+            {loadingViewBill ? (
+              <div className="flex h-40 items-center justify-center text-slate-400">Loading bill…</div>
+            ) : viewError ? (
+              <p className="text-sm text-red-600">{viewError}</p>
+            ) : viewingBill ? (
+              <>
+                {(viewingBill.customer?.name || viewingBill.customer?.phone || viewingBill.customer?.gstin) && (
+                  <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-600">
+                    {viewingBill.customer?.name && <p>Customer: {viewingBill.customer.name}</p>}
+                    {viewingBill.ipOp && <p>Ip/Op: {viewingBill.ipOp}</p>}
+                    {viewingBill.customer?.phone && <p>Phone: {viewingBill.customer.phone}</p>}
+                    +                  {viewingBill.customer?.gstin && <p>GSTIN: {viewingBill.customer.gstin}</p>}
+                    <p>{viewingBill.isInterState ? 'Inter-state sale (IGST)' : 'Intra-state sale (CGST + SGST)'}</p>
+                  </div>
+                )}
 
-              <div className="overflow-hidden rounded-xl border border-slate-100">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                    <tr>
-                      <th className="px-4 py-3">product</th>
-                      <th className="px-4 py-3">Batch</th>
-                      <th className="px-4 py-3">Qty</th>
-                      <th className="px-4 py-3">Unit price</th>
-                      <th className="px-4 py-3">GST</th>
-                      <th className="px-4 py-3">Line total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Batch</TableHead>
+                      <TableHead>Qty</TableHead>
+                      <TableHead>Unit Price</TableHead>
+                      <TableHead>GST</TableHead>
+                      <TableHead>Line Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+
+                  <TableBody>
                     {viewingBill.billItems.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-4 py-3">{item.product?.name ?? `#${item.productId}`}</td>
-                        <td className="px-4 py-3 text-slate-500">{item.batchNumber}</td>
-                        <td className="px-4 py-3">{item.quantity}</td>
-                        <td className="px-4 py-3">₹{item.unitPrice}</td>
-                        <td className="px-4 py-3 text-slate-500">
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          {item.product?.name ?? `#${item.productId}`}
+                        </TableCell>
+
+                        <TableCell>
+                          {item.batchNumber}
+                        </TableCell>
+
+                        <TableCell>
+                          {item.quantity}
+                        </TableCell>
+
+                        <TableCell>
+                          ₹{item.unitPrice}
+                        </TableCell>
+
+                        <TableCell>
                           {viewingBill.isInterState
                             ? `IGST ₹${item.igstAmount}`
                             : `CGST ₹${item.cgstAmount} + SGST ₹${item.sgstAmount}`}
-                        </td>
-                        <td className="px-4 py-3 font-medium">₹{item.totalAmount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </TableCell>
 
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-xl border border-slate-100 p-5">
-                  <h2 className="mb-3 font-medium text-slate-800">Totals</h2>
-                  <dl className="space-y-1.5 text-sm">
-                    <div className="flex justify-between text-slate-600">
-                      <span>Subtotal</span>
-                      <span>₹{viewingBill.subtotal}</span>
-                    </div>
-                    {viewingBill.isInterState ? (
+                        <TableCell>
+                          ₹{item.totalAmount}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <CardContent className="rounded-xl border border-slate-100 p-5">
+                    <h2 className="mb-3 font-medium text-slate-800">Totals</h2>
+                    <dl className="space-y-1.5 text-sm">
                       <div className="flex justify-between text-slate-600">
-                        <span>IGST</span>
-                        <span>₹{viewingBill.totalIgst}</span>
+                        <span>Subtotal</span>
+                        <span>₹{viewingBill.subtotal}</span>
+                      </div>
+                      {viewingBill.isInterState ? (
+                        <div className="flex justify-between text-slate-600">
+                          <span>IGST</span>
+                          <span>₹{viewingBill.totalIgst}</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between text-slate-600">
+                            <span>CGST</span>
+                            <span>₹{viewingBill.totalCgst}</span>
+                          </div>
+                          <div className="flex justify-between text-slate-600">
+                            <span>SGST</span>
+                            <span>₹{viewingBill.totalSgst}</span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between text-slate-600">
+                        <span>Total GST</span>
+                        <span>₹{viewingBill.totalGst}</span>
+                      </div>
+                      <div className="mt-2 flex justify-between border-t border-slate-100 pt-2 text-base font-semibold">
+                        <span>Total amount</span>
+                        <span>₹{viewingBill.totalAmount}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Paid</span>
+                        <span>₹{viewingTotalPaid.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between font-medium text-slate-800">
+                        <span>Balance due</span>
+                        <span>₹{viewingBalanceDue.toFixed(2)}</span>
+                      </div>
+                    </dl>
+                  </CardContent>
+
+                  {/* Read-only payment status/history — no recording form */}
+                  <CardContent className="rounded-xl border border-slate-100 p-5">
+                    <h2 className="mb-3 flex items-center gap-1.5 font-medium text-slate-800">
+                      <CreditCard className="h-4 w-4 text-brand-600" />
+                      Payment
+                    </h2>
+
+                    <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+                      <span className="text-slate-500">Status</span>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(viewingBill.paymentStatus)}`}
+                      >
+                        {viewingBill.paymentStatus.replace('_', ' ')}
+                      </span>
+                    </div>
+
+                    {viewingBill.payments && viewingBill.payments.length > 0 ? (
+                      <div>
+                        <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Payment history</h3>
+                        <ul className="space-y-1 text-sm text-slate-600">
+                          {viewingBill.payments.map((p) => (
+                            <li key={p.id} className="flex justify-between">
+                              <span>
+                                {p.method} · {new Date(p.paidAt).toLocaleString()}
+                              </span>
+                              <span>₹{p.amount}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     ) : (
-                      <>
-                        <div className="flex justify-between text-slate-600">
-                          <span>CGST</span>
-                          <span>₹{viewingBill.totalCgst}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600">
-                          <span>SGST</span>
-                          <span>₹{viewingBill.totalSgst}</span>
-                        </div>
-                      </>
+                      <p className="text-sm text-slate-400">No payments recorded for this bill yet.</p>
                     )}
-                    <div className="flex justify-between text-slate-600">
-                      <span>Total GST</span>
-                      <span>₹{viewingBill.totalGst}</span>
-                    </div>
-                    <div className="mt-2 flex justify-between border-t border-slate-100 pt-2 text-base font-semibold">
-                      <span>Total amount</span>
-                      <span>₹{viewingBill.totalAmount}</span>
-                    </div>
-                    <div className="flex justify-between text-slate-600">
-                      <span>Paid</span>
-                      <span>₹{viewingTotalPaid.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between font-medium text-slate-800">
-                      <span>Balance due</span>
-                      <span>₹{viewingBalanceDue.toFixed(2)}</span>
-                    </div>
-                  </dl>
+                  </CardContent>
                 </div>
-
-                {/* Read-only payment status/history — no recording form */}
-                <div className="rounded-xl border border-slate-100 p-5">
-                  <h2 className="mb-3 flex items-center gap-1.5 font-medium text-slate-800">
-                    <CreditCard className="h-4 w-4 text-brand-600" />
-                    Payment
-                  </h2>
-
-                  <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
-                    <span className="text-slate-500">Status</span>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(viewingBill.paymentStatus)}`}
-                    >
-                      {viewingBill.paymentStatus.replace('_', ' ')}
-                    </span>
-                  </div>
-
-                  {viewingBill.payments && viewingBill.payments.length > 0 ? (
-                    <div>
-                      <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Payment history</h3>
-                      <ul className="space-y-1 text-sm text-slate-600">
-                        {viewingBill.payments.map((p) => (
-                          <li key={p.id} className="flex justify-between">
-                            <span>
-                              {p.method} · {new Date(p.paidAt).toLocaleString()}
-                            </span>
-                            <span>₹{p.amount}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-400">No payments recorded for this bill yet.</p>
-                  )}
-                </div>
-              </div>
-            </>
-          ) : null}
-        </div>
-      )}
+              </>
+            ) : null}
+          </div>
+        )}
+      </Container>
 
 
       {showInvoicePopup && (

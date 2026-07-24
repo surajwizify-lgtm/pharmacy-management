@@ -6,6 +6,11 @@ import type { Doctor } from '@/types';
 import { Stethoscope, Plus, X, Search, Pencil, Trash2, Phone, BadgeCheck } from 'lucide-react';
 import CreateHospital from '@/components/hospitals/CreateHospital';
 import CreateDoctor from '@/components/doctor/CreateDoctor';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 type ModalMode = 'create' | 'edit';
 
@@ -123,123 +128,131 @@ export default function DoctorsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold text-neutral-900">Doctors</h1>
-                    <p className="text-sm text-neutral-500">Manage referring doctors used across bills.</p>
-                </div>
-                <button
-                    onClick={openCreate}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Doctor
-                </button>
-            </div>
+            <PageHeader
+                header={`Doctors`}
+                subheader="Manage referring doctors used across bills."
+            >
+                <HeaderButton text="New Return" onClick={openCreate} />
+            </PageHeader>
+            <Container>
 
-            <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between gap-3 border-b border-neutral-100 p-4">
-                    <h2 className="flex items-center gap-2 font-medium text-neutral-800">
-                        <Stethoscope className="h-4 w-4 text-primary-600" />
-                        All Doctors
-                        <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">{filtered.length}</span>
-                    </h2>
-                    <div className="relative">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-                        <input
-                            className="w-56 rounded-lg border border-neutral-300 bg-white py-1.5 pl-8 pr-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            placeholder="Search name, specialization…"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between gap-3 border-b border-neutral-100 p-4">
+                        <h2 className="flex items-center gap-2 font-medium text-neutral-800">
+                            <Stethoscope className="h-4 w-4 text-primary-600" />
+                            All Doctors
+                            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500">{filtered.length}</span>
+                        </h2>
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                            <input
+                                className="w-56 rounded-lg border border-neutral-300 bg-white py-1.5 pl-8 pr-3 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                placeholder="Search name, specialization…"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {listError && (
-                    <div className="mx-4 mt-3 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
-                        <span className="text-sm font-medium text-danger-700">{listError}</span>
-                    </div>
-                )}
+                    {listError && (
+                        <div className="mx-4 mt-3 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                            <span className="text-sm font-medium text-danger-700">{listError}</span>
+                        </div>
+                    )}
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
-                            <tr>
-                                <th className="p-3 text-left">Name</th>
-                                <th className="p-3 text-left">Registration No</th>
-                                <th className="p-3 text-left">Specialization</th>
-                                <th className="p-3 text-left">Phone</th>
-                                <th className="p-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-100">
-                            {loading ? (
-                                Array.from({ length: 4 }).map((_, i) => (
-                                    <tr key={i}>
-                                        <td className="p-3" colSpan={5}>
-                                            <div className="h-4 w-full animate-pulse rounded bg-neutral-100" />
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : filtered.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="p-10">
-                                        <div className="flex flex-col items-center justify-center text-neutral-400">
-                                            <Stethoscope className="mb-2 h-8 w-8" />
-                                            <p className="text-sm">No doctors found.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filtered.map((d) => (
-                                    <tr key={d.id} className="group transition-colors hover:bg-neutral-50/70">
-                                        <td className="p-3 font-medium text-neutral-800">Dr. {d.name}</td>
-                                        <td className="p-3 text-neutral-500">
-                                            {d.registrationNo ? (
-                                                <span className="inline-flex items-center gap-1">
-                                                    <BadgeCheck className="h-3.5 w-3.5 text-secondary-500" />
-                                                    {d.registrationNo}
-                                                </span>
-                                            ) : (
-                                                '—'
-                                            )}
-                                        </td>
-                                        <td className="p-3 text-neutral-600">{d.specialization || '—'}</td>
-                                        <td className="p-3 text-neutral-600">
-                                            {d.phone ? (
-                                                <span className="inline-flex items-center gap-1">
-                                                    <Phone className="h-3.5 w-3.5" /> {d.phone}
-                                                </span>
-                                            ) : (
-                                                '—'
-                                            )}
-                                        </td>
-                                        <td className="p-3">
-                                            <div className="flex items-center justify-end gap-1 opacity-70 transition-opacity group-hover:opacity-100">
-                                                <button
-                                                    title="Edit"
-                                                    onClick={() => openEdit(d)}
-                                                    className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-amber-50 hover:text-amber-600"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    title="Delete"
-                                                    disabled={deletingId === d.id}
-                                                    onClick={() => deleteDoctor(d.id, d.name)}
-                                                    className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Registration No</TableHead>
+                                    <TableHead>Specialization</TableHead>
+                                    <TableHead>Phone</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+
+                            <TableBody>
+                                {loading ? (
+                                    Array.from({ length: 4 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={5}>
+                                                <div className="h-4 w-full animate-pulse rounded bg-neutral-100" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : filtered.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5}>
+                                            <div className="flex flex-col items-center justify-center">
+                                                <Stethoscope className="h-8 w-8" />
+                                                <p>No doctors found.</p>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filtered.map((d) => (
+                                        <TableRow key={d.id}>
+                                            <TableCell>
+                                                Dr. {d.name}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {d.registrationNo ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <BadgeCheck className="h-4 w-4" />
+                                                        {d.registrationNo}
+                                                    </div>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {d.specialization || "—"}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {d.phone ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <Phone className="h-4 w-4" />
+                                                        {d.phone}
+                                                    </div>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Edit"
+                                                        onClick={() => openEdit(d)}
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Delete"
+                                                        disabled={deletingId === d.id}
+                                                        onClick={() => deleteDoctor(d.id, d.name)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
-            </div>
+            </Container>
 
             {showModal && (
                 <CreateDoctor

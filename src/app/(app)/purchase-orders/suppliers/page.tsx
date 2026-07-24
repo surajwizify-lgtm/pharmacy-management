@@ -4,6 +4,10 @@ import Link from "next/link";
 import CreatePurchaseOrderModal from '@/components/CreatePurchaseOrderModal';
 import PageHeader from "@/components/common/Header";
 import HeaderButton from "@/components/common/HeaderButton";
+import Container from "@/components/common/Container";
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 export default function SuppliersPage() {
 
@@ -31,65 +35,61 @@ export default function SuppliersPage() {
             >
                 <HeaderButton text="Add Supplier" href='/purchase-orders/suppliers/new' />
             </PageHeader>
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                <table className="w-full">
-                    <thead className="border-b bg-slate-50">
-                        <tr className="text-left text-sm font-semibold text-slate-700">
-                            <th className="px-6 py-4">Name</th>
-                            <th className="px-6 py-4">Email</th>
-                            <th className="px-6 py-4">Phone</th>
-                            <th className="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
+            <Container >
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
 
-                    <tbody>
-                        {suppliers.map((s) => (
-                            <tr
-                                key={s.id}
-                                className="border-b transition hover:bg-blue-50"
-                            >
-                                <td className="px-6 py-5">
-                                    <div className="font-semibold text-slate-900">
-                                        {s.name}
-                                    </div>
+                    <TableBody>
+                        {suppliers.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={4}>
+                                    No suppliers found.
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            suppliers.map((s) => (
+                                <TableRow key={s.id}>
+                                    <TableCell>
+                                        <div>{s.name}</div>
+                                        <div>{s.contactPerson || "-"}</div>
+                                    </TableCell>
 
-                                    <div className="text-sm text-slate-500">
-                                        {s.contactPerson || "-"}
-                                    </div>
-                                </td>
+                                    <TableCell>
+                                        {s.email || "-"}
+                                    </TableCell>
 
-                                <td className="px-6">
-                                    {s.email || "-"}
-                                </td>
+                                    <TableCell>
+                                        {s.phone || "-"}
+                                    </TableCell>
 
-                                <td className="px-6">
-                                    {s.phone || "-"}
-                                </td>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                onClick={() => openCreatePurchaseOrder(s)}
+                                            >
+                                                Create Purchase Order
+                                            </Button>
 
-                                <td className="px-6 py-4">
-                                    <div className="flex justify-end gap-3">
-
-                                        <button
-                                            onClick={() => openCreatePurchaseOrder(s)}
-                                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                                        >
-                                            Create Purchase Order
-                                        </button>
-
-                                        <Link
-                                            href={`/purchase-orders/suppliers/${s.id}`}
-                                            className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-100"
-                                        >
-                                            View
-                                        </Link>
-
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                                            <Button variant="outline" >
+                                                <Link href={`/purchase-orders/suppliers/${s.id}`}>
+                                                    View
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </Container>
             <CreatePurchaseOrderModal
                 open={showCreatePO}
                 supplier={selectedSupplier}

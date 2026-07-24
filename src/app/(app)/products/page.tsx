@@ -9,7 +9,13 @@ import { ProductFormModal } from '@/components/products/ProductFormModal';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
 import Input from '@/components/Input';
-import Button from '@/components/Button';
+import Container from '@/components/common/Container';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DataTable } from '@/components/data-table/data-table';
+import { Button } from '@/components/ui/button';
+import clsx from 'clsx';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 
 type GstType = 'INCLUSIVE' | 'EXCLUSIVE';
 type StatusFilter = 'ALL' | 'ACTIVE' | 'DISCONTINUED';
@@ -85,12 +91,14 @@ function StatCard({
     purple: 'text-purple-700 bg-purple-50',
   };
   return (
-    <div className="flex-1 min-w-[140px] rounded-xl border border-neutral-200 bg-white px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
-      <p className={`mt-1 inline-flex rounded-md px-1.5 text-xl font-semibold ${toneClasses[tone]}`}>
-        {value}
-      </p>
-    </div>
+    <Card>
+      <CardContent className="">
+        <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">{label}</p>
+        <p className={clsx(`mt-1 inline-flex rounded-md px-1.5 text-xl font-semibold `, toneClasses[tone])}>
+          {value}
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -124,19 +132,17 @@ function ConfirmDialog({
             : `${productName} will be marked active again and available for new sales.`}
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <button
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-neutral-600 hover:bg-neutral-100"
-            onClick={onCancel}
+          <Button onClick={onCancel}
           >
             Cancel
-          </button>
-          <button
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium text-white ${isActive ? 'bg-danger-600 hover:bg-danger-700' : 'bg-success-600 hover:bg-success-700'
+          </Button>
+          <Button
+            className={` ${isActive ? 'bg-danger-600 hover:bg-danger-700' : 'bg-success-600 hover:bg-success-700'
               }`}
             onClick={onConfirm}
           >
             {actionLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -217,157 +223,169 @@ export default function ProductsPage() {
         subheader="Catalog, GST slabs, and stock overview."
       >
         <HeaderButton text="Add product" onClick={openCreate} />
+        <Separator orientation="horizontal"></Separator>
       </PageHeader>
-      <div className="flex flex-wrap gap-3">
-        <StatCard label="Total products" value={stats.total} tone="primary" />
-        <StatCard label="Active" value={stats.active} tone="secondary" />
-        <StatCard label="Low / out of stock" value={stats.lowStock} tone="amber" />
-        <StatCard label="Prescription only" value={stats.rx} tone="purple" />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative max-w-sm flex-1">
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400">
-            <SearchIcon />
-          </span>
-          <Input
-            // className="w-full rounded-lg border border-neutral-200 bg-white py-2 pl-9 pr-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            placeholder="Search by name, barcode, or HSN code…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <Container>
+        <div className="flex flex-wrap gap-3">
+          <StatCard label="Total products" value={stats.total} tone="primary" />
+          <StatCard label="Active" value={stats.active} tone="secondary" />
+          <StatCard label="Low / out of stock" value={stats.lowStock} tone="amber" />
+          <StatCard label="Prescription only" value={stats.rx} tone="purple" />
         </div>
 
-        <div className="flex gap-1.5">
-          {filterPills.map((pill) => (
-            <button
-              key={pill.key}
-              onClick={() => setStatusFilter(pill.key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === pill.key
-                ? 'bg-primary-600 text-white'
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                }`}
-            >
-              {pill.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-sm flex-1">
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-neutral-400">
+              <SearchIcon />
+            </span>
+            <Input
+              placeholder="Search by name, barcode, or HSN code…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-1.5">
+            {filterPills.map((pill) => (
+              <Button
+                variant={'secondary'}
+                key={pill.key}
+                onClick={() => setStatusFilter(pill.key)}
+                className={` ${statusFilter === pill.key
+                  ? 'bg-gray-400'
+                  : ''
+                  }`}
+              >
+                {pill.label}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-neutral-200 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-400">
-            <tr>
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Manufacturer</th>
-              <th className="px-4 py-3 font-medium">HSN</th>
-              <th className="px-4 py-3 font-medium">GST %</th>
-              <th className="px-4 py-3 font-medium">GST type</th>
-              <th className="px-4 py-3 font-medium">Stock</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 text-center font-medium">Actions</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
-                    <td key={j} className="px-4 py-3.5">
-                      <div className="h-3.5 w-full max-w-[120px] animate-pulse rounded bg-neutral-100" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-16">
-                  <div className="flex flex-col items-center gap-2 text-center">
-                    <EmptyIcon />
-                    <p className="text-sm font-medium text-neutral-600">No products found</p>
-                    <p className="text-xs text-neutral-400">
-                      {search ? 'Try a different name, barcode, or HSN code.' : 'Add a product to get started.'}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              filtered.map((m) => {
-                const stock = getStock(m);
-                const gstType = getGstType(m);
-                const badge = stockBadge(stock);
-                return (
-                  <tr key={m.id} className="transition-colors hover:bg-neutral-50">
-                    <td className="px-4 py-3.5">
-                      <Link
-                        href={`/products/${m.id}`}
-                        className="font-medium text-neutral-900 hover:text-primary-600"
-                      >
-                        {m.name}
-                      </Link>
-                      {m.prescriptionRequired && (
-                        <span className="ml-2 rounded-full bg-purple-100 px-1.5 py-0.5 text-[11px] font-medium text-purple-700">
-                          Rx
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5 text-neutral-600">{m.manufacturer}</td>
-                    <td className="px-4 py-3.5 font-mono text-xs text-neutral-500">{m.hsnCode}</td>
-                    <td className="px-4 py-3.5 font-medium text-neutral-700">{m.gstPercentage}%</td>
-                    <td className="px-4 py-3.5">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${gstTypeBadgeClass(gstType)}`}>
-                        {gstType === 'EXCLUSIVE' ? 'Exclusive' : 'Inclusive'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}>
-                        {badge.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${m.status === 'ACTIVE'
-                          ? 'bg-secondary-100 text-secondary-700'
-                          : 'bg-neutral-200 text-neutral-500'
-                          }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${m.status === 'ACTIVE' ? 'bg-secondary-500' : 'bg-neutral-400'
-                            }`}
-                        />
-                        {m.status === 'ACTIVE' ? 'Active' : 'Discontinued'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      {canEdit && (
-                        <div className="grid grid-cols-3 gap-1">
-                          <Button
-                            onClick={() => openEdit(m)}
-                            variant='ghost'
-                          >
-                            <EditIcon />
-                          </Button>
-                          {role === 'ADMIN' && (
-                            <button
-                              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium  hover:bg-danger-50 col-span-2 ${m.status === 'ACTIVE' ? "text-danger-600" : "text-success-600"}`}
-                              onClick={() => setPendingDiscontinue(m)}
-                            >
-                              {m.status === 'ACTIVE' && <BanIcon />}
-                              {m.status === 'ACTIVE' ? "Discontinue" : "Activate"}
+        <div
+        >
 
-                            </button>
-                          )}
+          <Table className="w-full table-fixed">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[20%]">Name</TableHead>
+                <TableHead className="w-[15%]">Manufacturer</TableHead>
+                <TableHead className="w-[8%]">HSN</TableHead>
+                <TableHead className="w-[8%]">GST %</TableHead>
+                <TableHead className="w-[10%]">GST Type</TableHead>
+                <TableHead className="w-[7%]">Stock</TableHead>
+                <TableHead className="w-[7%]">Status</TableHead>
+                <TableHead className="w-[25%] text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className='w-full'>
+              {loading
+                ?
+                (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      {Array.from({ length: 8 }).map((__, j) => (
+                        <TableCell key={j} className="px-4 py-3.5">
+                          <div className="h-3.5 w-full max-w-[120px] animate-pulse rounded bg-neutral-100" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                )
+                :
+                filtered.length === 0
+                  ?
+                  (
+                    <TableRow className=''>
+                      <TableCell colSpan={8} className='' >
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          <EmptyIcon />
+                          <p className="text-sm font-medium text-neutral-600">No products found</p>
+                          <p className="text-xs text-neutral-400">
+                            {search ? 'Try a different name, barcode, or HSN code.' : 'Add a product to get started.'}
+                          </p>
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                  :
+                  (
+                    filtered.map((m) => {
+                      const stock = getStock(m);
+                      const gstType = getGstType(m);
+                      const badge = stockBadge(stock);
+                      return (
+                        <TableRow className='' key={m.id}>
+                          <TableCell className='  whitespace-normal'>
+                            <Link
+                              href={`/products/${m.id}`}
+                              className="font-medium text-neutral-900 hover:text-primary-600"
+                            >
+                              {m.name}
+                            </Link>
+                            {m.prescriptionRequired && (
+                              <span className="ml-2 rounded-full bg-purple-100 px-1.5 py-0.5 text-[11px] font-medium text-purple-700">
+                                Rx
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell >{m.manufacturer}</TableCell>
+                          <TableCell>{m.hsnCode}</TableCell>
+                          <TableCell>{m.gstPercentage}%</TableCell>
+                          <TableCell>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${gstTypeBadgeClass(gstType)}`}>
+                              {gstType === 'EXCLUSIVE' ? 'Exclusive' : 'Inclusive'}
+                            </span>
+                          </TableCell>
+                          <TableCell >
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}>
+                              {badge.label}
+                            </span>
+                          </TableCell>
+                          <TableCell >
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${m.status === 'ACTIVE'
+                                ? 'bg-secondary-100 text-secondary-700'
+                                : 'bg-neutral-200 text-neutral-500'
+                                }`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${m.status === 'ACTIVE' ? 'bg-secondary-500' : 'bg-neutral-400'
+                                  }`}
+                              />
+                              {m.status === 'ACTIVE' ? 'Active' : 'Discontinued'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {canEdit && (
+                              <div className="grid grid-cols-2 gap-1">
+                                <Button
+                                  onClick={() => openEdit(m)}
+                                  variant='ghost'
+                                >
+                                  <EditIcon />
+                                </Button>
+                                {role === 'ADMIN' && (
+                                  <Button
+                                    variant={m.status === 'ACTIVE' ? "destructive" : "default"}
+                                    onClick={() => setPendingDiscontinue(m)}
+                                  >
+                                    {m.status === 'ACTIVE' && <BanIcon />}
+                                    {m.status === 'ACTIVE' ? "Discontinue" : "Activate"}
+
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+            </TableBody>
+          </Table>
+        </div>
+      </Container>
       <ProductFormModal
         open={showForm}
         onClose={() => setShowForm(false)}

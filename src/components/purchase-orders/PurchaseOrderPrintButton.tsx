@@ -55,7 +55,7 @@ export default function PurchaseOrderPrintButton({
                 onClick={handlePrint}
                 className={`no-print ${className ?? ''}`}
             >
-                {loading ? 'Loading...' : '🖨️ Print'}
+                {loading ? 'Loading...' : ' Print'}
             </PrintButton>
 
             {mounted && printPO && createPortal(

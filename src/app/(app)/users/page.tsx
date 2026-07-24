@@ -3,6 +3,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { AppUser, Role } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/common/Header';
+import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
 
 const EMPTY_FORM = { username: '', password: '', fullName: '', role: 'CASHIER' as Role };
 
@@ -50,59 +55,66 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Users</h1>
-          <p className="text-sm text-slate-500">Admin, pharmacist, and cashier accounts.</p>
-        </div>
-        <button className="btn-primary" onClick={() => setShowForm(true)}>
-          + Add user
-        </button>
-      </div>
+    <div className="">
+      <PageHeader
+        header={`Users`}
+        subheader="Admin, pharmacist, and cashier accounts."
+      >
+        <HeaderButton text=" Add user" onClick={() => setShowForm(true)} />
+      </PageHeader>
 
-      <div className="card overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-3">Username</th>
-              <th className="px-4 py-3">Full name</th>
-              <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-400">
-                  Loading…
-                </td>
-              </tr>
-            ) : (
-              users.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{u.username}</td>
-                  <td className="px-4 py-3 text-slate-600">{u.fullName}</td>
-                  <td className="px-4 py-3 text-slate-600">{u.role}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge ${u.active ? 'bg-brand-100 text-brand-700' : 'bg-slate-200 text-slate-500'}`}>
-                      {u.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {u.active && (
-                      <button className="text-xs font-medium text-red-600 hover:underline" onClick={() => deactivate(u.id)}>
-                        Deactivate
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Container>
+        <div className="card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Username</TableHead>
+                <TableHead>Full name</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5}>
+                    Loading…
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell>{u.username}</TableCell>
+
+                    <TableCell>{u.fullName}</TableCell>
+
+                    <TableCell>{u.role}</TableCell>
+
+                    <TableCell>
+                      <span>
+                        {u.active ? "Active" : "Inactive"}
+                      </span>
+                    </TableCell>
+
+                    <TableCell>
+                      {u.active && (
+                        <Button
+                          variant="link"
+                          onClick={() => deactivate(u.id)}
+                        >
+                          Deactivate
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </Container>
 
       {showForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 p-4">

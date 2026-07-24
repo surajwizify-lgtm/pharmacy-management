@@ -6,7 +6,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         where: { id: Number(params.id) },
         include: {
             supplier: true,
-            purchaseOrder: true,
+            purchaseInvoice: true,
             items: { include: { product: true, batch: true } },
         },
     });

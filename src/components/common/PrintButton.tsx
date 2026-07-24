@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from "../ui/button";
+
 interface PrintButtonProps {
     onClick: () => void;
     className?: string;
@@ -12,7 +14,7 @@ export default function PrintButton({
     children,
 }: PrintButtonProps) {
     return (
-        <button
+        <Button variant={'outline'}
             onClick={onClick}
             className={
                 className ??
@@ -20,6 +22,6 @@ export default function PrintButton({
             }
         >
             {children ?? '🖨️ Print'}
-        </button>
+        </Button>
     );
 }

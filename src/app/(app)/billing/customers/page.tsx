@@ -1,9 +1,11 @@
 "use client";
-
+import Container from "@/components/common/Container";
 import PageHeader from "@/components/common/Header";
 import HeaderButton from "@/components/common/HeaderButton";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 type Customer = {
     id: number;
@@ -130,95 +132,115 @@ export default function CustomersPage() {
                 header={`Customers`}
                 subheader="Manage customer records used across billing."
             >
-                <HeaderButton text="Add Location" onClick={openCreateModal} />
+                <HeaderButton text="Customer" onClick={openCreateModal} />
             </PageHeader>
 
-            <div className="mb-4">
-                <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by name or phone..."
-                    className="w-full max-w-sm border border-neutral-200 rounded-md px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-                />
-            </div>
-
-            {loading && <p className="text-neutral-500 text-sm">Loading customers...</p>}
-            {error && (
-                <p className="text-danger-700 bg-danger-50 border border-danger-200 rounded-md px-3 py-2 text-sm mb-4">
-                    {error}
-                </p>
-            )}
-
-            {!loading && !error && (
-                <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                    <table className="w-full text-sm">
-                        <thead className="bg-neutral-100 text-neutral-600 text-left">
-                            <tr>
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Phone</th>
-                                <th className="px-4 py-2 font-medium">Email</th>
-                                <th className="px-4 py-2 font-medium">GSTIN</th>
-                                <th className="px-4 py-2 font-medium">Bills</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-200">
-                            {customers.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
-                                        No customers found.
-                                    </td>
-                                </tr>
-                            )}
-                            {customers.map((c) => (
-                                <tr key={c.id} className="hover:bg-neutral-50 transition-colors">
-                                    <td className="px-4 py-2 font-medium text-neutral-900">
-                                        <Link
-                                            href={`/billing/customers/${c.id}`}
-                                            className="hover:underline text-primary-700"
-                                        >
-                                            {c.name}
-                                        </Link>
-                                        {c.address && (
-                                            <div className="text-xs text-neutral-400">{c.address}</div>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-2 text-neutral-600">{c.phone || "—"}</td>
-                                    <td className="px-4 py-2 text-neutral-600">{c.email || "—"}</td>
-                                    <td className="px-4 py-2 text-neutral-600">{c.gstin || "—"}</td>
-                                    <td className="px-4 py-2 text-neutral-600">{c._count.bills}</td>
-                                    <td className="px-4 py-2">
-                                        <span
-                                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.active
-                                                ? "bg-secondary-100 text-secondary-800"
-                                                : "bg-neutral-100 text-neutral-500"
-                                                }`}
-                                        >
-                                            {c.active ? "Active" : "Inactive"}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-2 text-right space-x-3">
-                                        <button
-                                            onClick={() => openEditModal(c)}
-                                            className="text-primary-600 hover:underline text-sm"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(c)}
-                                            className="text-danger-600 hover:underline text-sm"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            <Container>
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Search by name or phone..."
+                        className="w-full max-w-sm border border-neutral-200 rounded-md px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                    />
                 </div>
-            )}
+
+                {loading && <p className="text-neutral-500 text-sm">Loading customers...</p>}
+                {error && (
+                    <p className="text-danger-700 bg-danger-50 border border-danger-200 rounded-md px-3 py-2 text-sm mb-4">
+                        {error}
+                    </p>
+                )}
+
+                {!loading && !error && (
+                    <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Phone</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>GSTIN</TableHead>
+                                    <TableHead>Bills</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+
+                            <TableBody>
+                                {customers.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7}>
+                                            No customers found.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    customers.map((c) => (
+                                        <TableRow key={c.id}>
+                                            <TableCell>
+                                                <Link href={`/billing/customers/${c.id}`}>
+                                                    {c.name}
+                                                </Link>
+
+                                                {c.address && (
+                                                    <div>{c.address}</div>
+                                                )}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {c.phone || "—"}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {c.email || "—"}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {c.gstin || "—"}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {c._count.bills}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <span
+                                                    className={
+                                                        c.active
+                                                            ? "bg-secondary-100 text-secondary-800 px-2 py-1 rounded-full text-xs"
+                                                            : "bg-neutral-100 text-neutral-500 px-2 py-1 rounded-full text-xs"
+                                                    }
+                                                >
+                                                    {c.active ? "Active" : "Inactive"}
+                                                </span>
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="link"
+                                                        onClick={() => openEditModal(c)}
+                                                    >
+                                                        Edit
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="link"
+                                                        onClick={() => handleDelete(c)}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )}
+            </Container>
 
             {modalOpen && (
                 <div className="fixed inset-0 bg-overlay-black flex items-center justify-center z-50">

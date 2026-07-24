@@ -6,6 +6,9 @@ import { apiFetch } from '@/lib/api-client';
 import type { Batch } from '@/types';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 
 // Extend the shared Batch type for this page
 type BatchWithProduct = Batch & {
@@ -170,7 +173,7 @@ export default function BatchesPage() {
   }, [batches]);
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <PageHeader
         header={`Batches & Stock`}
         subheader="Monitor inventory batches, expiry dates and maintain FIFO stock
@@ -178,150 +181,133 @@ export default function BatchesPage() {
       >
       </PageHeader>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          title="Expired"
-          value={stats.expired}
-          color="text-danger-600"
-        />
-
-        <StatCard
-          title="≤30 Days"
-          value={stats.critical}
-          color="text-danger-600"
-        />
-
-        <StatCard
-          title="31-90 Days"
-          value={stats.warning}
-          color="text-warning-600"
-        />
-
-        <StatCard
-          title="Units"
-          value={stats.units}
-          color="text-primary-600"
-        />
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-sm">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search product or batch..."
-            className="w-full rounded-lg border border-slate-300 py-2 pl-10 pr-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+      <Container>
+        {/* Stats */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <StatCard
+            title="Expired"
+            value={stats.expired}
+            color="text-danger-600"
           />
-          <div className="absolute left-3 top-3 text-slate-400">
-            <SearchIcon />
-          </div>
+
+          <StatCard
+            title="≤30 Days"
+            value={stats.critical}
+            color="text-danger-600"
+          />
+
+          <StatCard
+            title="31-90 Days"
+            value={stats.warning}
+            color="text-warning-600"
+          />
+
+          <StatCard
+            title="Units"
+            value={stats.units}
+            color="text-primary-600"
+          />
         </div>
 
-        <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
-          <input
-            type="checkbox"
-            checked={onlyExpiring}
-            onChange={(e) => setOnlyExpiring(e.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-          />
-          Show only batches expiring within 90 days
-        </label>
-      </div>
+        {/* Toolbar */}
+        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-sm">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search product or batch..."
+            // className="w-full rounded-lg border border-slate-300 py-2 pl-10 pr-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            />
+            <div className="absolute right-3 top-3 text-slate-400">
+              <SearchIcon />
+            </div>
+          </div>
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-5 py-4">Product</th>
-              <th className="px-5 py-4">Batch</th>
-              <th className="px-5 py-4">Expiry</th>
-              <th className="px-5 py-4">Quantity</th>
-              <th className="px-5 py-4">Selling Price</th>
-            </tr>
-          </thead>
+          <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+            <input
+              type="checkbox"
+              checked={onlyExpiring}
+              onChange={(e) => setOnlyExpiring(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+            />
+            Show only batches expiring within 90 days
+          </label>
+        </div>
 
-          <tbody className="divide-y divide-slate-100">
+        {/* Table */}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product</TableHead>
+              <TableHead>Batch</TableHead>
+              <TableHead>Expiry</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Selling Price</TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>
+                <TableRow key={i}>
                   {Array.from({ length: 5 }).map((__, j) => (
-                    <td key={j} className="px-5 py-4">
-                      <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
-                    </td>
+                    <TableCell key={j}>
+                      <div />
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-16">
-                  <div className="flex flex-col items-center gap-3">
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <div>
                     <EmptyIcon />
-                    <p className="font-medium text-slate-600">
-                      No batches found
-                    </p>
-                    <p className="text-sm text-slate-400">
-                      Try changing your filters or search.
-                    </p>
+                    <p>No batches found</p>
+                    <p>Try changing your filters or search.</p>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               filtered.map((batch) => {
                 const d = daysUntil(batch.expiryDate);
                 const tone = expiryTone(d);
 
                 return (
-                  <tr
-                    key={batch.id}
-                    className="transition hover:bg-brand-50/30"
-                  >
-                    <td className="px-5 py-4">
-                      <Link
-                        href={`/products/${batch.productId}`}
-                        className="font-semibold text-slate-800 transition hover:text-brand-600"
-                      >
-                        {batch.product?.name ??
-                          `Product #${batch.productId}`}
+                  <TableRow key={batch.id}>
+                    <TableCell>
+                      <Link href={`/products/${batch.productId}`}>
+                        {batch.product?.name ?? `Product #${batch.productId}`}
                       </Link>
-                    </td>
+                    </TableCell>
 
-                    <td className="px-5 py-4 font-mono text-sm text-slate-600">
+                    <TableCell>
                       {batch.batchNumber}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${tone.badge}`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${tone.dot}`}
-                        />
-
+                    <TableCell>
+                      <span>
+                        <span />
                         {new Date(batch.expiryDate).toLocaleDateString()}
-
                         {d < 0
                           ? `(Expired ${Math.abs(d)}d ago)`
                           : `(${d}d left)`}
                       </span>
-                    </td>
+                    </TableCell>
 
-                    <td className="px-5 py-4 font-medium text-slate-700">
+                    <TableCell>
                       {batch.quantityAvailable}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-5 py-4 font-semibold text-brand-700">
+                    <TableCell>
                       ₹{batch.sellingPrice}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </Container>
     </div>
   );
 }

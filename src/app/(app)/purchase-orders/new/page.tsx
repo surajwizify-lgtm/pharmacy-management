@@ -9,6 +9,7 @@ import type { product } from '@/types';
 import PurchaseOrderPrint from '@/components/print/PurchaseOrderPrint';
 import { printElement } from '@/lib/print-pdf';
 import PurchaseOrderPrintButton from '@/components/purchase-orders/PurchaseOrderPrintButton';
+import BackButton from '@/components/common/BackButton';
 
 type Supplier = { id: number; name: string };
 
@@ -232,12 +233,7 @@ export default function NewPurchaseOrderPage() {
     return (
         <div className="mx-auto max-w-3xl space-y-6">
             <div>
-                <Link
-                    href="/purchase-orders/registered"
-                    className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
-                >
-                    ← Back to purchase orders
-                </Link>
+                <BackButton />
                 <h1 className="mt-1 text-2xl font-semibold text-neutral-900">New Purchase Order</h1>
                 <p className="text-sm text-neutral-500">This is a request to your supplier — no stock is added yet.</p>
             </div>

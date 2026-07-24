@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import PurchaseOrderPrintButton from '@/components/purchase-orders/PurchaseOrderPrintButton';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-neutral-100 text-neutral-600 border-neutral-200',
@@ -35,7 +38,7 @@ export default function PurchaseOrdersPage() {
             </PageHeader>
 
             {/* Table */}
-            <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            <Container>
                 {loading ? (
                     <div className="flex items-center justify-center gap-3 py-12 text-neutral-500">
                         <svg className="h-5 w-5 animate-spin text-primary-600" viewBox="0 0 24 24" fill="none">
@@ -47,72 +50,83 @@ export default function PurchaseOrdersPage() {
                 ) : orders.length === 0 ? (
                     <p className="px-6 py-12 text-center text-sm text-neutral-500">No purchase orders found.</p>
                 ) : (
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
-                                <th className="p-3 font-medium">PO Number</th>
-                                <th className="p-3 font-medium">Supplier</th>
-                                <th className="p-3 font-medium">Status</th>
-                                <th className="p-3 font-medium">Items</th>
-                                <th className="p-3 font-medium">Order Date</th>
-                                <th className="p-3 font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>PO Number</TableHead>
+                                <TableHead>Supplier</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Items</TableHead>
+                                <TableHead>Order Date</TableHead>
+                                <TableHead className='text-center'>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
                             {orders.map((po) => (
-                                <tr key={po.id} className="border-t border-neutral-100 transition-colors hover:bg-neutral-50">
-                                    <td className="p-3">
-                                        <Link
-                                            href={`/purchase-orders/${po.id}`}
-                                            className="font-medium text-primary-600 hover:text-primary-700 hover:underline"
-                                        >
+                                <TableRow key={po.id}>
+                                    <TableCell>
+                                        <Link href={`/purchase-orders/${po.id}`}>
                                             {po.poNumber}
                                         </Link>
-                                    </td>
-                                    <td className="p-3 text-neutral-700">{po.supplier.name}</td>
-                                    <td className="p-3">
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {po.supplier.name}
+                                    </TableCell>
+
+                                    <TableCell>
                                         <span
-                                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[po.status] || 'bg-neutral-100 text-neutral-600 border-neutral-200'
+                                            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[po.status] ??
+                                                "bg-neutral-100 text-neutral-600 border-neutral-200"
                                                 }`}
                                         >
-                                            {po.status.replace('_', ' ')}
+                                            {po.status.replace("_", " ")}
                                         </span>
-                                    </td>
-                                    <td className="p-3 text-neutral-700">{po.items.length}</td>
-                                    <td className="p-3 text-neutral-700">{new Date(po.orderDate).toLocaleDateString()}</td>
-                                    <td className="p-3">
-                                        <div className="flex gap-3">
-                                            <Link
-                                                href={`/purchase-orders/${po.id}/edit`}
-                                                className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline"
-                                            >
-                                                Edit
-                                            </Link>
-                                            {po.status !== 'RECEIVED' && po.status !== 'CANCELLED' && (
-                                                <Link
-                                                    href={`/purchase-orders/${po.id}/receive`}
-                                                    className="text-xs font-medium text-secondary-600 hover:text-secondary-700 hover:underline"
-                                                >
-                                                    Receive
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {po.items.length}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {new Date(po.orderDate).toLocaleDateString()}
+                                    </TableCell>
+
+                                    <TableCell className='text-center'>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Button variant="outline">
+                                                <Link href={`/purchase-orders/${po.id}/edit`}>
+                                                    Edit
                                                 </Link>
+                                            </Button>
+
+                                            {po.status !== "RECEIVED" &&
+                                                po.status !== "CANCELLED" && (
+                                                    <Button variant="outline">
+                                                        <Link href={`/purchase-orders/${po.id}/receive`}>
+                                                            Receive
+                                                        </Link>
+                                                    </Button>
+                                                )}
+
+                                            {po.status === "RECEIVED" && (
+                                                <Button variant="destructive">
+                                                    <Link href={`/purchase-orders/return/new`}>
+                                                        Return
+                                                    </Link>
+                                                </Button>
                                             )}
-                                            {po.status === 'RECEIVED' && (
-                                                <Link
-                                                    href={`/purchase-orders/return/new`}
-                                                    className="text-xs font-medium text-danger-600 hover:text-danger-700 hover:underline"
-                                                >
-                                                    Return
-                                                </Link>
-                                            )}
+
                                             <PurchaseOrderPrintButton poId={po.id} />
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 )}
-            </div>
+            </Container>
         </div>
     );
 }

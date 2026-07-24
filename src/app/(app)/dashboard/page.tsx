@@ -15,6 +15,10 @@ import OverduePayablesList from '@/components/dashboard/OverduePayablesList';
 import CashFlowChart from '@/components/dashboard/CashFlowChart';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import DashboardLinks from '@/components/dashboard/DashboardLinks';
 
 async function getStats() {
   const [productCount, activeproducts, allproductsWithBatches, expiringBatches, billsToday, revenueAgg] =
@@ -52,104 +56,105 @@ export default async function DashboardPage() {
   const stats = await getStats();
 
   return (
-    <div className="space-y-8">
+    <div className="">
       <PageHeader
         header={`Welcome back, ${session?.user?.fullName?.split(' ')[0]}`}
         subheader="Track your key metrics, recent activity, and team performance in one place."
       >
         <HeaderButton text="Create New Bill" href="/billing/all-sales/new" />
       </PageHeader>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard
-          label="Active products"
-          value={stats.activeproducts}
-          sub={`${stats.productCount} total`}
-          icon={Package}
-          tone="primary"
-        />
-        <StatCard label="Bills today" value={stats.billsToday} icon={Receipt} tone="indigo" />
-        <StatCard
-          label="Revenue today"
-          value={`₹${Number(stats.revenueToday ?? 0).toFixed(2)}`}
-          icon={IndianRupee}
-          tone="secondary"
-        />
-        <StatCard
-          label="Low stock items"
-          value={stats.lowStock.length}
-          icon={AlertTriangle}
-          tone={stats.lowStock.length > 0 ? 'amber' : 'secondary'}
-        />
-      </div>
-
-      {/* -------- Lists -------- */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="card overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
-            <h2 className="flex items-center gap-2 font-medium text-neutral-800">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Low stock (≤ 20 units)
-            </h2>
-            <Link
-              href="/products"
-              className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
-            >
-              View all <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          <div className="p-5 pt-2">
-            {stats.lowStock.length === 0 ? (
-              <p className="py-4 text-sm text-neutral-400">All products are well stocked.</p>
-            ) : (
-              <ul className="divide-y divide-neutral-100">
-                {stats.lowStock.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between py-2.5 text-sm">
-                    <span className="font-medium text-neutral-700">{m.name}</span>
-                    <span className="badge bg-amber-100 text-amber-700">{m.totalStock} left</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+      <Container>
+        <DashboardLinks />
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <StatCard
+            label="Active products"
+            value={stats.activeproducts}
+            sub={`${stats.productCount} total`}
+            icon={Package}
+            tone="primary"
+          />
+          <StatCard label="Bills today" value={stats.billsToday} icon={Receipt} tone="indigo" />
+          <StatCard
+            label="Revenue today"
+            value={`₹${Number(stats.revenueToday ?? 0).toFixed(2)}`}
+            icon={IndianRupee}
+            tone="secondary"
+          />
+          <StatCard
+            label="Low stock items"
+            value={stats.lowStock.length}
+            icon={AlertTriangle}
+            tone={stats.lowStock.length > 0 ? 'amber' : 'secondary'}
+          />
         </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Card className=" overflow-hidden p-0">
+            <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+              <h2 className="flex items-center gap-2 font-medium text-neutral-800">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Low stock (≤ 20 units)
+              </h2>
+              <Link
+                href="/products"
+                className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
+              >
+                View all <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <div className="p-5 pt-2">
+              {stats.lowStock.length === 0 ? (
+                <p className="py-4 text-sm text-neutral-400">All products are well stocked.</p>
+              ) : (
+                <ul className="divide-y divide-neutral-100">
+                  {stats.lowStock.map((m) => (
+                    <li key={m.id} className="flex items-center justify-between py-2.5 text-sm">
+                      <span className="font-medium text-neutral-700">{m.name}</span>
+                      <span className="badge bg-amber-100 text-amber-700">{m.totalStock} left</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
 
-        <div className="card overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
-            <h2 className="flex items-center gap-2 font-medium text-neutral-800">
-              <Clock className="h-4 w-4 text-danger-500" />
-              Expiring soon (90 days)
-            </h2>
-            <Link
-              href="/batches"
-              className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
-            >
-              View all <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
-          <div className="p-5 pt-2">
-            {stats.expiringBatches.length === 0 ? (
-              <p className="py-4 text-sm text-neutral-400">Nothing expiring in the next 90 days.</p>
-            ) : (
-              <ul className="divide-y divide-neutral-100">
-                {stats.expiringBatches.map((b) => (
-                  <li key={b.id} className="flex items-center justify-between py-2.5 text-sm">
-                    <span className="text-neutral-700">
-                      <span className="font-medium">{b.product.name}</span>{' '}
-                      <span className="text-neutral-400">· {b.batchNumber}</span>
-                    </span>
-                    <span className="badge bg-danger-100 text-danger-700">
-                      {new Date(b.expiryDate).toLocaleDateString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <Card className="card overflow-hidden p-0">
+            <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
+              <h2 className="flex items-center gap-2 font-medium text-neutral-800">
+                <Clock className="h-4 w-4 text-danger-500" />
+                Expiring soon (90 days)
+              </h2>
+              <Link
+                href="/batches"
+                className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
+              >
+                View all <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <div className="p-5 pt-2">
+              {stats.expiringBatches.length === 0 ? (
+                <p className="py-4 text-sm text-neutral-400">Nothing expiring in the next 90 days.</p>
+              ) : (
+                <ul className="divide-y divide-neutral-100">
+                  {stats.expiringBatches.map((b) => (
+                    <li key={b.id} className="flex items-center justify-between py-2.5 text-sm">
+                      <span className="text-neutral-700">
+                        <span className="font-medium">{b.product.name}</span>{' '}
+                        <span className="text-neutral-400">· {b.batchNumber}</span>
+                      </span>
+                      <span className="badge bg-danger-100 text-danger-700">
+                        {new Date(b.expiryDate).toLocaleDateString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
+          <OverduePayablesList />
+
+          <CashFlowChart />
         </div>
-        <OverduePayablesList />
-
-        <CashFlowChart />
-      </div>
+      </Container>
     </div>
   );
 }
@@ -176,15 +181,17 @@ function StatCard({
 }) {
   const styles = TONE_STYLES[tone];
   return (
-    <div className="card flex items-start justify-between p-5">
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
-        <p className={`mt-1 text-2xl font-semibold ${styles.value}`}>{value}</p>
-        {sub && <p className="text-xs text-neutral-400">{sub}</p>}
+    <Card className="">
+      <div className='flex items-start justify-between p-5'>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
+          <p className={`mt-1 text-2xl font-semibold ${styles.value}`}>{value}</p>
+          {sub && <p className="text-xs text-neutral-400">{sub}</p>}
+        </div>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${styles.bg}`}>
+          <Icon className={`h-4.5 w-4.5 ${styles.icon}`} />
+        </div>
       </div>
-      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${styles.bg}`}>
-        <Icon className={`h-4.5 w-4.5 ${styles.icon}`} />
-      </div>
-    </div>
+    </Card>
   );
 }

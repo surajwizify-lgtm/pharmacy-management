@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BackButton from "@/components/common/BackButton";
 
 export default function NewSupplierPage() {
     const router = useRouter();
@@ -56,7 +57,7 @@ export default function NewSupplierPage() {
         <div className="p-6 max-w-xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">Add Supplier</h1>
-                <Link href="/purchase-orders/suppliers" className="text-blue-600">Back to list</Link>
+                <BackButton />
             </div>
             {error && (
                 <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>

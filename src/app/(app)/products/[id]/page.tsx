@@ -5,6 +5,14 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { product } from '@/types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+import DetailPageHeader from '@/components/common/DetailPageHeader';
+import { Button } from '@/components/ui/button';
+import { Printer } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import Container from '@/components/common/Container';
 
 const EMPTY_BATCH = { batchNumber: '', expiryDate: '', purchasePrice: '', sellingPrice: '', quantityAvailable: '' };
 
@@ -15,6 +23,7 @@ const labelClass = 'mb-1 block text-xs font-medium text-neutral-600';
 export default function productDetailPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession();
   const role = session?.user?.role;
+  const router = useRouter();
   const canEdit = role === 'ADMIN' || role === 'PHARMACIST';
 
   const [product, setproduct] = useState<product | null>(null);
@@ -89,113 +98,155 @@ export default function productDetailPage({ params }: { params: { id: string } }
   const totalStock = product.batches.reduce((s, b) => s + b.quantityAvailable, 0);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link href="/products" className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline">
-          ← Back to products
-        </Link>
-        <div className="mt-1 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-neutral-900">{product.name}</h1>
-            <p className="text-sm text-neutral-500">
-              {product.manufacturer} · HSN {product.hsnCode} · GST {product.gstPercentage}%
-            </p>
-          </div>
-          <span
-            className={`inline-flex rounded-md px-3 py-1 text-xs font-semibold ${product.status === 'ACTIVE' ? 'bg-secondary-100 text-secondary-700' : 'bg-neutral-200 text-neutral-500'
-              }`}
-          >
-            {product.status}
-          </span>
-        </div>
-      </div>
+    <div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <p className="mb-1 text-xs font-medium text-neutral-500">Total stock</p>
-          <p className="text-xl font-semibold text-neutral-900">{totalStock}</p>
-        </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <p className="mb-1 text-xs font-medium text-neutral-500">Batches</p>
-          <p className="text-xl font-semibold text-neutral-900">{product.batches.length}</p>
-        </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <p className="mb-1 text-xs font-medium text-neutral-500">Prescription</p>
-          <p className="text-xl font-semibold text-neutral-900">{product.prescriptionRequired ? 'Required' : 'Not required'}</p>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-medium text-neutral-800">Batches (FIFO by expiry)</h2>
-          {canEdit && (
-            <button
-              className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
-              onClick={() => setShowBatchForm(true)}
+      <DetailPageHeader
+        backHref="/products"
+        backLabel="Back to products"
+        title={product.name}
+        subtitle={
+          <>
+            {cn(product.manufacturer, ",", "HSN: ", product.hsnCode, ", GST:", product.gstPercentage)}
+          </>
+        }
+        status={{
+          label: 'status',
+          active: true,
+        }}
+        actions={
+          false && (
+            <Button
+              variant={'success'}
+            // onClick={handlePrint}
+            // className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
             >
-              + Add batch
-            </button>
-          )}
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+          )
+        }
+      />
+
+      <Container>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <p className="mb-1 text-xs font-medium text-neutral-500">Total stock</p>
+            <p className="text-xl font-semibold text-neutral-900">{totalStock}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <p className="mb-1 text-xs font-medium text-neutral-500">Batches</p>
+            <p className="text-xl font-semibold text-neutral-900">{product.batches.length}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <p className="mb-1 text-xs font-medium text-neutral-500">Prescription</p>
+            <p className="text-xl font-semibold text-neutral-900">{product.prescriptionRequired ? 'Required' : 'Not required'}</p>
+          </div>
         </div>
 
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
-            <tr>
-              <th className="py-2">Batch #</th>
-              <th className="py-2">Expiry</th>
-              <th className="py-2">Location</th>
-              <th className="py-2">Purchase price</th>
-              <th className="py-2">Selling price</th>
-              <th className="py-2">Qty available</th>
-              {canEdit && <th className="py-2">Adjust</th>}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {product.batches.map((b) => (
-              <tr key={b.id} className="hover:bg-neutral-50">
-                <td className="py-2 font-medium text-neutral-800">{b.batchNumber}</td>
-                <td className="py-2 text-neutral-600">{new Date(b.expiryDate).toLocaleDateString()}</td>
-                <td className="py-2 text-neutral-600">{(b.location) ? b.location : ""}</td>
-                <td className="py-2 text-neutral-600">₹{b.purchasePrice}</td>
-                <td className="py-2 text-neutral-600">₹{b.sellingPrice}</td>
-                <td className="py-2 text-neutral-600">{b.quantityAvailable}</td>
-                {canEdit && (
-                  <td className="py-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
-                        disabled={adjusting === b.id}
-                        onClick={() => adjustStock(b.id, b.version, -1)}
-                      >
-                        −1
-                      </button>
-                      <button
-                        className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
-                        disabled={adjusting === b.id}
-                        onClick={() => adjustStock(b.id, b.version, 1)}
-                      >
-                        +1
-                      </button>
-                      <button
-                        className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50"
-                        disabled={adjusting === b.id}
-                        onClick={() => {
-                          const n = Number(prompt('Add/remove how many units? (negative to remove)', '0'));
-                          if (!Number.isNaN(n) && n !== 0) adjustStock(b.id, b.version, n);
-                        }}
-                      >
-                        Custom
-                      </button>
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-medium text-neutral-800">Batches (FIFO by expiry)</h2>
+            {/* {canEdit && (
+              <button
+                className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
+                onClick={() => setShowBatchForm(true)}
+              >
+                + Add batch
+              </button>
+            )} */}
+          </div>
 
-      {showBatchForm && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Batch #</TableHead>
+                <TableHead>Expiry</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Purchase Price</TableHead>
+                <TableHead>Selling Price</TableHead>
+                <TableHead>Qty Available</TableHead>
+                {canEdit && <TableHead className="text-center">Adjust</TableHead>}
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {product.batches.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell className="font-medium">
+                    {b.batchNumber}
+                  </TableCell>
+
+                  <TableCell>
+                    {new Date(b.expiryDate).toLocaleDateString()}
+                  </TableCell>
+
+                  <TableCell>
+                    {b.location || "-"}
+                  </TableCell>
+
+                  <TableCell>
+                    ₹{b.purchasePrice}
+                  </TableCell>
+
+                  <TableCell>
+                    ₹{b.sellingPrice}
+                  </TableCell>
+
+                  <TableCell>
+                    {b.quantityAvailable}
+                  </TableCell>
+
+                  {canEdit && (
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={adjusting === b.id}
+                          onClick={() => adjustStock(b.id, b.version, -1)}
+                        >
+                          -1
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={adjusting === b.id}
+                          onClick={() => adjustStock(b.id, b.version, 1)}
+                        >
+                          +1
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={adjusting === b.id}
+                          onClick={() => {
+                            const n = Number(
+                              prompt(
+                                "Add/remove how many units? (negative to remove)",
+                                "0"
+                              )
+                            );
+
+                            if (!Number.isNaN(n) && n !== 0) {
+                              adjustStock(b.id, b.version, n);
+                            }
+                          }}
+                        >
+                          Custom
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Container>
+
+      {/* {showBatchForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
             <h2 className="mb-4 text-lg font-semibold text-neutral-800">Add batch</h2>
@@ -289,7 +340,7 @@ export default function productDetailPage({ params }: { params: { id: string } }
             </form>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

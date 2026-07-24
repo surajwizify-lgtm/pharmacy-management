@@ -349,6 +349,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { product } from '@/types';
+import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type GstType = 'INCLUSIVE' | 'EXCLUSIVE';
 
@@ -412,7 +414,7 @@ type ProductFormModalProps = {
 };
 
 
-const labelCls = 'mb-0.5 block text-xs font-medium text-neutral-500';
+const labelCls = 'mb-0.5 text-xs font-medium text-neutral-500';
 const inputCls =
     'w-full rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm text-neutral-800 placeholder:text-neutral-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 disabled:bg-neutral-50 disabled:text-neutral-400';
 
@@ -438,7 +440,6 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
         "Other"
     ]
 
-    // Reset form contents whenever the modal opens or the target product changes.
     useEffect(() => {
         if (!open) return;
         setForm(product ? toFormState(product) : EMPTY_FORM);
@@ -490,7 +491,7 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
 
     return (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-neutral-900/40 p-4">
-            <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
+            <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
                 <div className="mb-3 flex items-start justify-between">
                     <div>
                         <h2 className="text-base font-semibold text-neutral-900">
@@ -500,18 +501,17 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
                             {editingId ? 'Update catalog and GST details.' : 'Add a new item to the catalog.'}
                         </p>
                     </div>
-                    <button
+                    <Button
                         type="button"
+                        variant={'destructive'}
                         onClick={onClose}
-                        className="rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
                         aria-label="Close"
                     >
                         <CloseIcon />
-                    </button>
+                    </Button>
                 </div>
-
                 <form onSubmit={handleSubmit} className="space-y-2.5">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                         <div className="col-span-2">
                             <label className={labelCls}>Name</label>
                             <input
@@ -522,6 +522,34 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
                             />
                         </div>
                         <div>
+                            <label className={labelCls}>Category</label>
+                            <Select
+                                value={form.category}
+                                onValueChange={(value) => {
+                                    if (value === null) return;
+
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        category: value,
+                                    }));
+                                }}
+                            >
+                                <SelectTrigger className={inputCls}>
+                                    <SelectValue placeholder={'Select Category'}>
+
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+
+                                    {
+                                        options.map((option) => (
+                                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                                        ))
+                                    }
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className='col-span-2'>
                             <label className={labelCls}>Generic Name</label>
                             <input
                                 className={inputCls}
@@ -538,16 +566,7 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
                                 onChange={(e) => setForm({ ...form, manufacturer: e.target.value })}
                             />
                         </div>
-                        <div>
-                            <label className={labelCls}>Category</label>
-                            <select value={form.category} className={inputCls} onChange={(e) => setForm({ ...form, category: e.target.value })} name="" id="">
-                                {
-                                    options.map((option) => (
-                                        <option key={option} value={option}>{option}</option>
-                                    ))
-                                }
-                            </select>
-                        </div>
+
                         <div>
                             <label className={labelCls}>Barcode</label>
                             <input
@@ -608,10 +627,17 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
                                 onChange={(e) => setForm({ ...form, sp: e.target.value })}
                             />
                         </div>
+                        <label className="col-span-3 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-700">
+                            <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-400"
+                                checked={form.prescriptionRequired}
+                                onChange={(e) => setForm({ ...form, prescriptionRequired: e.target.checked })}
+                            />
+                            Prescription required
+                        </label>
 
-                        {/* GST type — inclusive (MRP already has GST, common for most retail
-                products) vs exclusive (GST added on top, common for B2B/hospital supply) */}
-                        <div className="col-span-2">
+                        <div className="col-span-3">
                             <label className={labelCls}>GST type</label>
                             <div className="inline-flex w-full rounded-lg border border-neutral-200 bg-neutral-50 p-0.5">
                                 <button
@@ -642,15 +668,7 @@ export function ProductFormModal({ open, onClose, product, onSuccess }: ProductF
                             </p>
                         </div>
 
-                        <label className="col-span-2 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm text-neutral-700">
-                            <input
-                                type="checkbox"
-                                className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-400"
-                                checked={form.prescriptionRequired}
-                                onChange={(e) => setForm({ ...form, prescriptionRequired: e.target.checked })}
-                            />
-                            Prescription required
-                        </label>
+
                     </div>
 
                     {error && (
