@@ -1,12 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
+import { Button } from '@/components/ui/button';
+import BackButton from '@/components/common/BackButton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import DetailPageHeader from '@/components/common/DetailPageHeader';
+import { Printer } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Container from '@/components/common/Container';
+
 
 export default function PurchaseOrderDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const id = params?.id as string;
 
     const [po, setPo] = useState<any>(null);
@@ -68,22 +77,38 @@ export default function PurchaseOrderDetailPage() {
 
     return (
         <div className="min-h-screen bg-neutral-50">
-            <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+            <DetailPageHeader
+                backHref="/products"
+                backLabel="Back to products"
+                title={po.poNumber}
+                subtitle={
+                    <>
+                        {cn('Supplier: ', po.supplier.name)}
+                    </>
+                }
+                status={{
+                    label: po.status.replace('_', ' '),
+                    active: true,
+                }}
+                actions={
+                    true && (
+                        <div>
+                            <Button
+                                variant={'success'}
+
+                            >
+                                <Printer className="h-4 w-4" />
+                                Print
+                            </Button>
+                            <div>
+                            </div>
+                        </div>
+                    )
+                }
+            />
+            <Container>
                 {/* Header */}
-                <div>
-                    <Link href="/purchase-orders/registerd" className="text-xs font-medium text-primary-600 hover:text-primary-700 hover:underline">
-                        ← Back to purchase orders
-                    </Link>
-                    <div className="mt-2 flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-neutral-900">PO #{po.poNumber}</h1>
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadge(po.status)}`}>
-                            {po.status.replace('_', ' ')}
-                        </span>
-                    </div>
-                    <p className="mt-1 text-sm text-neutral-500">
-                        Supplier: <span className="font-medium text-neutral-700">{po.supplier.name}</span>
-                    </p>
-                </div>
+
 
                 {/* Summary cards */}
                 <div className="grid grid-cols-2 gap-4">
@@ -178,7 +203,7 @@ export default function PurchaseOrderDetailPage() {
                         </table>
                     </div>
                 )}
-            </div>
+            </Container>
         </div>
     );
 }

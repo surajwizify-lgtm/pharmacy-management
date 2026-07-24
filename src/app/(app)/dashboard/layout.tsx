@@ -10,7 +10,7 @@ export default function DashboardLayout({
     const screen = { width: window.innerWidth, height: window.innerHeight };
 
     return (
-        <div className="relative min-h-screen bg-slate-50 overflow-hidden">
+        <div className="relative min-h-screen ">
             {/* Watermark */}
             <div className="pointer-events-none fixed inset-0 flex items-center justify-center z-0 select-none">
                 <Image

@@ -6,7 +6,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const payment = await prisma.supplierPayment.create({
         data: {
             supplierId: Number(params.id),
-            purchaseOrderId: body.purchaseOrderId ?? null,
+            purchaseInvoiceId: body.purchaseInvoiceId ?? null,
             amount: body.amount,
             paymentMode: body.paymentMode,
             referenceNo: body.referenceNo,

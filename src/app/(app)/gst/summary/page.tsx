@@ -5,6 +5,7 @@ import GstSummaryPrint from "@/components/print/GstSummaryPrint";
 import Button from '@/components/Button';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
 
 type GstSummary = {
     from: string;
@@ -173,137 +174,139 @@ export default function GstSummaryPage() {
                     Print summary
                 </Button>
             </PageHeader>
-            <div className="flex w-full items-end justify-between">
-                <div className="flex flex-wrap items-end gap-3">
-                    <div>
-                        <label className={labelClass}>From</label>
-                        <input
-                            type="date"
-                            value={from}
-                            onChange={(e) => setFrom(e.target.value)}
-                            className={inputClass}
+            <Container>
+                <div className="flex w-full items-end justify-between">
+                    <div className="flex flex-wrap items-end gap-3">
+                        <div>
+                            <label className={labelClass}>From</label>
+                            <input
+                                type="date"
+                                value={from}
+                                onChange={(e) => setFrom(e.target.value)}
+                                className={inputClass}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>To</label>
+                            <input
+                                type="date"
+                                value={to}
+                                onChange={(e) => setTo(e.target.value)}
+                                className={inputClass}
+                            />
+                        </div>
+                        <button
+                            onClick={fetchSummary}
+                            disabled={loading}
+                            className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {loading ? 'Loading…' : 'Refresh'}
+                        </button>
+                        <button
+                            onClick={handleSnapshot}
+                            disabled={saving || !summary}
+                            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {saving ? 'Saving…' : 'Snapshot as filing period'}
+                        </button>
+                    </div>
+
+
+                </div>
+
+                {error && (
+                    <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                        <span className="text-sm font-medium text-danger-700">{error}</span>
+                    </div>
+                )}
+
+                {summary && (
+                    <div className="grid grid-cols-3 gap-4">
+                        <SummaryCard label="Total Output GST" value={summary.totalOutputGst} sub="Collected from sales" />
+                        <SummaryCard label="Total Input GST" value={summary.totalInputGst} sub="Paid on purchases" />
+                        <SummaryCard
+                            label="Net Payable"
+                            value={summary.netPayable}
+                            sub={summary.netPayable >= 0 ? 'Owed to govt' : 'Carried forward / refundable'}
+                            highlight
                         />
                     </div>
-                    <div>
-                        <label className={labelClass}>To</label>
-                        <input
-                            type="date"
-                            value={to}
-                            onChange={(e) => setTo(e.target.value)}
-                            className={inputClass}
-                        />
+                )}
+
+                {summary && (
+                    <div className="grid grid-cols-2 gap-4">
+                        <BreakdownTable title="Output (Sales)" data={summary.breakdown.output} />
+                        <BreakdownTable title="Input (Purchases)" data={summary.breakdown.input} />
                     </div>
-                    <button
-                        onClick={fetchSummary}
-                        disabled={loading}
-                        className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {loading ? 'Loading…' : 'Refresh'}
-                    </button>
-                    <button
-                        onClick={handleSnapshot}
-                        disabled={saving || !summary}
-                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {saving ? 'Saving…' : 'Snapshot as filing period'}
-                    </button>
-                </div>
+                )}
 
-
-            </div>
-
-            {error && (
-                <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
-                    <span className="text-sm font-medium text-danger-700">{error}</span>
-                </div>
-            )}
-
-            {summary && (
-                <div className="grid grid-cols-3 gap-4">
-                    <SummaryCard label="Total Output GST" value={summary.totalOutputGst} sub="Collected from sales" />
-                    <SummaryCard label="Total Input GST" value={summary.totalInputGst} sub="Paid on purchases" />
-                    <SummaryCard
-                        label="Net Payable"
-                        value={summary.netPayable}
-                        sub={summary.netPayable >= 0 ? 'Owed to govt' : 'Carried forward / refundable'}
-                        highlight
-                    />
-                </div>
-            )}
-
-            {summary && (
-                <div className="grid grid-cols-2 gap-4">
-                    <BreakdownTable title="Output (Sales)" data={summary.breakdown.output} />
-                    <BreakdownTable title="Input (Purchases)" data={summary.breakdown.input} />
-                </div>
-            )}
-
-            <div>
-                <h2 className="mb-3 text-lg font-semibold text-neutral-900">Filing History</h2>
-                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-                    <table className="w-full text-left text-sm">
-                        <thead className="border-b border-neutral-200 bg-neutral-50">
-                            <tr>
-                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Period</th>
-                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Output</th>
-                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Input</th>
-                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Net Payable</th>
-                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Amount Paid</th>
-                                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Status</th>
-                                <th className="px-4 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-100">
-                            {periods.map((p) => (
-                                <tr key={p.id} className="hover:bg-neutral-50">
-                                    <td className="px-4 py-3 text-neutral-700">
-                                        {p.periodStart.slice(0, 10)} → {p.periodEnd.slice(0, 10)}
-                                    </td>
-                                    <td className="px-4 py-3 text-neutral-700">{formatCurrency(p.totalOutputGst)}</td>
-                                    <td className="px-4 py-3 text-neutral-700">{formatCurrency(p.totalInputGst)}</td>
-                                    <td className="px-4 py-3 font-medium text-neutral-900">{formatCurrency(p.netPayable)}</td>
-                                    <td className="px-4 py-3">
-                                        <input
-                                            type="number"
-                                            defaultValue={p.amountPaid}
-                                            onBlur={(e) => updateAmountPaid(p.id, Number(e.target.value))}
-                                            className={`${inputClass} w-24`}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {p.filed ? (
-                                            <span className="inline-flex rounded-md bg-secondary-100 px-3 py-1 text-xs font-semibold text-secondary-700">
-                                                Filed {p.filedAt?.slice(0, 10)}
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex rounded-md bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                                Pending
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {!p.filed && (
-                                            <button
-                                                onClick={() => markFiled(p.id, true)}
-                                                className="rounded-lg border border-primary-300 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 transition hover:bg-primary-100"
-                                            >
-                                                Mark filed
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {periods.length === 0 && (
+                <div>
+                    <h2 className="mb-3 text-lg font-semibold text-neutral-900">Filing History</h2>
+                    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b border-neutral-200 bg-neutral-50">
                                 <tr>
-                                    <td className="px-4 py-8 text-center text-sm text-neutral-400" colSpan={7}>
-                                        No filing periods yet — pick a range above and snapshot it.
-                                    </td>
+                                    <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Period</th>
+                                    <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Output</th>
+                                    <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Input</th>
+                                    <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Net Payable</th>
+                                    <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Amount Paid</th>
+                                    <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-neutral-500">Status</th>
+                                    <th className="px-4 py-3"></th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
+                                {periods.map((p) => (
+                                    <tr key={p.id} className="hover:bg-neutral-50">
+                                        <td className="px-4 py-3 text-neutral-700">
+                                            {p.periodStart.slice(0, 10)} → {p.periodEnd.slice(0, 10)}
+                                        </td>
+                                        <td className="px-4 py-3 text-neutral-700">{formatCurrency(p.totalOutputGst)}</td>
+                                        <td className="px-4 py-3 text-neutral-700">{formatCurrency(p.totalInputGst)}</td>
+                                        <td className="px-4 py-3 font-medium text-neutral-900">{formatCurrency(p.netPayable)}</td>
+                                        <td className="px-4 py-3">
+                                            <input
+                                                type="number"
+                                                defaultValue={p.amountPaid}
+                                                onBlur={(e) => updateAmountPaid(p.id, Number(e.target.value))}
+                                                className={`${inputClass} w-24`}
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {p.filed ? (
+                                                <span className="inline-flex rounded-md bg-secondary-100 px-3 py-1 text-xs font-semibold text-secondary-700">
+                                                    Filed {p.filedAt?.slice(0, 10)}
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex rounded-md bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                                    Pending
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {!p.filed && (
+                                                <button
+                                                    onClick={() => markFiled(p.id, true)}
+                                                    className="rounded-lg border border-primary-300 bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 transition hover:bg-primary-100"
+                                                >
+                                                    Mark filed
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {periods.length === 0 && (
+                                    <tr>
+                                        <td className="px-4 py-8 text-center text-sm text-neutral-400" colSpan={7}>
+                                            No filing periods yet — pick a range above and snapshot it.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </Container>
             {showPrint && summary && (
                 <GstSummaryPrint
                     from={summary.from}

@@ -44,7 +44,7 @@ export default function PrintLayout({
     });
 
     return (
-        <div id="bill-print-area" className="text-neutral-900">
+        <div id="bill-print-area" className="text-neutral-900 bg-bg-primary">
             {/* ---------- Header ---------- */}
             <header className="print-header">
                 <div className="flex items-start justify-between gap-6 border-b-2 border-primary-700 pb-3">

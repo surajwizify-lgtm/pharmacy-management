@@ -3,6 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import DetailPageHeader from "@/components/common/DetailPageHeader";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
+import Container from "@/components/common/Container";
+import PrintBillButton from "@/components/billing/PrintBillButton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 type PaymentMethod = "CASH" | "CARD" | "UPI" | "OTHER";
 
@@ -143,12 +150,33 @@ export default function CustomerDetailPage() {
     }
     if (error || !customer) {
         return (
-            <div className="p-6">
-                <p className="text-sm text-danger-600">{error || "Customer not found"}</p>
-                <Link href="/billing/customers" className="text-sm text-primary-600 hover:underline mt-2 inline-block">
-                    ← Back to customers
-                </Link>
-            </div>
+
+            <DetailPageHeader
+                backHref="/products"
+                backLabel="Back to products"
+                title={customer?.name || ""}
+                subtitle={
+                    <>
+                        {customer?.address || ""}
+                    </>
+                }
+                status={{
+                    label: 'status',
+                    active: true,
+                }}
+                actions={
+                    true && (
+                        <Button
+                            variant={'outline'}
+                            onClick={(() => { })}
+                        // className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
+                        >
+                            <Printer className="h-4 w-4" />
+                            Print
+                        </Button>
+                    )
+                }
+            />
         );
     }
 
@@ -158,135 +186,249 @@ export default function CustomerDetailPage() {
     const totalDue = totalBilled - totalPaid;
 
     return (
-        <div className="p-6 max-w-6xl mx-auto space-y-6 bg-neutral-50 min-h-screen">
-            <div>
-                <Link href="/billing/customers" className="text-xs font-medium text-primary-600 hover:underline">
-                    ← Back to customers
-                </Link>
-                <div className="flex items-start justify-between mt-1">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-neutral-900">{customer.name}</h1>
-                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-neutral-500">
-                            {customer.phone && <span>📞 {customer.phone}</span>}
-                            {customer.email && <span>✉️ {customer.email}</span>}
-                            {customer.gstin && <span>GSTIN: {customer.gstin}</span>}
+        <div>
+            <DetailPageHeader
+                backHref="/products"
+                backLabel="Back to products"
+                title={customer?.name || ""}
+                subtitle={
+                    <div className="grid w-full gap-5 grid-cols-4">
+                        <span>{customer?.address || ""}</span>
+                        <span>{customer.phone} || +91</span>
+                        <span>{customer.email}|| abc@gmail.com</span>
+                        <span>GSTIN: {customer.gstin}</span>
+
+
+
+                    </div>
+                }
+                status={{
+                    label: 'status',
+                    active: true,
+                }}
+                actions={
+                    true && (
+                        <Button
+                            variant={'outline'}
+                            onClick={(() => { })}
+                        // className="rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700"
+                        >
+                            <Printer className="h-4 w-4" />
+                            Print
+                        </Button>
+                    )
+                }
+            />
+            <Container>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                        <p className="text-xs text-neutral-400">Total Billed</p>
+                        <p className="text-xl font-semibold text-neutral-800">₹{totalBilled.toFixed(2)}</p>
+                        <p className="text-xs text-neutral-400 mt-0.5">{activeBills.length} bill(s)</p>
+                    </div>
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                        <p className="text-xs text-neutral-400">Total Paid</p>
+                        <p className="text-xl font-semibold text-secondary-600">₹{totalPaid.toFixed(2)}</p>
+                    </div>
+                    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs text-neutral-400">Amount Due</p>
+                            {totalDue > 0 && (
+                                <button
+                                    onClick={() => openPayModal()}
+                                    className="text-xs font-medium text-primary-600 hover:underline"
+                                >
+                                    + Add Payment
+                                </button>
+                            )}
                         </div>
-                        {customer.address && <p className="mt-1 text-sm text-neutral-400">{customer.address}</p>}
+                        <p className={`text-xl font-semibold ${totalDue > 0 ? "text-danger-600" : "text-neutral-800"}`}>
+                            ₹{totalDue.toFixed(2)}
+                        </p>
                     </div>
-                    <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${customer.active ? "bg-secondary-100 text-secondary-800" : "bg-neutral-100 text-neutral-500"
-                            }`}
-                    >
-                        {customer.active ? "Active" : "Inactive"}
-                    </span>
                 </div>
-            </div>
-
-            {/* Summary cards */}
-            <div className="grid grid-cols-3 gap-4">
-                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs text-neutral-400">Total Billed</p>
-                    <p className="text-xl font-semibold text-neutral-800">₹{totalBilled.toFixed(2)}</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">{activeBills.length} bill(s)</p>
-                </div>
-                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-                    <p className="text-xs text-neutral-400">Total Paid</p>
-                    <p className="text-xl font-semibold text-secondary-600">₹{totalPaid.toFixed(2)}</p>
-                </div>
-                <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs text-neutral-400">Amount Due</p>
-                        {totalDue > 0 && (
-                            <button
-                                onClick={() => openPayModal()}
-                                className="text-xs font-medium text-primary-600 hover:underline"
-                            >
-                                + Add Payment
-                            </button>
-                        )}
+                <div className="rounded-xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
+                    <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
+                        <h2 className="font-medium text-neutral-800">Bills</h2>
+                        <span className="text-xs text-neutral-400">{customer.bills.length} total</span>
                     </div>
-                    <p className={`text-xl font-semibold ${totalDue > 0 ? "text-danger-600" : "text-neutral-800"}`}>
-                        ₹{totalDue.toFixed(2)}
-                    </p>
-                </div>
-            </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Bill No.</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead className="text-right">Paid</TableHead>
+                                <TableHead className="text-right">Due</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-center">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
 
-            {/* Bills table */}
-            <div className="rounded-xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-                <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
-                    <h2 className="font-medium text-neutral-800">Bills</h2>
-                    <span className="text-xs text-neutral-400">{customer.bills.length} total</span>
-                </div>
-                <table className="w-full text-sm">
-                    <thead className="bg-neutral-100 text-neutral-500 text-left text-xs uppercase">
-                        <tr>
-                            <th className="px-4 py-2 font-medium">Bill No.</th>
-                            <th className="px-4 py-2 font-medium">Date</th>
-                            <th className="px-4 py-2 font-medium">Total</th>
-                            <th className="px-4 py-2 font-medium">Paid</th>
-                            <th className="px-4 py-2 font-medium">Due</th>
-                            <th className="px-4 py-2 font-medium">Status</th>
-                            <th className="px-4 py-2 font-medium text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100">
-                        {customer.bills.length === 0 && (
-                            <tr>
-                                <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
-                                    No bills yet for this customer.
-                                </td>
-                            </tr>
-                        )}
-                        {customer.bills.map((bill) => {
-                            const paid = billPaid(bill);
-                            const due = billDue(bill);
-                            return (
-                                <tr key={bill.id} className="hover:bg-neutral-50 transition-colors">
-                                    <td className="px-4 py-2 font-medium text-neutral-800">
-                                        {bill.billNumber}
-                                        {bill.cancelled && (
-                                            <span className="ml-2 text-xs text-danger-500">(Cancelled)</span>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-2 text-neutral-500">
-                                        {new Date(bill.billDate).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-4 py-2 text-neutral-700">₹{Number(bill.totalAmount).toFixed(2)}</td>
-                                    <td className="px-4 py-2 text-secondary-600">₹{paid.toFixed(2)}</td>
-                                    <td className={`px-4 py-2 font-medium ${due > 0 ? "text-danger-600" : "text-neutral-400"}`}>
-                                        ₹{due.toFixed(2)}
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <span
-                                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge[bill.paymentStatus]}`}
-                                        >
-                                            {bill.paymentStatus.replace("_", " ")}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-2 text-right space-x-3">
-                                        {!bill.cancelled && due > 0 && (
-                                            <button
-                                                onClick={() => openPayModal(bill.id)}
-                                                className="text-primary-600 hover:underline text-xs font-medium"
+                        <TableBody>
+                            {customer.bills.length === 0 ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={7}
+                                        className="py-8 text-center text-muted-foreground"
+                                    >
+                                        No bills yet for this customer.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                customer.bills.map((bill) => {
+                                    const paid = billPaid(bill);
+                                    const due = billDue(bill);
+
+                                    return (
+                                        <TableRow key={bill.id}>
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{bill.billNumber}</span>
+
+                                                    {bill.cancelled && (
+                                                        <span className="rounded-full bg-danger-100 px-2 py-0.5 text-xs font-medium text-danger-600">
+                                                            Cancelled
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+
+                                            <TableCell>
+                                                {new Date(bill.billDate).toLocaleDateString()}
+                                            </TableCell>
+
+                                            <TableCell className="text-right">
+                                                ₹{Number(bill.totalAmount).toFixed(2)}
+                                            </TableCell>
+
+                                            <TableCell className="text-right text-secondary-600">
+                                                ₹{paid.toFixed(2)}
+                                            </TableCell>
+
+                                            <TableCell
+                                                className={`text-right font-medium ${due > 0
+                                                    ? "text-danger-600"
+                                                    : "text-secondary-600"
+                                                    }`}
                                             >
-                                                Add Payment
-                                            </button>
-                                        )}
-                                        <Link
-                                            href={`/billing/${bill.id}`}
-                                            className="text-neutral-500 hover:underline text-xs font-medium"
-                                        >
-                                            View
-                                        </Link>
+                                                ₹{due.toFixed(2)}
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <span
+                                                    className={`rounded-full px-2 py-1 text-xs font-medium ${statusBadge[bill.paymentStatus]}`}
+                                                >
+                                                    {bill.paymentStatus.replace("_", " ")}
+                                                </span>
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    {!bill.cancelled && due > 0 && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => openPayModal(bill.id)}
+                                                        >
+                                                            Add Payment
+                                                        </Button>
+                                                    )}
+
+                                                    <PrintBillButton
+                                                        billId={bill.id}
+                                                        label=""
+                                                    />
+
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                    >
+                                                        <Link href={`/billing/${bill.id}`}>
+                                                            View
+                                                        </Link>
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                    {/* <table className="w-full text-sm">
+                        <thead className="bg-neutral-100 text-neutral-500 text-left text-xs uppercase">
+                            <tr>
+                                <th className="px-4 py-2 font-medium">Bill No.</th>
+                                <th className="px-4 py-2 font-medium">Date</th>
+                                <th className="px-4 py-2 font-medium">Total</th>
+                                <th className="px-4 py-2 font-medium">Paid</th>
+                                <th className="px-4 py-2 font-medium">Due</th>
+                                <th className="px-4 py-2 font-medium">Status</th>
+                                <th className="px-4 py-2 font-medium text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-100">
+                            {customer.bills.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="px-4 py-6 text-center text-neutral-400">
+                                        No bills yet for this customer.
                                     </td>
                                 </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Add payment modal */}
+                            )}
+                            {customer.bills.map((bill) => {
+                                const paid = billPaid(bill);
+                                const due = billDue(bill);
+                                return (
+                                    <tr key={bill.id} className="hover:bg-neutral-50 transition-colors">
+                                        <td className="px-4 py-2 font-medium text-neutral-800">
+                                            {bill.billNumber}
+                                            {bill.cancelled && (
+                                                <span className="ml-2 text-xs text-danger-500">(Cancelled)</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-2 text-neutral-500">
+                                            {new Date(bill.billDate).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-4 py-2 text-neutral-700">₹{Number(bill.totalAmount).toFixed(2)}</td>
+                                        <td className="px-4 py-2 text-secondary-600">₹{paid.toFixed(2)}</td>
+                                        <td className={`px-4 py-2 font-medium ${due > 0 ? "text-danger-600" : "text-neutral-400"}`}>
+                                            ₹{due.toFixed(2)}
+                                        </td>
+                                        <td className="px-4 py-2">
+                                            <span
+                                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge[bill.paymentStatus]}`}
+                                            >
+                                                {bill.paymentStatus.replace("_", " ")}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2 text-right space-x-3">
+                                            {!bill.cancelled && due > 0 && (
+                                                <button
+                                                    onClick={() => openPayModal(bill.id)}
+                                                    className="text-primary-600 hover:underline text-xs font-medium"
+                                                >
+                                                    Add Payment
+                                                </button>
+                                            )}
+                                            <PrintBillButton
+                                                billId={bill.id}
+                                                label=""
+                                            />
+                                            <Link
+                                                href={`/billing/${bill.id}`}
+                                                className="text-neutral-500 hover:underline text-xs font-medium"
+                                            >
+                                                View
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table> */}
+                </div>
+            </Container>
             {payModalOpen && (
                 <div className="fixed inset-0 bg-overlay-black flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 border border-neutral-200">

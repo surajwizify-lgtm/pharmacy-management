@@ -1,7 +1,11 @@
 "use client";
 
+import Container from "@/components/common/Container";
 import PageHeader from "@/components/common/Header";
 import HeaderButton from "@/components/common/HeaderButton";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { useEffect, useState, useCallback } from "react";
 
 type LocationType = "RACK" | "SHELF" | "BIN" | "COLD_STORAGE" | "WAREHOUSE" | "OTHER";
@@ -130,81 +134,90 @@ export default function LocationsPage() {
             >
                 <HeaderButton text="Add Location" onClick={openCreateModal} />
             </PageHeader>
+            <Container>
 
-            {loading && (
-                <div className="flex items-center gap-2 text-sm text-neutral-400">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-300" />
-                    Loading locations...
-                </div>
-            )}
-            {error && (
-                <div className="mb-4 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
-                    <span className="text-sm font-medium text-danger-700">{error}</span>
-                </div>
-            )}
+                {loading && (
+                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                        <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-300" />
+                        Loading locations...
+                    </div>
+                )}
+                {error && (
+                    <div className="mb-4 flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                        <span className="text-sm font-medium text-danger-700">{error}</span>
+                    </div>
+                )}
 
-            {!loading && !error && (
-                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-                    <table className="w-full text-sm">
-                        <thead className="bg-neutral-50 text-left text-neutral-600">
-                            <tr>
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Code</th>
-                                <th className="px-4 py-2 font-medium">Type</th>
-                                <th className="px-4 py-2 font-medium">Batches</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 text-right font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-100">
+                {!loading && !error && (
+                    <Table className="w-full table-fixed">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[30%]">Name</TableHead>
+                                <TableHead className="w-[10%]">Code</TableHead>
+                                <TableHead className="w-[10%]">Type</TableHead>
+                                <TableHead className="w-[10%]">Batches</TableHead>
+                                <TableHead className="w-[10%]">Status</TableHead>
+                                <TableHead className="w-[20%] text-center">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+
+                        <TableBody>
                             {locations.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-6 text-center text-neutral-400">
+                                <TableRow>
+                                    <TableCell colSpan={6}>
                                         No locations yet.
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             )}
+
                             {locations.map((loc) => (
-                                <tr key={loc.id} className="hover:bg-neutral-50">
-                                    <td className="px-4 py-2 font-medium text-neutral-900">
+                                <TableRow key={loc.id}>
+                                    <TableCell>
                                         {loc.name}
                                         {loc.description && (
-                                            <div className="text-xs text-neutral-400">{loc.description}</div>
+                                            <div>{loc.description}</div>
                                         )}
-                                    </td>
-                                    <td className="px-4 py-2 text-neutral-600">{loc.code || "—"}</td>
-                                    <td className="px-4 py-2 text-neutral-600">{loc.type}</td>
-                                    <td className="px-4 py-2 text-neutral-600">{loc._count.batches}</td>
-                                    <td className="px-4 py-2">
-                                        <span
-                                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${loc.active
-                                                ? "bg-secondary-100 text-secondary-700"
-                                                : "bg-neutral-100 text-neutral-500"
-                                                }`}
-                                        >
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {loc.code || "—"}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {loc.type}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {loc._count.batches}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        <span>
                                             {loc.active ? "Active" : "Inactive"}
                                         </span>
-                                    </td>
-                                    <td className="px-4 py-2 text-right space-x-3">
-                                        <button
+                                    </TableCell>
+
+                                    <TableCell className="gap-2 flex justify-center">
+                                        <Button
+                                            variant="outline"
                                             onClick={() => openEditModal(loc)}
-                                            className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
                                         >
                                             Edit
-                                        </button>
-                                        <button
+                                        </Button>
+
+                                        <Button
+                                            variant="destructive"
                                             onClick={() => handleDelete(loc)}
-                                            className="text-sm text-danger-600 hover:text-danger-700 hover:underline"
                                         >
                                             Delete
-                                        </button>
-                                    </td>
-                                </tr>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                        </TableBody>
+                    </Table>
+                )}
+            </Container>
 
             {modalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

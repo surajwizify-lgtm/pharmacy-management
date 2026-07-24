@@ -6,6 +6,11 @@ import { apiFetch } from '@/lib/api-client';
 import RecordPaymentModal from '@/components/RecordPaymentModal';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
+import Container from '@/components/common/Container';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Input } from '@/components/ui/input';
 
 const PAYMENT_STATUS_COLORS: Record<string, string> = {
     DUE: 'bg-danger-100 text-danger-700',
@@ -91,205 +96,202 @@ export default function PurchaseInvoicesPage() {
             </PageHeader>
 
 
-            {/* Filters */}
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+            <Container>
+                {/* Filters */}
+                <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
 
-                <div className="grid gap-5 md:grid-cols-5">
+                    <div className="grid gap-5 md:grid-cols-5">
 
-                    <div>
-                        <label className={labelClass}>
-                            Search
-                        </label>
+                        <div>
+                            <label className={labelClass}>
+                                Search
+                            </label>
 
-                        <input
-                            className={inputClass}
-                            placeholder="Invoice / GRN"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                            <Input
+                                // className={inputClass}
+                                placeholder="Invoice / GRN"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>
+                                Supplier
+                            </label>
+
+                            <select
+                                className={inputClass}
+                                value={selectedSupplier}
+                                onChange={(e) =>
+                                    setSelectedSupplier(e.target.value)
+                                }
+                            >
+                                <option value="">All Suppliers</option>
+
+                                {suppliers.map((supplier) => (
+                                    <option
+                                        key={supplier.id}
+                                        value={supplier.id}
+                                    >
+                                        {supplier.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>
+                                Status
+                            </label>
+
+                            <select
+                                className={inputClass}
+                                value={paymentStatus}
+                                onChange={(e) =>
+                                    setPaymentStatus(e.target.value)
+                                }
+                            >
+                                <option value="">All</option>
+                                <option value="DUE">Due</option>
+                                <option value="PARTIAL">Partial</option>
+                                <option value="PAID">Paid</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>
+                                From
+                            </label>
+                            <DatePicker
+                                value={fromDate}
+                                onChange={setFromDate}
+                            />
+
+                            {/* <input
+                                type="date"
+                                className={inputClass}
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                            /> */}
+                        </div>
+
+                        <div>
+                            <label className={labelClass}>
+                                To
+                            </label>
+
+                            <DatePicker
+                                value={toDate}
+                                onChange={setToDate}
+                            />
+
+                            {/* <input
+                                type="date"
+                                className={inputClass}
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                            /> */}
+                        </div>
+
                     </div>
 
-                    <div>
-                        <label className={labelClass}>
-                            Supplier
-                        </label>
+                    <div className="mt-5 flex justify-end">
 
-                        <select
-                            className={inputClass}
-                            value={selectedSupplier}
-                            onChange={(e) =>
-                                setSelectedSupplier(e.target.value)
-                            }
+                        <button
+                            onClick={() => {
+                                setSearch('');
+                                setSelectedSupplier('');
+                                setPaymentStatus('');
+                                setFromDate('');
+                                setToDate('');
+                            }}
+                            className="rounded-lg border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
                         >
-                            <option value="">All Suppliers</option>
+                            Clear Filters
+                        </button>
 
-                            {suppliers.map((supplier) => (
-                                <option
-                                    key={supplier.id}
-                                    value={supplier.id}
-                                >
-                                    {supplier.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className={labelClass}>
-                            Status
-                        </label>
-
-                        <select
-                            className={inputClass}
-                            value={paymentStatus}
-                            onChange={(e) =>
-                                setPaymentStatus(e.target.value)
-                            }
-                        >
-                            <option value="">All</option>
-                            <option value="DUE">Due</option>
-                            <option value="PARTIAL">Partial</option>
-                            <option value="PAID">Paid</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className={labelClass}>
-                            From
-                        </label>
-
-                        <input
-                            type="date"
-                            className={inputClass}
-                            value={fromDate}
-                            onChange={(e) => setFromDate(e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className={labelClass}>
-                            To
-                        </label>
-
-                        <input
-                            type="date"
-                            className={inputClass}
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                        />
                     </div>
 
                 </div>
 
-                <div className="mt-5 flex justify-end">
+                {/* Table */}
+                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
 
-                    <button
-                        onClick={() => {
-                            setSearch('');
-                            setSelectedSupplier('');
-                            setPaymentStatus('');
-                            setFromDate('');
-                            setToDate('');
-                        }}
-                        className="rounded-lg border border-neutral-300 bg-white px-5 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
-                    >
-                        Clear Filters
-                    </button>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Invoice #</TableHead>
+                                <TableHead>Supplier</TableHead>
+                                <TableHead>GRN #</TableHead>
+                                <TableHead>Amount Due</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
 
+                        <TableBody>
+                            {filteredInvoices.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7}>
+                                        No purchase invoices match these filters.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                filteredInvoices.map((inv) => (
+                                    <TableRow key={inv.id}>
+                                        <TableCell>
+                                            <span
+                                                className={`inline-flex rounded-md px-3 py-1 text-xs font-semibold ${PAYMENT_STATUS_COLORS[inv.paymentStatus]}`}
+                                            >
+                                                {inv.paymentStatus}
+                                            </span>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {new Date(inv.invoiceDate).toLocaleDateString()}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {inv.invoiceNumber}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <div>{inv.supplier.name}</div>
+                                            <div>Supplier</div>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <Link href={`/purchase-orders/purchase-invoices/${inv.id}`}>
+                                                {inv.grnNumber}
+                                            </Link>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <div>
+                                                ₹{Number(inv.remainingAmount).toFixed(2)}
+                                            </div>
+                                            <div>
+                                                Total ₹{Number(inv.totalAmount).toFixed(2)}
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell>
+                                            <Button
+                                                variant="link"
+                                                onClick={() => openPaymentModal(inv)}
+                                            >
+                                                Record Payment
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
-
-            </div>
-
-            {/* Table */}
-            <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-
-                <table className="w-full text-left">
-
-                    <thead className="border-b border-neutral-200 bg-neutral-50">
-                        <tr className="text-left text-sm font-semibold text-neutral-700">
-                            <th className="px-6 py-4">Status</th>
-                            <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4">Invoice #</th>
-                            <th className="px-6 py-4">Supplier</th>
-                            <th className="px-6 py-4">GRN #</th>
-                            <th className="px-6 py-4 text-right">Amount Due</th>
-                            <th className="px-6 py-4 text-center">Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-neutral-100">
-                        {filteredInvoices.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="px-6 py-10 text-center text-sm text-neutral-400">
-                                    No purchase invoices match these filters.
-                                </td>
-                            </tr>
-                        ) : (
-                            filteredInvoices.map((inv) => (
-                                <tr
-                                    key={inv.id}
-                                    className="hover:bg-neutral-50"
-                                >
-                                    <td className="px-6 py-5">
-                                        <span
-                                            className={`inline-flex rounded-md px-3 py-1 text-xs font-semibold ${PAYMENT_STATUS_COLORS[inv.paymentStatus]}`}
-                                        >
-                                            {inv.paymentStatus}
-                                        </span>
-                                    </td>
-
-                                    <td className="px-6 text-neutral-600">
-                                        {new Date(inv.invoiceDate).toLocaleDateString()}
-                                    </td>
-
-                                    <td className="px-6 font-medium text-neutral-800">
-                                        {inv.invoiceNumber}
-                                    </td>
-
-                                    <td className="px-6">
-                                        <div className="font-medium text-neutral-800">
-                                            {inv.supplier.name}
-                                        </div>
-
-                                        <div className="text-xs text-neutral-500">
-                                            Supplier
-                                        </div>
-                                    </td>
-
-                                    <td className="px-6">
-                                        <Link
-                                            href={`/purchase-orders/purchase-invoices/${inv.id}`}
-                                            className="text-primary-600 hover:text-primary-700 hover:underline"
-                                        >
-                                            {inv.grnNumber}
-                                        </Link>
-                                    </td>
-
-                                    <td className="px-6 text-right">
-                                        <div className="text-lg font-semibold text-neutral-900">
-                                            ₹{Number(inv.remainingAmount).toFixed(2)}
-                                        </div>
-
-                                        <div className="text-xs text-neutral-500">
-                                            Total ₹{Number(inv.totalAmount).toFixed(2)}
-                                        </div>
-                                    </td>
-
-                                    <td className="px-6 text-center">
-                                        <button
-                                            onClick={() => openPaymentModal(inv)}
-                                            className="font-medium text-primary-600 hover:text-primary-700"
-                                        >
-                                            Record Payment
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-
-                </table>
-            </div>
+            </Container>
 
             <RecordPaymentModal
                 open={showPaymentForm}

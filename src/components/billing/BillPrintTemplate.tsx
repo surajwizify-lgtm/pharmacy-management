@@ -55,10 +55,10 @@ export default function BillPrintTemplate({ bill }: { bill: BillPrintData | null
             <div className="grid grid-cols-2 gap-4 mb-3 text-xs">
                 <div>
                     <p className="font-semibold">Bill To</p>
-                    <p>{bill.customer.name || "Walk-in Customer"}</p>
+                    <p>{bill.customer ? bill.customer.name : "Walk-in Customer"}</p>
                     <p>{`IP/OP: ${bill.ipOp}`}</p>
-                    {bill.customer.phone && <p>{bill.customer.phone}</p>}
-                    {bill.customer.gstin && <p>GSTIN: {bill.customer.gstin}</p>}
+                    {bill?.customer?.phone && <p>{bill?.customer?.phone}</p>}
+                    {bill?.customer?.gstin && <p>GSTIN: {bill?.customer?.gstin}</p>}
                 </div>
                 <div>
                     {bill.doctorName && <p><span className="font-semibold">Doctor:</span> {bill.doctorName}</p>}

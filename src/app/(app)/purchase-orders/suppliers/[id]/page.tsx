@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import SupplierLedgerPrint from "@/components/print/SupplierLedgerPrint";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 
 export default function SupplierDetailPage() {
@@ -16,6 +19,8 @@ export default function SupplierDetailPage() {
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedPOId, setSelectedPOId] = useState<string | null>(null);
+    const [purchaseInvoiceId, setPurchaseInvoiceId] = useState<string | null>(null);
+    console.log(purchaseInvoiceId)
     const [paymentForm, setPaymentForm] = useState({
         amount: "",
         paymentMode: "BANK_TRANSFER",
@@ -64,8 +69,9 @@ export default function SupplierDetailPage() {
             );
     }, []);
 
-    const openPaymentModal = (purchaseOrderId: string | null = null, amount?: number) => {
+    const openPaymentModal = (purchaseOrderId: string | null = null, purchaseInvoiceId: string | null = null, amount?: number) => {
         setSelectedPOId(purchaseOrderId);
+        setPurchaseInvoiceId(purchaseInvoiceId)
         setPaymentForm({
             amount: amount ? amount.toFixed(2) : "",
             paymentMode: "BANK_TRANSFER",
@@ -79,6 +85,7 @@ export default function SupplierDetailPage() {
     const closePaymentModal = () => {
         setShowPaymentModal(false);
         setSelectedPOId(null);
+        setPurchaseInvoiceId(null);
         setFormError("");
     };
 
@@ -94,7 +101,7 @@ export default function SupplierDetailPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    purchaseOrderId: selectedPOId ? Number(selectedPOId) : null,
+                    purchaseInvoiceId: purchaseInvoiceId ? Number(purchaseInvoiceId) : null,
                     amount: Number(paymentForm.amount),
                     paymentMode: paymentForm.paymentMode,
                     referenceNo: paymentForm.referenceNo || null,
@@ -171,7 +178,6 @@ export default function SupplierDetailPage() {
         };
         return map[status] || "bg-neutral-100 text-neutral-600 border-neutral-200";
     };
-    console.log("supplier", supplier);
 
     return (
         <div className="min-h-screen bg-neutral-50">
@@ -339,7 +345,7 @@ export default function SupplierDetailPage() {
                                         <td className="p-3">
                                             {po.paymentStatus !== "PAID" && (
                                                 <button
-                                                    onClick={() => openPaymentModal(po.id, Number(po.totalAmount))}
+                                                    onClick={() => openPaymentModal(po.id, po.id, Number(po.totalAmount))}
                                                     className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline"
                                                 >
                                                     + Add Payment
@@ -437,17 +443,16 @@ export default function SupplierDetailPage() {
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 border border-neutral-200">
                         <div className="flex justify-between items-center mb-5">
                             <h3 className="text-lg font-semibold text-neutral-900">Add Payment</h3>
-                            <button
+                            <Button variant={'destructive'}
                                 onClick={closePaymentModal}
-                                className="text-neutral-400 hover:text-neutral-700 transition-colors"
                             >
                                 ✕
-                            </button>
+                            </Button>
                         </div>
 
-                        {selectedPOId && (
+                        {purchaseInvoiceId ? (
                             <p className="text-sm text-neutral-500 mb-4 bg-primary-50 border border-primary-100 rounded-md px-3 py-2">
-                                Against invoice:{" "}
+                                Invoice Selected
                                 <span className="font-semibold text-primary-700">
                                     {
                                         supplier.purchaseInvoices?.find(
@@ -456,7 +461,19 @@ export default function SupplierDetailPage() {
                                     }
                                 </span>
                             </p>
-                        )}
+                        ) :
+                            <Select value={purchaseInvoiceId} onValueChange={setPurchaseInvoiceId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a Invoice" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    {supplier?.purchaseInvoices.map((p: any) => {
+                                        return <SelectItem value={p.id}>{p.invoiceNumber}</SelectItem>
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        }
 
                         <div className="space-y-4">
                             <div>
@@ -490,7 +507,6 @@ export default function SupplierDetailPage() {
                                     <option value="CARD">Card</option>
                                 </select>
                             </div>
-
                             <div>
                                 <label className="block text-sm font-medium text-neutral-700 mb-1.5">Reference No.</label>
                                 <input

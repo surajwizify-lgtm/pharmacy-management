@@ -1,94 +1,36 @@
-// components/common/Container.tsx
-import React from "react";
+// components/Container.tsx
+import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
 interface ContainerProps {
-    children: React.ReactNode;
-    title?: string;
-    description?: string;
-    action?: React.ReactNode;
-    footer?: React.ReactNode;
+    children: ReactNode;
     className?: string;
-    contentClassName?: string;
-    headerClassName?: string;
-    footerClassName?: string;
-    variant?: "default" | "flat" | "card" | "elevated";
-    size?: "sm" | "md" | "lg" | "full";
-    noHeaderDivider?: boolean;
-    noFooterDivider?: boolean;
+    size?: "sm" | "md" | "lg" | "xl" | "2xl" | "fluid";
 }
+
+const sizeMap = {
+    sm: "max-w-screen-sm",      // 640px
+    md: "max-w-screen-md",      // 768px
+    lg: "max-w-screen-lg",      // 1024px
+    xl: "max-w-screen-xl",      // 1280px
+    "2xl": "max-w-screen-2xl",  // 1536px
+    fluid: "max-w-full",         // 100%
+};
 
 export default function Container({
     children,
-    title,
-    description,
-    action,
-    footer,
-    className = "",
-    contentClassName = "",
-    headerClassName = "",
-    footerClassName = "",
-    variant = "default",
-    size = "md",
-    noHeaderDivider = false,
-    noFooterDivider = false,
+    className,
+    size = "xl",
 }: ContainerProps) {
-    const variantStyles = {
-        default: "bg-surface-50 border border-neutral-200 rounded-xl shadow-sm",
-        flat: "bg-surface-50 border border-neutral-200 rounded-xl",
-        card: "bg-white border border-neutral-200 rounded-xl shadow-sm",
-        elevated: "bg-white border border-neutral-200 rounded-xl shadow-md",
-    };
-
-    const sizeStyles = {
-        sm: "p-4",
-        md: "p-5 md:p-6",
-        lg: "p-6 md:p-8",
-        full: "",
-    };
-
-    const hasHeader = title || description || action;
-    const hasFooter = footer;
-
     return (
-        <div className={`${variantStyles[variant]} ${className}`}>
-            {/* Header */}
-            {hasHeader && (
-                <>
-                    <div
-                        className={`flex items-start justify-between gap-4 ${sizeStyles[size]} ${headerClassName}`}
-                    >
-                        <div className="flex-1 min-w-0">
-                            {title && (
-                                <h2 className="text-lg font-semibold text-neutral-900 leading-tight">
-                                    {title}
-                                </h2>
-                            )}
-                            {description && (
-                                <p className="mt-1 text-sm text-neutral-500 leading-relaxed">
-                                    {description}
-                                </p>
-                            )}
-                        </div>
-                        {action && <div className="shrink-0">{action}</div>}
-                    </div>
-                    {!noHeaderDivider && <div className="border-t border-neutral-200" />}
-                </>
+        <div
+            className={cn(
+                "mx-auto w-full px-4 space-y-5 sm:px-6 lg:px-8",
+                sizeMap[size],
+                className
             )}
-
-            {/* Content */}
-            <div className={`${sizeStyles[size]} ${contentClassName}`}>
-                {children}
-            </div>
-
-            {/* Footer */}
-            {hasFooter && (
-                <>
-                    {!noFooterDivider && <div className="border-t border-neutral-200" />}
-                    <div className={`${sizeStyles[size]} ${footerClassName}`}>
-                        {footer}
-                    </div>
-                </>
-            )}
+        >
+            {children}
         </div>
     );
 }
