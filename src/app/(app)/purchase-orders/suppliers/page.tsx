@@ -36,7 +36,7 @@ export default function SuppliersPage() {
                 <HeaderButton text="Add Supplier" href='/purchase-orders/suppliers/new' />
             </PageHeader>
             <Container >
-                <Table>
+                <Table className="table-fixed">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
@@ -107,6 +107,6 @@ export default function SuppliersPage() {
                         .then(setSuppliers);
                 }}
             />
-        </div>
+        </div >
     );
 }

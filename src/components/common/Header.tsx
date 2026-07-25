@@ -35,7 +35,7 @@ export default function PageHeader({
     const activeTone = badge?.tone || "primary";
 
     return (
-        <div className="relative mb-5 bg-white border-b border-neutral-200/80">
+        <div className="relative mb-5 px-5 bg-white border-b border-neutral-200/80">
             {/* Subtle top accent line */}
             <div className={`absolute top-0 left-0 right-0 h-0.5 ${activeTone === "success" ? "bg-emerald-500" :
                 activeTone === "amber" ? "bg-amber-500" :

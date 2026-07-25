@@ -8,6 +8,16 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
 import Container from '@/components/common/Container';
+import { Card } from '@/components/ui/card';
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const EMPTY_FORM = { username: '', password: '', fullName: '', role: 'CASHIER' as Role };
 
@@ -65,7 +75,7 @@ export default function UsersPage() {
 
       <Container>
         <div className="card overflow-hidden">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead>Username</TableHead>
@@ -114,13 +124,76 @@ export default function UsersPage() {
             </TableBody>
           </Table>
         </div>
-      </Container>
+      </Container >
 
       {showForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 p-4">
-          <div className="card w-full max-w-sm p-6">
+          <Card className=" bg-bg-primary w-full max-w-xl p-6">
             <h2 className="mb-4 text-lg font-semibold text-slate-800">Add user</h2>
+
+
             <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  required
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Password (min. 8 chars)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName">Full name</Label>
+                <Input
+                  id="fullName"
+                  required
+                  value={form.fullName}
+                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="role">Role</Label>
+                <Select
+                  value={form.role}
+                  onValueChange={(value) => setForm({ ...form, role: value as Role })}
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="PHARMACIST">Pharmacist</SelectItem>
+                    <SelectItem value="CASHIER">Cashier</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {error && <p className="text-sm text-red-600">{error}</p>}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </form>
+            {/* <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="label">Username</label>
                 <input className="input" required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
@@ -159,10 +232,11 @@ export default function UsersPage() {
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>
-            </form>
-          </div>
+            </form> */}
+          </Card>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }

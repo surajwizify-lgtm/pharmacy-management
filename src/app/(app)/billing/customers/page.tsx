@@ -155,7 +155,7 @@ export default function CustomersPage() {
 
                 {!loading && !error && (
                     <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                        <Table>
+                        <Table className="table-fixed">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
@@ -239,8 +239,9 @@ export default function CustomersPage() {
                             </TableBody>
                         </Table>
                     </div>
-                )}
-            </Container>
+                )
+                }
+            </Container >
 
             {modalOpen && (
                 <div className="fixed inset-0 bg-overlay-black flex items-center justify-center z-50">
@@ -345,6 +346,6 @@ export default function CustomersPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 }

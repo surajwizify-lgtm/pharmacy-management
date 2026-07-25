@@ -119,7 +119,7 @@ export default function HospitalsPage() {
                     )}
 
                     <div className="overflow-x-auto">
-                        <Table>
+                        <Table className="table-fixed">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
@@ -217,7 +217,7 @@ export default function HospitalsPage() {
                         </Table>
                     </div>
                 </div>
-            </Container>
+            </Container >
 
             {showModal && (
                 <CreateHospital
@@ -227,7 +227,8 @@ export default function HospitalsPage() {
                         loadHospitals();
                     }}
                 />
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

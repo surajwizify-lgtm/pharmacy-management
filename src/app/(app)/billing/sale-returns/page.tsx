@@ -108,7 +108,7 @@ export default function SalesReturnsPage() {
                 {error && <p className="px-4 pt-3 text-sm text-red-600">{error}</p>}
 
                 <div className="overflow-x-auto">
-                    <Table>
+                    <Table className="table-fixed">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Return #</TableHead>
@@ -192,7 +192,7 @@ export default function SalesReturnsPage() {
                                         {expandedId === r.id && (
                                             <TableRow>
                                                 <TableCell colSpan={8}>
-                                                    <Table>
+                                                    <Table className="table-fixed">
                                                         <thead>
                                                             <tr>
                                                                 <th>Product</th>
@@ -241,7 +241,7 @@ export default function SalesReturnsPage() {
                         </TableBody>
                     </Table>
                 </div>
-            </Container>
-        </div>
+            </Container >
+        </div >
     );
 }

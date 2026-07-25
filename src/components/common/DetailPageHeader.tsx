@@ -29,7 +29,7 @@ export default function DetailPageHeader({
 }: DetailPageHeaderProps) {
     const router = useRouter();
     return (
-        <div className="flex items-center bg-bg-primary justify-between relative mb-5 px-5 py-2 border-b border-neutral-200/80">
+        <div className="flex items-center bg-bg-primary justify-between relative mb-5 px-10 py-2 border-b border-neutral-200/80">
             <div className=''>
                 <BackButton />
                 <div className=''>

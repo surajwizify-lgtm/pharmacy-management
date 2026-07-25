@@ -411,7 +411,7 @@ export default function CreateBillPage() {
                                     </div>
                                     <div className="flex-1 min-h-0 overflow-y-auto bg-[var(--color-bg-primary)]">
 
-                                        <Table>
+                                        <Table className="table-fixed">
                                             <TableHeader>
                                                 <TableRow>
                                                     <TableHead>Item</TableHead>
@@ -844,7 +844,7 @@ export default function CreateBillPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
 

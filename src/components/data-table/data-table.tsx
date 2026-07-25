@@ -67,7 +67,7 @@ export function DataTable<TData, TValue>({
                     className="max-w-sm"
                 />
             </div>
-            <Table>
+            <Table className="table-fixed">
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>
@@ -224,6 +224,6 @@ export function DataTable<TData, TValue>({
                     </Button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

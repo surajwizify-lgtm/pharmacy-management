@@ -50,7 +50,7 @@ export default function PurchaseOrdersPage() {
                 ) : orders.length === 0 ? (
                     <p className="px-6 py-12 text-center text-sm text-neutral-500">No purchase orders found.</p>
                 ) : (
-                    <Table>
+                    <Table className="table-fixed">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>PO Number</TableHead>
@@ -127,6 +127,6 @@ export default function PurchaseOrdersPage() {
                     </Table>
                 )}
             </Container>
-        </div>
+        </div >
     );
 }

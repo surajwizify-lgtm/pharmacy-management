@@ -156,7 +156,7 @@ export default function productDetailPage({ params }: { params: { id: string } }
             )} */}
           </div>
 
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead>Batch #</TableHead>
@@ -244,7 +244,7 @@ export default function productDetailPage({ params }: { params: { id: string } }
             </TableBody>
           </Table>
         </div>
-      </Container>
+      </Container >
 
       {/* {showBatchForm && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
@@ -341,6 +341,6 @@ export default function productDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
       )} */}
-    </div>
+    </div >
   );
 }

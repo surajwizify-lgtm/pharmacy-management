@@ -152,9 +152,9 @@ export default function LocationsPage() {
                     <Table className="w-full table-fixed">
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[30%]">Name</TableHead>
+                                <TableHead className="w-[20%]">Name</TableHead>
                                 <TableHead className="w-[10%]">Code</TableHead>
-                                <TableHead className="w-[10%]">Type</TableHead>
+                                <TableHead className="w-[15%]">Type</TableHead>
                                 <TableHead className="w-[10%]">Batches</TableHead>
                                 <TableHead className="w-[10%]">Status</TableHead>
                                 <TableHead className="w-[20%] text-center">Actions</TableHead>
