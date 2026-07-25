@@ -24,7 +24,7 @@ export default function DashboardLinks() {
             varient: "outline"
         },
         {
-            title: "Receive/Return P.O.",
+            title: "View P.O.",
             link: "/purchase-orders/registered",
             varient: "secondary"
         },
@@ -41,7 +41,7 @@ export default function DashboardLinks() {
     ]
     return (
         <Card >
-            <CardContent className='grid grid-cols-7 gap-2'>
+            <CardContent className='grid lg:grid-cols-6 grid-cols-3 gap-2'>
                 {
                     links.map((l) => {
                         return <Button variant={l.varient || null} onClick={() => router.push(l.link)}>

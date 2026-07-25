@@ -156,7 +156,7 @@ export default function PurchaseInvoicesTable({ invoices, suppliers }: props) {
             {/* Table */}
             <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
 
-                <Table>
+                <Table className="table-fixed">
                     <TableHeader>
                         <TableRow>
                             <TableHead>Status</TableHead>
@@ -238,6 +238,6 @@ export default function PurchaseInvoicesTable({ invoices, suppliers }: props) {
                 }}
                 onSuccess={refreshInvoices}
             />
-        </Container>
+        </Container >
     )
 }

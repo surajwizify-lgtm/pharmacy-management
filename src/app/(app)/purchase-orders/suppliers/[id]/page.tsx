@@ -6,6 +6,7 @@ import SupplierLedgerPrint from "@/components/print/SupplierLedgerPrint";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import DetailPageHeader from "@/components/common/DetailPageHeader";
 
 
 export default function SupplierDetailPage() {
@@ -181,9 +182,31 @@ export default function SupplierDetailPage() {
 
     return (
         <div className="min-h-screen bg-neutral-50">
+            <DetailPageHeader title={supplier.name} status={{ active: supplier.status != "Active" ? true : false, label: supplier.status }} subtitle={"Supplier"} actions={
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowPrint(true)}
+                        className="px-4 py-2 rounded-md bg-primary-600 text-white"
+                    >
+                        🖨 Print
+                    </button>
+                    <Link
+                        href={`/purchase-orders/suppliers/${id}/edit`}
+                        className="px-4 py-2 text-sm font-medium rounded-md border border-neutral-300 text-neutral-700 bg-white hover:bg-neutral-100 transition-colors"
+                    >
+                        Edit
+                    </Link>
+                    <Link
+                        href="/purchase-orders/suppliers"
+                        className="px-4 py-2 text-sm font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+                    >
+                        Back to list
+                    </Link>
+                </div>
+            } />
             <div className="max-w-5xl mx-auto px-6 py-8">
                 {/* Header */}
-                <div className="flex justify-between items-start mb-8">
+                {/* <div className="flex justify-between items-start mb-8">
                     <div>
                         <p className="text-xs font-semibold tracking-wide text-primary-600 uppercase mb-1">Supplier</p>
                         <h1 className="text-2xl font-bold text-neutral-900">{supplier.name}</h1>
@@ -211,7 +234,7 @@ export default function SupplierDetailPage() {
                             Back to list
                         </Link>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Basic info */}
                 <div className="bg-white border border-neutral-200 rounded-xl p-6 mb-6 shadow-sm">
@@ -288,7 +311,7 @@ export default function SupplierDetailPage() {
                                 {supplier.purchaseOrders.map((po: any) => (
                                     <tr key={po.id} className="border-t border-neutral-100 hover:bg-neutral-50 transition-colors">
                                         <td className="p-3">
-                                            <Link href={`/purchase-orders/purchase-orders/${po.id}`} className="text-primary-600 font-medium hover:underline">
+                                            <Link href={`/purchase-orders/${po.id}`} className="text-primary-600 font-medium hover:underline">
                                                 {po.poNumber}
                                             </Link>
                                         </td>
@@ -365,7 +388,7 @@ export default function SupplierDetailPage() {
                 <div className="bg-white border border-neutral-200 rounded-xl mb-6 shadow-sm overflow-hidden">
                     <div className="flex justify-between items-center px-6 py-4 border-b border-neutral-200">
                         <h2 className="text-base font-semibold text-neutral-900">Returns to Supplier</h2>
-                        <Link href={`/supplier-returns/new?supplierId=${id}`} className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                        <Link href={`/purchase-orders/return/new`} className="text-sm font-medium text-primary-600 hover:text-primary-700">
                             + New Return
                         </Link>
                     </div>

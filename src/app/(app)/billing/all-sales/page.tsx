@@ -392,7 +392,7 @@ export default function BillingPage() {
 
             {listError && <p className="px-4 pt-3 text-sm text-red-600">{listError}</p>}
 
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow className='grid grid-cols-[2fr_1fr_1fr_1fr_1fr_3fr]'>
                   <TableHead className=''>Bill</TableHead>
@@ -506,187 +506,190 @@ export default function BillingPage() {
           </div>
         </div>
 
-        {showViewBill && (
-          <div className="card space-y-6 p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-slate-900">
-                  {viewingBill ? viewingBill.billNumber : 'Loading bill…'}
-                </h1>
-                {viewingBill && (
-                  <p className="text-sm text-slate-500">
-                    {new Date(viewingBill.billDate).toLocaleString()} · Cashier:{' '}
-                    {viewingBill.cashier?.fullName ?? viewingBill.cashierId}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {viewingBill && (
-                  <span
-                    className={`badge ${viewingBill.paymentStatus === 'PAID'
-                      ? 'bg-brand-100 text-brand-700'
-                      : viewingBill.paymentStatus === 'PARTIALLY_PAID'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-slate-100 text-slate-600'
-                      }`}
+        {
+          showViewBill && (
+            <div className="card space-y-6 p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-2xl font-semibold text-slate-900">
+                    {viewingBill ? viewingBill.billNumber : 'Loading bill…'}
+                  </h1>
+                  {viewingBill && (
+                    <p className="text-sm text-slate-500">
+                      {new Date(viewingBill.billDate).toLocaleString()} · Cashier:{' '}
+                      {viewingBill.cashier?.fullName ?? viewingBill.cashierId}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {viewingBill && (
+                    <span
+                      className={`badge ${viewingBill.paymentStatus === 'PAID'
+                        ? 'bg-brand-100 text-brand-700'
+                        : viewingBill.paymentStatus === 'PARTIALLY_PAID'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-slate-100 text-slate-600'
+                        }`}
+                    >
+                      {viewingBill.paymentStatus}
+                    </span>
+                  )}
+                  <button
+                    onClick={closeViewBill}
+                    className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                   >
-                    {viewingBill.paymentStatus}
-                  </span>
-                )}
-                <button
-                  onClick={closeViewBill}
-                  className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {loadingViewBill ? (
-              <div className="flex h-40 items-center justify-center text-slate-400">Loading bill…</div>
-            ) : viewError ? (
-              <p className="text-sm text-red-600">{viewError}</p>
-            ) : viewingBill ? (
-              <>
-                {(viewingBill.customer?.name || viewingBill.customer?.phone || viewingBill.customer?.gstin) && (
-                  <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-600">
-                    {viewingBill.customer?.name && <p>Customer: {viewingBill.customer.name}</p>}
-                    {viewingBill.ipOp && <p>Ip/Op: {viewingBill.ipOp}</p>}
-                    {viewingBill.customer?.phone && <p>Phone: {viewingBill.customer.phone}</p>}
-                    +                  {viewingBill.customer?.gstin && <p>GSTIN: {viewingBill.customer.gstin}</p>}
-                    <p>{viewingBill.isInterState ? 'Inter-state sale (IGST)' : 'Intra-state sale (CGST + SGST)'}</p>
-                  </div>
-                )}
+              {loadingViewBill ? (
+                <div className="flex h-40 items-center justify-center text-slate-400">Loading bill…</div>
+              ) : viewError ? (
+                <p className="text-sm text-red-600">{viewError}</p>
+              ) : viewingBill ? (
+                <>
+                  {(viewingBill.customer?.name || viewingBill.customer?.phone || viewingBill.customer?.gstin) && (
+                    <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-600">
+                      {viewingBill.customer?.name && <p>Customer: {viewingBill.customer.name}</p>}
+                      {viewingBill.ipOp && <p>Ip/Op: {viewingBill.ipOp}</p>}
+                      {viewingBill.customer?.phone && <p>Phone: {viewingBill.customer.phone}</p>}
+                      +                  {viewingBill.customer?.gstin && <p>GSTIN: {viewingBill.customer.gstin}</p>}
+                      <p>{viewingBill.isInterState ? 'Inter-state sale (IGST)' : 'Intra-state sale (CGST + SGST)'}</p>
+                    </div>
+                  )}
 
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Batch</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Unit Price</TableHead>
-                      <TableHead>GST</TableHead>
-                      <TableHead>Line Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {viewingBill.billItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          {item.product?.name ?? `#${item.productId}`}
-                        </TableCell>
-
-                        <TableCell>
-                          {item.batchNumber}
-                        </TableCell>
-
-                        <TableCell>
-                          {item.quantity}
-                        </TableCell>
-
-                        <TableCell>
-                          ₹{item.unitPrice}
-                        </TableCell>
-
-                        <TableCell>
-                          {viewingBill.isInterState
-                            ? `IGST ₹${item.igstAmount}`
-                            : `CGST ₹${item.cgstAmount} + SGST ₹${item.sgstAmount}`}
-                        </TableCell>
-
-                        <TableCell>
-                          ₹{item.totalAmount}
-                        </TableCell>
+                  <Table className="table-fixed">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Batch</TableHead>
+                        <TableHead>Qty</TableHead>
+                        <TableHead>Unit Price</TableHead>
+                        <TableHead>GST</TableHead>
+                        <TableHead>Line Total</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  <CardContent className="rounded-xl border border-slate-100 p-5">
-                    <h2 className="mb-3 font-medium text-slate-800">Totals</h2>
-                    <dl className="space-y-1.5 text-sm">
-                      <div className="flex justify-between text-slate-600">
-                        <span>Subtotal</span>
-                        <span>₹{viewingBill.subtotal}</span>
-                      </div>
-                      {viewingBill.isInterState ? (
+                    <TableBody>
+                      {viewingBill.billItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            {item.product?.name ?? `#${item.productId}`}
+                          </TableCell>
+
+                          <TableCell>
+                            {item.batchNumber}
+                          </TableCell>
+
+                          <TableCell>
+                            {item.quantity}
+                          </TableCell>
+
+                          <TableCell>
+                            ₹{item.unitPrice}
+                          </TableCell>
+
+                          <TableCell>
+                            {viewingBill.isInterState
+                              ? `IGST ₹${item.igstAmount}`
+                              : `CGST ₹${item.cgstAmount} + SGST ₹${item.sgstAmount}`}
+                          </TableCell>
+
+                          <TableCell>
+                            ₹{item.totalAmount}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <CardContent className="rounded-xl border border-slate-100 p-5">
+                      <h2 className="mb-3 font-medium text-slate-800">Totals</h2>
+                      <dl className="space-y-1.5 text-sm">
                         <div className="flex justify-between text-slate-600">
-                          <span>IGST</span>
-                          <span>₹{viewingBill.totalIgst}</span>
+                          <span>Subtotal</span>
+                          <span>₹{viewingBill.subtotal}</span>
+                        </div>
+                        {viewingBill.isInterState ? (
+                          <div className="flex justify-between text-slate-600">
+                            <span>IGST</span>
+                            <span>₹{viewingBill.totalIgst}</span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between text-slate-600">
+                              <span>CGST</span>
+                              <span>₹{viewingBill.totalCgst}</span>
+                            </div>
+                            <div className="flex justify-between text-slate-600">
+                              <span>SGST</span>
+                              <span>₹{viewingBill.totalSgst}</span>
+                            </div>
+                          </>
+                        )}
+                        <div className="flex justify-between text-slate-600">
+                          <span>Total GST</span>
+                          <span>₹{viewingBill.totalGst}</span>
+                        </div>
+                        <div className="mt-2 flex justify-between border-t border-slate-100 pt-2 text-base font-semibold">
+                          <span>Total amount</span>
+                          <span>₹{viewingBill.totalAmount}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-600">
+                          <span>Paid</span>
+                          <span>₹{viewingTotalPaid.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-medium text-slate-800">
+                          <span>Balance due</span>
+                          <span>₹{viewingBalanceDue.toFixed(2)}</span>
+                        </div>
+                      </dl>
+                    </CardContent>
+
+                    {/* Read-only payment status/history — no recording form */}
+                    <CardContent className="rounded-xl border border-slate-100 p-5">
+                      <h2 className="mb-3 flex items-center gap-1.5 font-medium text-slate-800">
+                        <CreditCard className="h-4 w-4 text-brand-600" />
+                        Payment
+                      </h2>
+
+                      <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+                        <span className="text-slate-500">Status</span>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(viewingBill.paymentStatus)}`}
+                        >
+                          {viewingBill.paymentStatus.replace('_', ' ')}
+                        </span>
+                      </div>
+
+                      {viewingBill.payments && viewingBill.payments.length > 0 ? (
+                        <div>
+                          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Payment history</h3>
+                          <ul className="space-y-1 text-sm text-slate-600">
+                            {viewingBill.payments.map((p) => (
+                              <li key={p.id} className="flex justify-between">
+                                <span>
+                                  {p.method} · {new Date(p.paidAt).toLocaleString()}
+                                </span>
+                                <span>₹{p.amount}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       ) : (
-                        <>
-                          <div className="flex justify-between text-slate-600">
-                            <span>CGST</span>
-                            <span>₹{viewingBill.totalCgst}</span>
-                          </div>
-                          <div className="flex justify-between text-slate-600">
-                            <span>SGST</span>
-                            <span>₹{viewingBill.totalSgst}</span>
-                          </div>
-                        </>
+                        <p className="text-sm text-slate-400">No payments recorded for this bill yet.</p>
                       )}
-                      <div className="flex justify-between text-slate-600">
-                        <span>Total GST</span>
-                        <span>₹{viewingBill.totalGst}</span>
-                      </div>
-                      <div className="mt-2 flex justify-between border-t border-slate-100 pt-2 text-base font-semibold">
-                        <span>Total amount</span>
-                        <span>₹{viewingBill.totalAmount}</span>
-                      </div>
-                      <div className="flex justify-between text-slate-600">
-                        <span>Paid</span>
-                        <span>₹{viewingTotalPaid.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between font-medium text-slate-800">
-                        <span>Balance due</span>
-                        <span>₹{viewingBalanceDue.toFixed(2)}</span>
-                      </div>
-                    </dl>
-                  </CardContent>
-
-                  {/* Read-only payment status/history — no recording form */}
-                  <CardContent className="rounded-xl border border-slate-100 p-5">
-                    <h2 className="mb-3 flex items-center gap-1.5 font-medium text-slate-800">
-                      <CreditCard className="h-4 w-4 text-brand-600" />
-                      Payment
-                    </h2>
-
-                    <div className="mb-4 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
-                      <span className="text-slate-500">Status</span>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(viewingBill.paymentStatus)}`}
-                      >
-                        {viewingBill.paymentStatus.replace('_', ' ')}
-                      </span>
-                    </div>
-
-                    {viewingBill.payments && viewingBill.payments.length > 0 ? (
-                      <div>
-                        <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Payment history</h3>
-                        <ul className="space-y-1 text-sm text-slate-600">
-                          {viewingBill.payments.map((p) => (
-                            <li key={p.id} className="flex justify-between">
-                              <span>
-                                {p.method} · {new Date(p.paidAt).toLocaleString()}
-                              </span>
-                              <span>₹{p.amount}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-400">No payments recorded for this bill yet.</p>
-                    )}
-                  </CardContent>
-                </div>
-              </>
-            ) : null}
-          </div>
-        )}
-      </Container>
+                    </CardContent>
+                  </div>
+                </>
+              ) : null
+              }
+            </div >
+          )
+        }
+      </Container >
 
 
       {showInvoicePopup && (
@@ -758,16 +761,18 @@ export default function BillingPage() {
           </div>
         </div>
       )}
-      {returningBillId !== null && (
+      {
+        returningBillId !== null && (
 
-        <SalesReturnModal
-          billId={returningBillId}
-          onClose={() => setReturningBillId(null)}
-          onSuccess={loadBills}
-        />
-      )}
+          <SalesReturnModal
+            billId={returningBillId}
+            onClose={() => setReturningBillId(null)}
+            onSuccess={loadBills}
+          />
+        )
+      }
 
       <InvoicePrintStyles />
-    </div>
+    </div >
   );
 }

@@ -235,7 +235,7 @@ export default function BatchesPage() {
         </div>
 
         {/* Table */}
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             <TableRow>
               <TableHead>Product</TableHead>
@@ -308,6 +308,6 @@ export default function BatchesPage() {
           </TableBody>
         </Table>
       </Container>
-    </div>
+    </div >
   );
 }

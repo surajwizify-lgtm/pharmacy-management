@@ -61,7 +61,7 @@ export default async function DashboardPage() {
         header={`Welcome back, ${session?.user?.fullName?.split(' ')[0]}`}
         subheader="Track your key metrics, recent activity, and team performance in one place."
       >
-        <HeaderButton text="Create New Bill" href="/billing/all-sales/new" />
+        {/* <HeaderButton text="Create New Bill" href="/billing/all-sales/new" /> */}
       </PageHeader>
       <Container>
         <DashboardLinks />

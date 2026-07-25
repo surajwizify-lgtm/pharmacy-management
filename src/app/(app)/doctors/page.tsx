@@ -161,7 +161,7 @@ export default function DoctorsPage() {
                     )}
 
                     <div className="overflow-x-auto">
-                        <Table>
+                        <Table className="table-fixed">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Name</TableHead>
@@ -252,7 +252,7 @@ export default function DoctorsPage() {
                         </Table>
                     </div>
                 </div>
-            </Container>
+            </Container >
 
             {showModal && (
                 <CreateDoctor
@@ -264,7 +264,8 @@ export default function DoctorsPage() {
                     }
                     onCreated={loadDoctors}
                 />
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

@@ -111,7 +111,7 @@ export function Sidebar({
   return (
     <div>
 
-      <div className={clsx("fixed  top-3 z-100", collapsed ? "left-3" : "left-3")}>
+      <div className={clsx("fixed  top-3 z-100", collapsed ? "left-1" : "left-2")}>
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="rounded-lg p-2 hover:bg-neutral-100 transition"
@@ -125,8 +125,8 @@ export function Sidebar({
       </div>
       <aside
         className={clsx(
-          "fixed flex h-screen flex-col p-2 border-r border-surface-200 bg-white transition-all duration-300",
-          collapsed ? "w-0" : "w-64"
+          "fixed flex h-screen flex-col p-2  border-surface-200 bg-white transition-all duration-300",
+          collapsed ? "w-0" : "w-64 border-r"
         )}
       >
 

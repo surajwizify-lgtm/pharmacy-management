@@ -81,7 +81,7 @@ export default function SupplierReturnsPage() {
                     //         <SupplierReturnRow key={ret.id} ret={ret} />
                     //     ))}
                     // </div>
-                    <Table>
+                    <Table className="table-fixed">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Return #</TableHead>
@@ -164,6 +164,6 @@ export default function SupplierReturnsPage() {
                     </Table>
                 )}
             </Container>
-        </div>
+        </div >
     );
 }

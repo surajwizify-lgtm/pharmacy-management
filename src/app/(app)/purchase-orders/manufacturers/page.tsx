@@ -73,7 +73,7 @@ export default async function ManufacturerListPage({
                 </form>
 
                 <div className="overflow-x-auto border rounded-md">
-                    <Table>
+                    <Table className="table-fixed">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
@@ -142,7 +142,7 @@ export default async function ManufacturerListPage({
                         </TableBody>
                     </Table>
                 </div>
-            </Container>
-        </div>
+            </Container >
+        </div >
     );
 }

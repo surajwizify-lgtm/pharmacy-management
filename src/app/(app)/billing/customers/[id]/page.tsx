@@ -252,7 +252,7 @@ export default function CustomerDetailPage() {
                         <h2 className="font-medium text-neutral-800">Bills</h2>
                         <span className="text-xs text-neutral-400">{customer.bills.length} total</span>
                     </div>
-                    <Table>
+                    <Table className="table-fixed">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Bill No.</TableHead>
@@ -428,7 +428,7 @@ export default function CustomerDetailPage() {
                         </tbody>
                     </table> */}
                 </div>
-            </Container>
+            </Container >
             {payModalOpen && (
                 <div className="fixed inset-0 bg-overlay-black flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 border border-neutral-200">
@@ -504,7 +504,8 @@ export default function CustomerDetailPage() {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
