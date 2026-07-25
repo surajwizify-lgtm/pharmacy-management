@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  SUPER_ADMIN
   ADMIN
   PHARMACIST
   CASHIER
@@ -99,6 +100,8 @@ model User {
   bills            Bill[]
   auditLogs        AuditLog[]
   stockAdjustments StockAdjustment[]
+  pharmacyId       Int?
+  pharmacy         Pharmacy?         @relation(fields: [pharmacyId], references: [id])
 
   @@map("users")
 }
@@ -145,7 +148,9 @@ model Location {
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
-  batches Batch[]
+  batches    Batch[]
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   @@index([name])
   @@index([code])
@@ -178,6 +183,8 @@ model Supplier {
   purchaseInvoices PurchaseInvoice[]
   payments         SupplierPayment[]
   supplierReturns  SupplierReturn[]
+  pharmacyId       Int
+  pharmacy         Pharmacy          @relation(fields: [pharmacyId], references: [id])
 
   @@map("suppliers")
 }
@@ -236,6 +243,8 @@ model Product {
   purchaseOrderItems   PurchaseOrderItem[]
   supplierReturnItems  SupplierReturnItem[]
   stockAdjustments     StockAdjustment[]
+  pharmacyId           Int
+  pharmacy             Pharmacy              @relation(fields: [pharmacyId], references: [id])
 
   @@index([name])
   @@index([hsnCode])
@@ -260,6 +269,8 @@ model Batch {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   version           Int       @default(0)
+  pharmacyId        Int
+  pharmacy          Pharmacy  @relation(fields: [pharmacyId], references: [id])
 
   billItems           BillItem[]
   returnItems         ReturnItem[]
@@ -289,6 +300,8 @@ model PurchaseOrder {
 
   items            PurchaseOrderItem[]
   purchaseInvoices PurchaseInvoice[]
+  pharmacyId       Int
+  pharmacy         Pharmacy            @relation(fields: [pharmacyId], references: [id])
 
   @@map("purchase_orders")
 }
@@ -337,6 +350,8 @@ model PurchaseInvoice {
   payments        SupplierPayment[]
   supplierReturns SupplierReturn[]
   gstLedgerEntry  GstLedgerEntry?
+  pharmacy        Pharmacy              @relation(fields: [pharmacyId], references: [id])
+  pharmacyId      Int
 
   @@index([supplierId])
   @@index([purchaseOrderId])
@@ -464,19 +479,23 @@ model Doctor {
 
   bills Bill[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   @@index([name])
   @@map("doctors")
 }
 
 model Hospital {
-  id      Int     @id @default(autoincrement())
-  name    String  @db.VarChar(200)
-  address String? @db.VarChar(300)
-  phone   String? @db.VarChar(20)
-  gstin   String? @unique @db.VarChar(15)
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  address    String?  @db.VarChar(300)
+  phone      String?  @db.VarChar(20)
+  gstin      String?  @unique @db.VarChar(15)
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   bills Bill[]
 
@@ -502,8 +521,10 @@ model Customer {
 
   bills Bill[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   @@index([name])
   @@index([phone])
@@ -554,6 +575,8 @@ model Bill {
   payments       Payment[]
   returns        Return[]
   gstLedgerEntry GstLedgerEntry?
+  pharmacyId     Int
+  pharmacy       Pharmacy        @relation(fields: [pharmacyId], references: [id])
 
   @@index([billDate])
   @@index([cashierId])
@@ -637,20 +660,24 @@ model GstFilingPeriod {
   filed          Boolean   @default(false)
   filedAt        DateTime? @map("filed_at")
   createdAt      DateTime  @default(now()) @map("created_at")
+  pharmacyId     Int
+  pharmacy       Pharmacy  @relation(fields: [pharmacyId], references: [id])
 
   @@map("gst_filing_periods")
 }
 
 model AuditLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int?     @map("user_id")
-  user      User?    @relation(fields: [userId], references: [id])
-  action    String   @db.VarChar(100)
-  entity    String   @db.VarChar(100)
-  entityId  Int?     @map("entity_id")
-  details   String?
-  ipAddress String?  @map("ip_address") @db.VarChar(45)
-  createdAt DateTime @default(now()) @map("created_at")
+  id         Int      @id @default(autoincrement())
+  userId     Int?     @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String   @db.VarChar(100)
+  entity     String   @db.VarChar(100)
+  entityId   Int?     @map("entity_id")
+  details    String?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   @@index([userId])
   @@index([entity, entityId])
@@ -667,8 +694,10 @@ model GstLedgerEntry {
   supplierReturnId Int?            @unique @map("supplier_return_id")
   supplierReturn   SupplierReturn? @relation(fields: [supplierReturnId], references: [id])
 
-  billId Int?  @unique @map("bill_id")
-  bill   Bill? @relation(fields: [billId], references: [id])
+  billId     Int?     @unique @map("bill_id")
+  bill       Bill?    @relation(fields: [billId], references: [id])
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   returnId   Int?    @unique @map("return_id")
   saleReturn Return? @relation(fields: [returnId], references: [id])
@@ -683,4 +712,28 @@ model GstLedgerEntry {
   @@index([type])
   @@index([entryDate])
   @@map("gst_ledger_entries")
+}
+
+model Pharmacy {
+  id Int @id @default(autoincrement())
+
+  name    String
+  gstin   String
+  phone   String?
+  address String?
+
+  users            User[]
+  products         Product[]
+  suppliers        Supplier[]
+  customers        Customer[]
+  locations        Location[]
+  purchaseOrders   PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+  bills            Bill[]
+  batches          Batch[]
+  doctors          Doctor[]
+  hospitals        Hospital[]
+  gstLedgerEntries GstLedgerEntry[]
+  gstFilingPeriods GstFilingPeriod[]
+  auditLogs        AuditLog[]
 }
