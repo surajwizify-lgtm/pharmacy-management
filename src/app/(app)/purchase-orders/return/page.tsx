@@ -150,7 +150,7 @@ export default function SupplierReturnsPage() {
                                                 </Button>
 
                                                 <Button
-                                                    variant="ghost"
+                                                    variant="outline"
                                                     size="sm"
                                                 >
                                                     Print

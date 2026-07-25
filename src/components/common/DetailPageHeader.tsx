@@ -8,7 +8,7 @@ import { ArrowBigLeft } from 'lucide-react';
 import BackButton from './BackButton';
 
 interface DetailPageHeaderProps {
-    backHref: string;
+    backHref?: string;
     backLabel?: string;
     title: string;
     subtitle?: ReactNode;
