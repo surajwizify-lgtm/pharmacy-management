@@ -485,7 +485,6 @@ export default function BillingPage() {
                           <PrintBillButton
                             billId={bill.id}
                             label=""
-                          // variant="ghost"
                           />
 
                           <Button
