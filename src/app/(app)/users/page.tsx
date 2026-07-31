@@ -22,6 +22,7 @@ import {
 const EMPTY_FORM = { username: '', password: '', fullName: '', role: 'CASHIER' as Role };
 
 export default function UsersPage() {
+  console.log('Users Page')
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

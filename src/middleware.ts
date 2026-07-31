@@ -12,7 +12,11 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     if (req.nextUrl.pathname.startsWith('/users') && token?.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/dashboard', req.url));
+      if (token?.role == 'SUPER_ADMIN') {
+        return null;
+      } else {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+      }
     }
     return NextResponse.next();
   },

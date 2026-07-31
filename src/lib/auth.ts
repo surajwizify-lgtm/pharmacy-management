@@ -34,6 +34,8 @@ export const authOptions: NextAuthOptions = {
           where: { username: credentials.username },
         });
 
+        console.log(user);
+
         if (!user || !user.active) {
           return null;
         }
@@ -48,6 +50,7 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           fullName: user.fullName,
           role: user.role,
+          pharmacyId: user.pharmacyId,
         };
       },
     }),
@@ -59,6 +62,7 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username;
         token.fullName = user.fullName;
         token.role = user.role;
+        token.pharmacyId = user.pharmacyId;
       }
       return token;
     },
@@ -68,6 +72,7 @@ export const authOptions: NextAuthOptions = {
         username: token.username,
         fullName: token.fullName,
         role: token.role,
+        pharmacyId: token.pharmacyId,
       };
       return session;
     },

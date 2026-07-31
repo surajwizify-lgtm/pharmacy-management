@@ -393,14 +393,14 @@ export default function BillingPage() {
             {listError && <p className="px-4 pt-3 text-sm text-red-600">{listError}</p>}
 
             <Table className="table-fixed">
-              <TableHeader>
-                <TableRow className='grid grid-cols-[2fr_1fr_1fr_1fr_1fr_3fr]'>
-                  <TableHead className=''>Bill</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className='text-center'>Actions</TableHead>
+              <TableHeader className='w-full'>
+                <TableRow className=''>
+                  <TableHead className='w-2/12'>Bill</TableHead>
+                  <TableHead className='w-2/12'>Customer</TableHead>
+                  <TableHead className='w-1/12'>Date</TableHead>
+                  <TableHead className='w-1/12'>Amount</TableHead>
+                  <TableHead className='w-1/12'>Status</TableHead>
+                  <TableHead className='w-5/12 text-center'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -415,10 +415,10 @@ export default function BillingPage() {
                   ))
                 ) : filteredBills.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4}>
-                      <div>
-                        <Receipt />
-                        <p>No bills found.</p>
+                    <TableCell colSpan={6} className="h-40 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2 text-neutral-400">
+                        <Receipt className="h-8 w-8" />
+                        <p className="text-sm">No bills found.</p>
                       </div>
                     </TableCell>
                   </TableRow>

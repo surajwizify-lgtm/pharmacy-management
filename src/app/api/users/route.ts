@@ -4,14 +4,17 @@ import { Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireSession, withErrorHandling, conflict } from '@/lib/api-utils';
 import { createUserSchema } from '@/lib/schemas';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const USER_SELECT = { id: true, username: true, fullName: true, role: true, active: true, createdAt: true };
 
 
 export async function GET() {
   return withErrorHandling(async () => {
-    await requireSession([Role.ADMIN]);
-    return prisma.user.findMany({ select: USER_SELECT, orderBy: { createdAt: 'desc' } });
+    await requireSession([Role.ADMIN, Role.SUPER_ADMIN]);
+    const session = await getServerSession(authOptions);
+    return session?.user.role == Role.SUPER_ADMIN ? prisma.user.findMany({ select: USER_SELECT, orderBy: { createdAt: 'desc' } }) : prisma.user.findMany({ where: { pharmacyId: session?.user.pharmacyId }, select: USER_SELECT, orderBy: { createdAt: 'desc' } });
   });
 }
 
