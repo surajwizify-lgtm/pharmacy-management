@@ -15,6 +15,7 @@ export const createUserSchema = z.object({
   password: z.string().min(8),
   fullName: z.string().min(1),
   role: z.nativeEnum(Role),
+  pharmacyId: z.string()
 });
 
 export const createproductSchema = z.object({

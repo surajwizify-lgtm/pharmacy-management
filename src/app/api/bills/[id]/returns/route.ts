@@ -1,12 +1,25 @@
-
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createGstLedgerEntry } from '@/lib/gst-ledger';
 
 function round2(n: number) {
     return Math.round(n * 100) / 100;
 }
+
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const pharmacyId = session.user.pharmacyId;
+    if (!pharmacyId) {
+        return NextResponse.json({ error: 'No pharmacy associated with this user' }, { status: 400 });
+    }
+
     const billId = Number(params.id);
 
     const bill = await prisma.bill.findUnique({
@@ -16,6 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (!bill) {
         return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
     }
+    if (bill.pharmacyId !== pharmacyId) {
+        return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
+    }
+
     const priorReturnItems = await prisma.returnItem.findMany({
         where: { return: { billId } },
     });
@@ -37,6 +54,17 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const pharmacyId = session.user.pharmacyId;
+    if (!pharmacyId) {
+        return NextResponse.json({ error: 'No pharmacy associated with this user' }, { status: 400 });
+    }
+
     const billId = Number(params.id);
     const body = await req.json();
 
@@ -51,6 +79,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 include: { billItems: true },
             });
             if (!bill) throw new Error('Bill not found');
+            if (bill.pharmacyId !== pharmacyId) throw new Error('Bill not found');
 
             const priorReturnItems = await tx.returnItem.findMany({
                 where: { return: { billId } },
@@ -118,6 +147,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 },
                 include: { returnItems: true },
             });
+
             await createGstLedgerEntry(tx, {
                 type: 'OUTPUT',
                 taxableValue: round2(totalTaxable),
@@ -126,6 +156,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                 igstAmount: round2(totalIgst),
                 totalGst: round2(totalGst),
                 returnId: saleReturn.id,
+                pharmacyId,
             });
 
             for (const item of preparedItems) {

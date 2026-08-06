@@ -1,10 +1,9 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 const itemSchema = z.object({
     productId: z.number().int().positive(),
@@ -74,6 +73,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 
+    const pharmacyId = session.user.pharmacyId;
+    if (!pharmacyId) {
+        return NextResponse.json({ message: 'No pharmacy associated with this user' }, { status: 400 });
+    }
+
     const json = await req.json().catch(() => null);
     if (!json) {
         return NextResponse.json({ message: 'Invalid JSON body' }, { status: 400 });
@@ -106,25 +110,29 @@ export async function POST(req: NextRequest) {
     try {
         const result = await prisma.$transaction(async (tx) => {
             const productIds = [...new Set(data.items.map((i) => i.productId))];
-            const products = await tx.product.findMany({ where: { id: { in: productIds } } });
+            const products = await tx.product.findMany({
+                where: { id: { in: productIds }, pharmacyId },
+            });
             if (products.length !== productIds.length) {
                 throw new Error('One or more products were not found');
             }
 
             const supplier = await tx.supplier.findUnique({ where: { id: data.supplierId } });
-            if (!supplier) {
+            if (!supplier || supplier.pharmacyId !== pharmacyId) {
                 throw new Error('Supplier not found');
             }
+
             const locationNames = [...new Set(
                 data.items.map((i) => i.location).filter((v): v is string => !!v)
             )];
             const matchedLocations = locationNames.length
                 ? await tx.location.findMany({
-                    where: { name: { in: locationNames } },
+                    where: { name: { in: locationNames }, pharmacyId },
                     select: { id: true, name: true },
                 })
                 : [];
             const locationIdByName = new Map(matchedLocations.map((l) => [l.name, l.id]));
+
             const po = await tx.purchaseOrder.create({
                 data: {
                     poNumber: data.poNumber,
@@ -133,6 +141,7 @@ export async function POST(req: NextRequest) {
                     orderDate: new Date(data.orderDate),
                     expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
                     notes: data.notes,
+                    pharmacyId,
                     items: {
                         create: data.items.map((i) => ({
                             productId: i.productId,
@@ -159,12 +168,17 @@ export async function POST(req: NextRequest) {
                     totalGst: totals.totalGst,
                     totalAmount: totals.totalAmount,
                     paymentStatus: 'DUE',
+                    pharmacyId,
                 },
             });
 
             for (let i = 0; i < data.items.length; i++) {
                 const item = data.items[i];
                 const calc = lineCalcs[i];
+
+                const resolvedLocationId = item.location
+                    ? locationIdByName.get(item.location) ?? null
+                    : null;
 
                 const batch = await tx.batch.create({
                     data: {
@@ -176,7 +190,8 @@ export async function POST(req: NextRequest) {
                         mrp: item.mrp,
                         sellingPrice: item.sellingPrice,
                         quantityAvailable: item.quantity,
-                        locationId: item.location ? Number(item.location) ?? null : null,
+                        locationId: resolvedLocationId,
+                        pharmacyId,
                     },
                 });
 
@@ -216,6 +231,7 @@ export async function POST(req: NextRequest) {
                     igstAmount: totals.totalIgst,
                     totalGst: totals.totalGst,
                     entryDate: new Date(data.invoiceDate),
+                    pharmacyId,
                 },
             });
 

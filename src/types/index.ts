@@ -1,3 +1,5 @@
+import { Pharmacy } from "@prisma/client";
+
 export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER';
 export type productStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
@@ -146,6 +148,7 @@ export interface AppUser {
   username: string;
   fullName: string;
   role: Role;
+  pharmacy: Pharmacy;
   active: boolean;
   createdAt: string;
 }

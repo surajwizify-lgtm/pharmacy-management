@@ -1,16 +1,35 @@
-
-
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.trim() || "";
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
+    // SUPER_ADMIN can inspect a specific pharmacy via ?pharmacyId=
+    const pharmacyIdParam = searchParams.get("pharmacyId");
+    const pharmacyId =
+        session.user.role === Role.SUPER_ADMIN && pharmacyIdParam
+            ? Number(pharmacyIdParam)
+            : session.user.pharmacyId;
+
+    if (!pharmacyId) {
+        return NextResponse.json({ error: "No pharmacy associated with this user" }, { status: 400 });
+    }
+
+    // Return has no pharmacyId of its own — scope via the parent Bill
     const where: Prisma.ReturnWhereInput = {
+        bill: { pharmacyId },
         ...(dateFrom || dateTo
             ? {
                 createdAt: {

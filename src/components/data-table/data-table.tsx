@@ -29,23 +29,19 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
 }
 
-export function DataTable<TData, TValue>({
-    columns,
-    data,
-}: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
     const [pagination, setPagination] = useState<PaginationState>({
-        pageIndex: 0,
-        pageSize: 10,
+        pageIndex: 0, pageSize: 10,
     });
     const table = useReactTable({
         data,
         columns,
-
         state: {
             sorting,
             pagination,
+            globalFilter
         },
 
         onSortingChange: setSorting,
@@ -58,7 +54,7 @@ export function DataTable<TData, TValue>({
 
 
     return (
-        <div className="rounded-lg border bg-white">
+        <div className="rounded-lg bg-white">
             <div className="flex items-center justify-between py-4">
                 <Input
                     placeholder="Search..."
@@ -124,81 +120,6 @@ export function DataTable<TData, TValue>({
                 </TableBody>
             </Table>
             <div className="flex items-center justify-between py-4">
-                <div className="text-sm text-muted-foreground">
-                    Page {table.getState().pagination.pageIndex + 1} of{" "}
-                    {table.getPageCount()}
-                </div>
-
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div><div className="flex items-center justify-between py-4">
-                <div className="text-sm text-muted-foreground">
-                    Page {table.getState().pagination.pageIndex + 1} of{" "}
-                    {table.getPageCount()}
-                </div>
-
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div><div className="flex items-center justify-between py-4">
-                <div className="text-sm text-muted-foreground">
-                    Page {table.getState().pagination.pageIndex + 1} of{" "}
-                    {table.getPageCount()}
-                </div>
-
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div><div className="flex items-center justify-between py-4">
                 <div className="text-sm text-muted-foreground">
                     Page {table.getState().pagination.pageIndex + 1} of{" "}
                     {table.getPageCount()}

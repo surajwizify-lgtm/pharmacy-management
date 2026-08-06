@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { use, useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { AppUser, Role } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,22 +18,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Pharmacy } from '@prisma/client';
+import { CloudCog } from 'lucide-react';
+import { number } from 'zod';
+import { useSession } from 'next-auth/react';
 
-const EMPTY_FORM = { username: '', password: '', fullName: '', role: 'CASHIER' as Role };
+const EMPTY_FORM = { username: '', password: '', fullName: '', role: 'CASHIER' as Role, pharmacyId: '' };
 
 export default function UsersPage() {
-  console.log('Users Page')
+  const { data: session, status } = useSession();
+
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pharmacyId, setPharmacyId] = useState('');
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
 
   async function load() {
     setLoading(true);
     try {
       setUsers(await apiFetch<AppUser[]>('/api/users'));
+      setPharmacies(await apiFetch<Pharmacy[]>('/api/pharmacies'));
     } finally {
       setLoading(false);
     }
@@ -41,7 +49,11 @@ export default function UsersPage() {
 
   useEffect(() => {
     load();
+    if (session?.user.role == 'ADMIN') {
+      setForm({ ...form, pharmacyId: String(session.user.pharmacyId) })
+    }
   }, []);
+
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -58,11 +70,14 @@ export default function UsersPage() {
       setSaving(false);
     }
   }
-
+  console.log(form);
   async function deactivate(id: number) {
     if (!confirm('Deactivate this user?')) return;
     await apiFetch(`/api/users/${id}/deactivate`, { method: 'PATCH' });
     load();
+  }
+  if (status === "loading") {
+    return <p>Loading...</p>;
   }
 
   return (
@@ -83,7 +98,8 @@ export default function UsersPage() {
                 <TableHead>Full name</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead></TableHead>
+                <TableHead>Pharmacy</TableHead>
+                <TableHead>ACTIONS</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -108,6 +124,8 @@ export default function UsersPage() {
                         {u.active ? "Active" : "Inactive"}
                       </span>
                     </TableCell>
+
+                    <TableCell>{u.pharmacy?.name}</TableCell>
 
                     <TableCell>
                       {u.active && (
@@ -134,6 +152,25 @@ export default function UsersPage() {
 
 
             <form onSubmit={handleSubmit} className="space-y-3">
+              {session?.user.role != 'ADMIN' && <div className="space-y-1.5">
+
+                <Select
+                  value={form.pharmacyId}
+                  onValueChange={(value) => setForm({ ...form, pharmacyId: String(value) })}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select a Pharmacy" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {pharmacies.map((p) => (
+                      <SelectItem label={p.name} key={p.id} value={p.id.toString()}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>}
               <div className="space-y-1.5">
                 <Label htmlFor="username">Username</Label>
                 <Input

@@ -1,21 +1,62 @@
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { apiFetch } from '@/lib/api-client';
-import RecordPaymentModal from '@/components/RecordPaymentModal';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
-import Container from '@/components/common/Container';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Input } from '@/components/ui/input';
 import PurchaseInvoicesTable from '@/components/purchase-orders/purchase-invoices/PurchaseInvoiceTable';
 
-
 export default async function PurchaseInvoicesPage() {
-    const data = await apiFetch<any[]>('http://localhost:3000/api/purchase-invoices');
-    const supplier = await apiFetch('http://localhost:3000/api/suppliers');
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        redirect('/login');
+    }
+
+    const pharmacyId = session.user.pharmacyId;
+    if (!pharmacyId) {
+        return (
+            <div>
+                <PageHeader header="Purchase Invoices" subheader="View All Purchase Invoices">
+                    <HeaderButton text="Create Invoice" href="/purchase-orders/purchase-invoices/new" />
+                </PageHeader>
+                <p className="p-6 text-sm text-muted-foreground">
+                    No pharmacy associated with this account.
+                </p>
+            </div>
+        );
+    }
+
+    const [rawInvoices, suppliers] = await Promise.all([
+        prisma.purchaseInvoice.findMany({
+            where: { pharmacyId },
+            include: { supplier: true, payments: true, supplierReturns: true },
+            orderBy: { createdAt: 'desc' },
+        }),
+        prisma.supplier.findMany({
+            where: { pharmacyId },
+            orderBy: { createdAt: 'desc' },
+        }),
+    ]);
+
+    // compute remainingAmount = total - paid - returned, same logic as the overdue-payments route
+    const invoices = rawInvoices.map((inv) => {
+        const paid = inv.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+        const returned = inv.supplierReturns.reduce((sum, r) => sum + Number(r.totalAmount), 0);
+        const remainingAmount = Number(inv.totalAmount) - paid - returned;
+
+        return {
+            id: inv.id,
+            invoiceNumber: inv.invoiceNumber,
+            grnNumber: inv.grnNumber,
+            invoiceDate: inv.invoiceDate.toISOString(),
+            totalAmount: Number(inv.totalAmount),
+            remainingAmount,
+            paymentStatus: inv.paymentStatus,
+            supplierId: inv.supplierId,
+            supplier: { name: inv.supplier.name },
+        };
+    });
 
     return (
         <div className="">
@@ -23,9 +64,9 @@ export default async function PurchaseInvoicesPage() {
                 header={`Purchase Invoices`}
                 subheader="View All Purchase Invoices"
             >
-                <HeaderButton text="Create Invoice" href='/purchase-orders/purchase-invoices/new' />
+                <HeaderButton text="Create Invoice" href="/purchase-orders/purchase-invoices/new" />
             </PageHeader>
-            <PurchaseInvoicesTable suppliers={supplier} invoices={data} />
+            <PurchaseInvoicesTable suppliers={suppliers} invoices={invoices} />
         </div>
     );
 }

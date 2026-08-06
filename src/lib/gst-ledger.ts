@@ -11,6 +11,7 @@ type LedgerInput = {
     supplierReturnId?: number;
     billId?: number;
     returnId?: number;
+    pharmacyId: number;
 };
 
 // Call this INSIDE an existing prisma.$transaction (pass `tx`), so the
@@ -28,6 +29,7 @@ export async function createGstLedgerEntry(tx: Prisma.TransactionClient, input: 
             supplierReturnId: input.supplierReturnId ?? null,
             billId: input.billId ?? null,
             returnId: input.returnId ?? null,
+            pharmacyId: input.pharmacyId,
         },
     });
 }

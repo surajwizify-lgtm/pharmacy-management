@@ -1,8 +1,20 @@
-
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const pharmacyId = session.user.pharmacyId;
+    if (!pharmacyId) {
+        return NextResponse.json({ error: 'No pharmacy associated with this user' }, { status: 400 });
+    }
+
     const poId = Number(params.id);
     const body = await req.json();
 
@@ -14,8 +26,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         const result = await prisma.$transaction(async (tx) => {
             const po = await tx.purchaseOrder.findUnique({ where: { id: poId }, include: { items: true } });
             if (!po) throw new Error('Purchase order not found');
+            if (po.pharmacyId !== pharmacyId) throw new Error('Purchase order not found');
             if (po.status === 'RECEIVED') throw new Error('This purchase order is already fully received');
             if (po.status === 'CANCELLED') throw new Error('Cannot receive a cancelled purchase order');
+
             const locationNames: string[] = Array.from(
                 new Set<string>(
                     body.items
@@ -25,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             );
             const matchedLocations = locationNames.length
                 ? await tx.location.findMany({
-                    where: { name: { in: locationNames } },
+                    where: { name: { in: locationNames }, pharmacyId },
                     select: { id: true, name: true },
                 })
                 : [];
@@ -78,8 +92,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             const totalGst = totalCgst + totalSgst + totalIgst;
             const totalAmount = subtotal - totalDiscount + totalGst;
 
-            // count of GRN numbers today, simple sequential approach
-            const grnCount = await tx.purchaseInvoice.count();
+            // GRN sequence scoped per pharmacy
+            const grnCount = await tx.purchaseInvoice.count({ where: { pharmacyId } });
             const grnNumber = `GRN-${String(grnCount + 1).padStart(6, '0')}`;
 
             const invoice = await tx.purchaseInvoice.create({
@@ -97,6 +111,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     totalIgst,
                     totalGst,
                     totalAmount,
+                    pharmacyId,
                 },
             });
 
@@ -112,6 +127,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                         sellingPrice: it.sellingPrice,
                         quantityAvailable: it.quantity + it.freeQuantity,
                         locationId: it.location ? locationIdByName.get(it.location) ?? null : null,
+                        pharmacyId,
                     },
                 });
 
@@ -140,6 +156,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     },
                 });
             }
+
             await tx.purchaseOrder.update({
                 where: { id: po.id },
                 data: { status: 'RECEIVED' },
@@ -154,6 +171,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
                     sgstAmount: totalSgst,
                     igstAmount: totalIgst,
                     totalGst,
+                    pharmacyId,
                 },
             });
 

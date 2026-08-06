@@ -1,13 +1,26 @@
-
 import { prisma } from '@/lib/prisma';
-import { requireSession, withErrorHandling } from '@/lib/api-utils';
+import { requireSession, withErrorHandling, notFound } from '@/lib/api-utils';
+import { Role } from '@prisma/client';
 
-export async function GET() {
+export async function GET(req: Request) {
     return withErrorHandling(async () => {
-        await requireSession();
+        const session = await requireSession();
+
+        const { searchParams } = new URL(req.url);
+
+        // SUPER_ADMIN can inspect a specific pharmacy via ?pharmacyId=
+        const pharmacyIdParam = searchParams.get('pharmacyId');
+        const pharmacyId =
+            session.user.role === Role.SUPER_ADMIN && pharmacyIdParam
+                ? Number(pharmacyIdParam)
+                : session.user.pharmacyId;
+
+        if (!pharmacyId) {
+            throw notFound('No pharmacy associated with this user');
+        }
 
         const invoices = await prisma.purchaseInvoice.findMany({
-            where: { paymentStatus: { in: ['DUE', 'PARTIAL'] } },
+            where: { pharmacyId, paymentStatus: { in: ['DUE', 'PARTIAL'] } },
             include: { supplier: true, payments: true, supplierReturns: true },
             orderBy: { invoiceDate: 'asc' },
         });

@@ -33,16 +33,22 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', roles: ["SUPER_ADMIN"], icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: LayoutDashboard },
   {
-    href: '/', label: 'Inventory', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: Package, children: [
+    href: '/', label: 'Inventory', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Package, children: [
       { href: '/products', label: 'Products & Services' },
       { href: '/batches', label: 'Batches & Stock' },
       { href: '/batches/locations', label: 'Racks/Locations' },
     ],
   },
   {
-    href: '/billing', label: 'Sales & Payments', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: Receipt, children: [
+    href: '/', label: 'Inventory', roles: ["SUPER_ADMIN"], icon: Package, children: [
+      { href: '/products', label: 'Products & Services' },
+    ],
+  },
+  {
+    href: '/billing', label: 'Sales & Payments', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Receipt, children: [
       { href: '/billing/all-sales', label: 'Invoices' },
       { href: '/billing/sale-returns', label: 'Sale Returns' },
       { href: '/billing/customers', label: 'Customers' },
@@ -51,7 +57,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: '/purchase-orders/registered',
     label: 'Purchase',
-    roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"],
+    roles: ['ADMIN', 'PHARMACIST', 'CASHIER'],
     icon: ShoppingCart,
     children: [
       { href: '/purchase-orders/registered', label: 'Purchase Orders' },
@@ -64,7 +70,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     href: '/gst/summary',
     label: 'GST',
-    roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"],
+    roles: ['ADMIN', 'PHARMACIST', 'CASHIER'],
     icon: FileText,
     children: [
       { href: '/gst/summary', label: 'Summary' },
@@ -73,7 +79,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/doctors', label: 'Doctors', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: Stethoscope },
   { href: '/hospitals', label: 'Hospitals', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: Building2 },
   { href: '/users', label: 'Users', roles: ['ADMIN', "SUPER_ADMIN"], icon: Users2 },
-  { href: '/pharmacies', label: 'Pharmacies', roles: ['ADMIN', "SUPER_ADMIN"], icon: Users },
+  { href: '/pharmacies', label: 'Pharmacies', roles: ["SUPER_ADMIN"], icon: Users },
 ];
 
 const ROLE_STYLES: Record<string, string> = {

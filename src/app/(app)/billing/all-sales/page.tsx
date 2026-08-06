@@ -44,6 +44,8 @@ import Container from '@/components/common/Container';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { DataTable } from '@/components/data-table/data-table';
+import { getColumns } from './column';
 
 interface CartLine {
   productId: number;
@@ -338,6 +340,14 @@ export default function BillingPage() {
   const viewingTotalPaid = viewingBill ? (viewingBill.payments ?? []).reduce((s, p) => s + Number(p.amount), 0) : 0;
   const viewingBalanceDue = viewingBill ? Number(viewingBill.totalAmount) - viewingTotalPaid : 0;
 
+  const columns = getColumns({
+    handleReturnClick,
+    openViewBill,
+    openInvoicePopup,
+    deleteBill,
+    deletingId,
+  });
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -392,7 +402,7 @@ export default function BillingPage() {
 
             {listError && <p className="px-4 pt-3 text-sm text-red-600">{listError}</p>}
 
-            <Table className="table-fixed">
+            {/* <Table className="table-fixed">
               <TableHeader className='w-full'>
                 <TableRow className=''>
                   <TableHead className='w-2/12'>Bill</TableHead>
@@ -500,9 +510,16 @@ export default function BillingPage() {
                       </TableRow>
                     );
                   })
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                  </TableBody>
+                </Table>
+            */}
+
+            <DataTable
+              columns={columns}
+              data={filteredBills}
+            />
+
           </div>
         </div>
 

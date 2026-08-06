@@ -2,9 +2,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createGstLedgerEntry } from '@/lib/gst-ledger';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { Role } from '@prisma/client';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // SUPER_ADMIN can inspect a specific pharmacy via ?pharmacyId=
+    const pharmacyIdParam = req.nextUrl.searchParams.get('pharmacyId');
+    const pharmacyId =
+        session.user.role === Role.SUPER_ADMIN && pharmacyIdParam
+            ? Number(pharmacyIdParam)
+            : session.user.pharmacyId;
+
+    if (!pharmacyId) {
+        return NextResponse.json({ error: 'No pharmacy associated with this user' }, { status: 400 });
+    }
+
     const invoices = await prisma.purchaseInvoice.findMany({
+        where: { pharmacyId },
         include: { supplier: true, payments: true },
         orderBy: { createdAt: 'desc' },
     });

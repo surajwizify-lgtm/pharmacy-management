@@ -4,6 +4,9 @@ import { Role } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireSession, withErrorHandling, conflict } from '@/lib/api-utils';
 import { createproductSchema } from '@/lib/schemas';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { notFound } from 'next/navigation';
 
 export async function GET(req: NextRequest) {
   return withErrorHandling(async () => {
@@ -32,10 +35,14 @@ export async function GET(req: NextRequest) {
 }
 export async function POST(req: NextRequest) {
   return withErrorHandling(async () => {
-    await requireSession([Role.ADMIN, Role.PHARMACIST]);
+    const session = await requireSession([Role.ADMIN, Role.PHARMACIST]);
+    const pharmacyId = session.user.pharmacyId;
+    if (!pharmacyId) {
+      throw notFound();
+    }
+
     const dto = createproductSchema.parse(await req.json());
     const { category, ...rest } = dto;
-    console.log(category)
 
     return prisma.product.create({
       data: {
@@ -48,6 +55,9 @@ export async function POST(req: NextRequest) {
             },
           }
           : undefined,
+        pharmacy: {
+          connect: { id: pharmacyId },
+        },
       },
     });
   });
