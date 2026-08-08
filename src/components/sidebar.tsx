@@ -43,7 +43,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    href: '/', label: 'Inventory', roles: ["SUPER_ADMIN"], icon: Package, children: [
+    href: '/admin', label: 'Inventory', roles: ["SUPER_ADMIN"], icon: Package, children: [
       { href: '/products', label: 'Products & Services' },
     ],
   },

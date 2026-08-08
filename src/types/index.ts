@@ -1,6 +1,6 @@
-import { Pharmacy } from "@prisma/client";
+import { Pharmacy, Role } from "@prisma/client";
 
-export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER';
+// export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER' | 'SUPER_ADMIN';
 export type productStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'OTHER';
@@ -30,26 +30,81 @@ export interface Batch {
   version: number;
 }
 
+// export interface product {
+//   id: number;
+//   name: string;
+//   manufacturer: string;
+//   category: string | null;
+//   barcode: string | null;
+//   hsnCode: string;
+//   gstPercentage: string;
+//   gstType: 'INCLUSIVE' | 'EXCLUSIVE';
+//   prescriptionRequired: boolean;
+//   status: productStatus;
+//   mrp: number;
+//   cp: number;
+//   sp: number;
+//   genericName?: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   version: number;
+//   batches: Batch[];
+//   totalStock?: number;
+// }
+
 export interface product {
   id: number;
+
   name: string;
-  manufacturer: string;
-  category: string | null;
+  genericName: string | null;
+
+  manufacturer: string | null;
+  manufacturerId: number | null;
+
+  categoryId: number | null;
+  category: ProductCategory | null;
+
   barcode: string | null;
-  hsnCode: string;
+  hsnCode: string | null;
+
   gstPercentage: string;
   gstType: 'INCLUSIVE' | 'EXCLUSIVE';
-  prescriptionRequired: boolean;
-  status: productStatus;
+
   mrp: number;
   cp: number;
   sp: number;
-  genericName?: string;
+
+  unit: string;
+  packSize: string | null;
+  defaultMrp: number;
+  reorderLevel: number;
+  rackLocation: string | null;
+
+  scheduleType: string;
+
+  prescriptionRequired: boolean;
+  tracksExpiry: boolean;
+
+  attributes: unknown | null;
+
+  status: productStatus;
+
   createdAt: string;
   updatedAt: string;
+
   version: number;
+
+  pharmacyId: number;
+
   batches: Batch[];
+
   totalStock?: number;
+}
+
+export interface ProductCategory {
+  id: number;
+  name: string;
+  parentId: number | null;
 }
 
 export interface BillItem {
@@ -148,7 +203,7 @@ export interface AppUser {
   username: string;
   fullName: string;
   role: Role;
-  pharmacy: Pharmacy;
+  pharmacy?: Pharmacy;
   active: boolean;
-  createdAt: string;
+  createdAt: Date;
 }
