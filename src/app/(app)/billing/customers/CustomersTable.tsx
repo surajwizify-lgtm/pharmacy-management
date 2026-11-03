@@ -159,10 +159,10 @@ export default function CustomersTable({ data }: { data: Customer[] }) {
                 header: 'Actions',
                 cell: ({ row }) => (
                     <div className="flex items-center gap-2">
-                        <Button variant="link" onClick={() => openEditModal(row.original)}>
+                        <Button size={'xs'} variant="outline" onClick={() => openEditModal(row.original)}>
                             Edit
                         </Button>
-                        <Button variant="link" onClick={() => handleDelete(row.original)}>
+                        <Button size={'xs'} variant="destructive" onClick={() => handleDelete(row.original)}>
                             Delete
                         </Button>
                     </div>

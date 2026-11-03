@@ -19,6 +19,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { headers } from 'next/headers';
 import { Role } from '@prisma/client';
 import { cn } from '@/lib/utils';
+import { AddEditModel } from '@/components/common/Modal';
 
 type GstType = 'INCLUSIVE' | 'EXCLUSIVE';
 type StatusFilter = 'ALL' | 'ACTIVE' | 'DISCONTINUED';
@@ -152,6 +153,8 @@ export default function ProductsClient({
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
+    const [showAddProduct, setShowAddProduct] = useState(false);
+
     const [editingProduct, setEditingProduct] = useState<product | null>(null);
     const [pendingDiscontinue, setPendingDiscontinue] = useState<product | null>(null);
 
@@ -195,7 +198,7 @@ export default function ProductsClient({
 
     function openCreate() {
         setEditingProduct(null);
-        setShowForm(true);
+        setShowAddProduct(true);
     }
 
     function openEdit(m: product) {
@@ -239,31 +242,6 @@ export default function ProductsClient({
             header: "Category",
             cell: ({ row }) => row.original.category?.name ?? "-",
         },
-        // {
-        //     accessorKey: "barcode",
-        //     header: "Barcode",
-        //     cell: ({ row }) => row.original.barcode ?? "-",
-        // },
-        // {
-        //     accessorKey: "hsnCode",
-        //     header: "HSN",
-        //     cell: ({ row }) => row.original.hsnCode ?? "-",
-        // },
-        // {
-        //     accessorKey: "mrp",
-        //     header: "MRP",
-        //     cell: ({ row }) => `₹${row.original.mrp}`,
-        // },
-        // {
-        //     accessorKey: "cp",
-        //     header: "CP",
-        //     cell: ({ row }) => `₹${row.original.cp}`,
-        // },
-        // {
-        //     accessorKey: "sp",
-        //     header: "SP",
-        //     cell: ({ row }) => `₹${row.original.sp}`,
-        // },
         {
             id: "stock",
             header: "Stock",
@@ -297,13 +275,16 @@ export default function ProductsClient({
             cell: ({ row }) => {
                 return (
                     <div className="flex gap-2">
+                        <AddEditModel onClose={() => { }} title='Edit Product' onSubmit={() => { }} buttonTitle='Edit' onClick={() => openEdit(row.original)}>
+                            <ProductFormModal open={showForm} onClose={() => setShowForm(false)} product={editingProduct} onSuccess={load} />
+                        </AddEditModel>
                         {canEdit && (
                             <div className="flex">
-                                <Button onClick={() => openEdit(row.original)} variant="ghost">
+                                <Button size={'xs'} onClick={() => openEdit(row.original)} variant="ghost">
                                     <EditIcon />
                                 </Button>
                                 {(role === 'ADMIN' || role === Role.SUPER_ADMIN) && (
-                                    <Button
+                                    <Button size={'xs'}
                                         variant={row.original.status === 'ACTIVE' ? 'destructive' : 'default'}
                                         onClick={() => setPendingDiscontinue(row.original)}
                                     >
@@ -461,7 +442,7 @@ export default function ProductsClient({
                     </Table>
                 </div> */}
             </Container>
-            <ProductFormModal open={showForm} onClose={() => setShowForm(false)} product={editingProduct} onSuccess={load} />
+            <ProductFormModal open={showAddProduct} onClose={() => setShowAddProduct(false)} product={editingProduct} onSuccess={load} />
             <ConfirmDialog
                 open={!!pendingDiscontinue}
                 productName={pendingDiscontinue?.name ?? ''}

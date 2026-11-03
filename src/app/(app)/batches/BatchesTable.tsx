@@ -172,16 +172,7 @@ export default function BatchesTable({ data }: { data: BatchWithProduct[] }) {
                     Show only batches expiring within 90 days
                 </label>
             </div>
-
-            {tableData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-10 text-center">
-                    <EmptyIcon />
-                    <p className="font-medium text-slate-600">No batches found</p>
-                    <p className="text-sm text-slate-400">Try changing your filters or search.</p>
-                </div>
-            ) : (
-                <DataTable columns={columns} data={tableData} />
-            )}
+            <DataTable columns={columns} data={tableData} />
         </>
     );
 }

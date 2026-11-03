@@ -1,5 +1,8 @@
-// components/common/PageHeader.tsx
+
+"use client";
 import React from "react";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 export interface PageHeaderProps {
     header: string;
@@ -33,6 +36,20 @@ export default function PageHeader({
     };
 
     const activeTone = badge?.tone || "primary";
+
+    const actionRef = useRef<HTMLDivElement>(null);
+
+    // useEffect(() => {
+    //     if (!actionRef.current) return;
+
+    //     gsap.to(actionRef.current, {
+    //         y: 500,
+    //         duration: 1.5,
+    //         repeat: 1,
+    //         yoyo: true,
+    //         ease: "power1.inOut",
+    //     });
+    // }, []);
 
     return (
         <div className="relative mb-5 px-5 bg-white border-b border-neutral-200/80">
@@ -109,7 +126,7 @@ export default function PageHeader({
 
                     {/* Action button */}
                     {children && (
-                        <div className="shrink-0 mt-1 sm:mt-0">
+                        <div ref={actionRef} className="shrink-0 mt-1 sm:mt-0">
                             {children}
                         </div>
                     )}

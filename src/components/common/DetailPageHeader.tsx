@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { ArrowBigLeft } from 'lucide-react';
 import BackButton from './BackButton';
+import { useDispatch } from 'react-redux';
+import { setCollapsed } from '@/store/slices/uiSlice';
 
 interface DetailPageHeaderProps {
     backHref?: string;
@@ -28,10 +30,16 @@ export default function DetailPageHeader({
     actions,
 }: DetailPageHeaderProps) {
     const router = useRouter();
+    const dispatch = useDispatch();
+    useEffect(() => {
+        dispatch(setCollapsed(true))
+    }, [])
     return (
         <div className="flex items-center bg-bg-primary justify-between relative mb-5 px-10 py-2 border-b border-neutral-200/80">
             <div className=''>
-                <BackButton />
+                <div onClick={() => { dispatch(setCollapsed(false)) }}>
+                    <BackButton />
+                </div>
                 <div className=''>
                     <div className="mt-2 flex items-center gap-3">
                         <h1 className="text-2xl font-semibold text-neutral-900">{title}</h1>

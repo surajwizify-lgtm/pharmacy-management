@@ -102,7 +102,8 @@ export async function createSalesReturn(dto: CreateSalesReturnDto) {
             sgstAmount: Number(totalSgst.toFixed(2)),
             igstAmount: Number(totalIgst.toFixed(2)),
             totalGst: Number(totalCgst.add(totalSgst).add(totalIgst).toFixed(2)),
-            returnId: salesReturn.id,
+            returnId: Number(salesReturn.id),
+            pharmacyId: salesReturn.bill.pharmacyId
         });
 
         return salesReturn;

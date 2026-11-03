@@ -12,7 +12,7 @@ interface HospitalOption {
 }
 
 type Props = {
-    onClose: () => void;
+    onClose: (value?: any) => void;
     onCreated?: (hospital: HospitalOption) => void;
     hospital?: HospitalOption;
 };

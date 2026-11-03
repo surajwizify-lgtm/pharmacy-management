@@ -26,7 +26,12 @@ export default function HeaderButton({ text, href, onClick }: HeaderButtonProps)
     }
 
     return (
-        <Button size={'lg'} onClick={onClick} className={baseClass}>
+        <Button size={'lg'} onClick={() => {
+            if (onClick) {
+                console.log('tapped', onClick)
+                onClick()
+            }
+        }} className={baseClass}>
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
             {text}
         </Button>

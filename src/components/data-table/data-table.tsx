@@ -42,22 +42,6 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0, pageSize: 10,
     });
-    // const table = useReactTable({
-    //     data,
-    //     columns,
-    //     state: {
-    //         sorting,
-    //         pagination,
-    //         globalFilter
-    //     },
-
-    //     onSortingChange: setSorting,
-    //     onPaginationChange: setPagination,
-
-    //     getCoreRowModel: getCoreRowModel(),
-    //     getSortedRowModel: getSortedRowModel(),
-    //     getPaginationRowModel: getPaginationRowModel(),
-    // });
     const table = useReactTable({
         data,
         columns,
@@ -88,7 +72,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                     className="max-w-sm"
                 />
             </div>
-            <div className="shadow shadow-gray-800 rounded-lg">
+            <div className="">
                 <Table className="table-fixed ">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -125,7 +109,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                                     className="hover:bg-gray-50 transition-colors"
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell className="py-0 px-2" key={cell.id}>
+                                        <TableCell className="py-1 px-2" key={cell.id}>
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()

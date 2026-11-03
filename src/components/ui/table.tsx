@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
-      className="relative w-full border rounded-lg overflow-x-auto"
+      className="relative w-full border rounded overflow-x-auto"
     >
       <table
         data-slot="table"
@@ -22,7 +22,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b bg-bgdark-tertiary text-bg-inverse", className)}
+      className={cn("[&_tr]:border-b bg-white text-black", className)}
       {...props}
     />
   )
@@ -72,7 +72,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle text-bg-primary font-medium  [&:has([role=checkbox])]:pr-0",
+        "h-10 px-2 text-left align-middle text-black font-medium  [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

@@ -144,10 +144,10 @@ export default function LocationsTable({ data }: { data: Location[] }) {
                 header: 'Actions',
                 cell: ({ row }) => (
                     <div className="flex justify-center gap-2">
-                        <Button variant="outline" onClick={() => openEditModal(row.original)}>
+                        <Button size={'xs'} variant="outline" onClick={() => openEditModal(row.original)}>
                             Edit
                         </Button>
-                        <Button variant="destructive" onClick={() => handleDelete(row.original)}>
+                        <Button size={'xs'} variant="destructive" onClick={() => handleDelete(row.original)}>
                             Delete
                         </Button>
                     </div>
