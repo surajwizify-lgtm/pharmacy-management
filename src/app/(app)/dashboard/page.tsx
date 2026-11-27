@@ -3,7 +3,6 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import {
-  Plus,
   Package,
   Receipt,
   IndianRupee,
@@ -14,10 +13,8 @@ import {
 import OverduePayablesList from '@/components/dashboard/OverduePayablesList';
 import CashFlowChart from '@/components/dashboard/CashFlowChart';
 import PageHeader from '@/components/common/Header';
-import HeaderButton from '@/components/common/HeaderButton';
 import Container from '@/components/common/Container';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import DashboardLinks from '@/components/dashboard/DashboardLinks';
 
 async function getStats() {
@@ -54,6 +51,8 @@ async function getStats() {
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const stats = await getStats();
+  const role = session?.user.role;
+  const isAdmin = role == "ADMIN";
 
   return (
     <div className="">
@@ -64,8 +63,8 @@ export default async function DashboardPage() {
         {/* <HeaderButton text="Create New Bill" href="/billing/all-sales/new" /> */}
       </PageHeader>
       <Container>
-        <DashboardLinks />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {isAdmin && <DashboardLinks />}
+        {isAdmin && <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard
             label="Active products"
             value={stats.activeproducts}
@@ -86,8 +85,8 @@ export default async function DashboardPage() {
             icon={AlertTriangle}
             tone={stats.lowStock.length > 0 ? 'amber' : 'secondary'}
           />
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        </div>}
+        {isAdmin && <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className=" overflow-hidden p-0">
             <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
               <h2 className="flex items-center gap-2 font-medium text-neutral-800">
@@ -153,7 +152,7 @@ export default async function DashboardPage() {
           <OverduePayablesList />
 
           <CashFlowChart />
-        </div>
+        </div>}
       </Container>
     </div>
   );

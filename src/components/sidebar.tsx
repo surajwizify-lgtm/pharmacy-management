@@ -20,7 +20,11 @@ import {
   Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
+  Users2,
 } from "lucide-react";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import { toggleSideBar } from '@/store/slices/uiSlice';
 
 type NavChild = { href: string; label: string };
 type NavItem = {
@@ -32,12 +36,18 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
+  { href: '/dashboard', label: 'Dashboard', roles: ["SUPER_ADMIN"], icon: LayoutDashboard },
   { href: '/dashboard', label: 'Dashboard', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: LayoutDashboard },
   {
     href: '/', label: 'Inventory', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Package, children: [
       { href: '/products', label: 'Products & Services' },
       { href: '/batches', label: 'Batches & Stock' },
       { href: '/batches/locations', label: 'Racks/Locations' },
+    ],
+  },
+  {
+    href: '/admin', label: 'Inventory', roles: ["SUPER_ADMIN"], icon: Package, children: [
+      { href: '/products', label: 'Products & Services' },
     ],
   },
   {
@@ -69,9 +79,10 @@ const NAV_ITEMS: NavItem[] = [
       { href: '/gst/summary', label: 'Summary' },
     ],
   },
-  { href: '/doctors', label: 'Doctors', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Stethoscope },
-  { href: '/hospitals', label: 'Hospitals', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Building2 },
-  { href: '/users', label: 'Users', roles: ['ADMIN'], icon: Users },
+  { href: '/doctors', label: 'Doctors', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: Stethoscope },
+  { href: '/hospitals', label: 'Hospitals', roles: ['ADMIN', 'PHARMACIST', 'CASHIER', "SUPER_ADMIN"], icon: Building2 },
+  { href: '/users', label: 'Users', roles: ['ADMIN', "SUPER_ADMIN"], icon: Users2 },
+  { href: '/pharmacies', label: 'Pharmacies', roles: ["SUPER_ADMIN"], icon: Users },
 ];
 
 const ROLE_STYLES: Record<string, string> = {
@@ -85,7 +96,7 @@ type SidebarProps = {
 };
 
 export function Sidebar({
-  collapsed,
+  // collapsed,
   setCollapsed,
 }: SidebarProps) {
   const pathname = usePathname();
@@ -95,6 +106,9 @@ export function Sidebar({
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     '/purchase-orders/registered': pathname?.startsWith('/purchase-orders') ?? false,
   });
+  const dispatch = useDispatch();
+  const collapsed = useSelector((state: RootState) => state.ui.collapsed);
+
 
 
   function toggleMenu(href: string) {
@@ -113,7 +127,7 @@ export function Sidebar({
 
       <div className={clsx("fixed  top-3 z-100", collapsed ? "left-1" : "left-2")}>
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => dispatch(toggleSideBar())}
           className="rounded-lg p-2 hover:bg-neutral-100 transition"
         >
           {collapsed ? (
@@ -131,9 +145,9 @@ export function Sidebar({
       >
 
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary-500/[0.06] blur-[90px]" />
-        <div className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-secondary-500/[0.05] blur-[90px]" />
+        <div className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full blur-[90px]" />
         {!collapsed && <div className="relative flex items-center gap-3">
-          <div className="relative w-full h-[100px] flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
+          <div className="relative w-full h-[100px] flex shrink-0 items-center justify-center overflow-hidden  bg-white">
             <Image
               src="/logo.png"
               alt="Pharmacy POS Logo"

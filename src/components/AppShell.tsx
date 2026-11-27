@@ -3,13 +3,23 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { Sidebar } from "@/components/sidebar";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { toggleSideBar } from "@/store/slices/uiSlice";
+import { Toaster } from "sonner";
 
 export default function AppShell({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const [collapsed, setCollapsed] = useState(false);
+    // const [collapsed, setCollapsed] = useState(false);
+    const collapsed = useSelector((state: RootState) => state.ui.collapsed);
+    const dispatch = useDispatch();
+
+    const setCollapsed = () => {
+        dispatch(toggleSideBar())
+    }
 
     return (
         <div className="flex min-h-screen">
@@ -26,6 +36,7 @@ export default function AppShell({
             >
                 {children}
             </main>
+            <Toaster position="top-right" />
         </div>
     );
 }

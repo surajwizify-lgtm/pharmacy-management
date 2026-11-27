@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/common/button";
 
 interface HeaderButtonProps {
     text: string;
@@ -18,7 +18,7 @@ export default function HeaderButton({ text, href, onClick }: HeaderButtonProps)
     if (href) {
         return (
             <Link href={href} >
-                <Button variant={'primary'}><Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <Button variant={'default'}><Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
                     {text}</Button>
             </Link>
 
@@ -26,7 +26,12 @@ export default function HeaderButton({ text, href, onClick }: HeaderButtonProps)
     }
 
     return (
-        <Button size={'lg'} onClick={onClick} className={baseClass}>
+        <Button size={'lg'} onClick={() => {
+            if (onClick) {
+                console.log('tapped', onClick)
+                onClick()
+            }
+        }} className={baseClass}>
             <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
             {text}
         </Button>

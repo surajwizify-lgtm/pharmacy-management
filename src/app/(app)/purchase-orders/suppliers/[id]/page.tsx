@@ -5,7 +5,7 @@ import Link from "next/link";
 import SupplierLedgerPrint from "@/components/print/SupplierLedgerPrint";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/common/button";
 import DetailPageHeader from "@/components/common/DetailPageHeader";
 
 

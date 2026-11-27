@@ -10,6 +10,10 @@ import PurchaseOrderPrint from '@/components/print/PurchaseOrderPrint';
 import { printElement } from '@/lib/print-pdf';
 import PurchaseOrderPrintButton from '@/components/purchase-orders/PurchaseOrderPrintButton';
 import BackButton from '@/components/common/BackButton';
+import Container from '@/components/common/Container';
+import DetailPageHeader from '@/components/common/DetailPageHeader';
+import { AppSelectWithSearch } from '@/components/common/AppSelectWithSearch';
+import Button from '@/components/Button';
 
 type Supplier = { id: number; name: string };
 
@@ -119,8 +123,8 @@ export default function NewPurchaseOrderPage() {
             {
                 productId: selectedProduct.id,
                 productName: selectedProduct.name,
-                genericName: selectedProduct.genericName,
-                manufacturer: selectedProduct.manufacturer,
+                genericName: selectedProduct.genericName || '',
+                manufacturer: selectedProduct.manufacturer || '',
                 quantity: Number(pickQty),
                 expectedRate: Number(pickRate),
                 gstPercentage: Number(selectedProduct.gstPercentage) ?? 0,
@@ -231,211 +235,220 @@ export default function NewPurchaseOrderPage() {
     }
 
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
-            <div>
-                <BackButton />
-                <h1 className="mt-1 text-2xl font-semibold text-neutral-900">New Purchase Order</h1>
-                <p className="text-sm text-neutral-500">This is a request to your supplier — no stock is added yet.</p>
-            </div>
-
-            {error && (
-                <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
-                    <span className="text-sm font-medium text-danger-700">{error}</span>
-                </div>
-            )}
-
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">Supplier</label>
-                        <select
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            value={supplierId}
-                            onChange={(e) => setSupplierId(Number(e.target.value))}
-                        >
-                            <option value="">Select supplier…</option>
-                            {suppliers.map((s) => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
-                            ))}
-                        </select>
+        <div>
+            <DetailPageHeader title='New Purchase Order' subtitle="This is a request to your supplier — no stock is added yet." />
+            <Container>
+                {error && (
+                    <div className="flex items-center gap-2 rounded-lg border border-danger-200 bg-danger-50 px-4 py-2.5">
+                        <span className="text-sm font-medium text-danger-700">{error}</span>
                     </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">Purchase Order ID</label>
-                        <input
-                            className="w-full cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm text-neutral-500"
-                            value="Auto Generated"
-                            disabled
-                        />
-                        <p className="mt-1 text-xs text-neutral-400">
-                            Purchase Order ID will be generated automatically when the order is created.
-                        </p>
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">Expected Date (optional)</label>
-                        <input
-                            type="date"
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            value={expectedDate}
-                            onChange={(e) => setExpectedDate(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">Notes (optional)</label>
-                        <input
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </div>
+                )}
 
-            <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
-                <h2 className="font-medium text-neutral-800">Requested products</h2>
-                <div className="grid grid-cols-3 gap-3">
-                    {/* ---- searchable product picker ---- */}
-                    <div className="relative" ref={searchWrapRef}>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">product</label>
-                        <input
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            placeholder="Search by name, generic, manufacturer…"
-                            value={productSearch}
-                            onFocus={() => setShowDropdown(true)}
-                            onChange={(e) => {
-                                setProductSearch(e.target.value);
-                                setSelectedProduct(null);
-                                setPickRate('');
-                                setShowDropdown(true);
-                            }}
-                        />
-                        {selectedProduct && (
-                            <p className="mt-1 text-[11px] text-neutral-400">
-                                GST {selectedProduct.gstPercentage}% ·{' '}
-                                {((selectedProduct as unknown as { gstType?: GstType }).gstType ?? 'INCLUSIVE') === 'EXCLUSIVE'
-                                    ? 'added on top'
-                                    : 'included in rate'}
-                            </p>
-                        )}
-
-                        {showDropdown && productSearch.trim() && (
-                            <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg">
-                                {filteredProducts.length === 0 && (
-                                    <p className="px-3 py-2 text-sm text-neutral-400">No products found</p>
-                                )}
-                                {filteredProducts.map((m) => (
-                                    <button
-                                        type="button"
-                                        key={m.id}
-                                        onClick={() => pickProduct(m)}
-                                        disabled={lines.some((l) => l.productId === m.id)}
-                                        className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <span className="font-medium text-neutral-800">{m.name}</span>
-                                        <span className="text-xs text-neutral-400">
-                                            {m.manufacturer} · GST {m.gstPercentage}%
-                                            {lines.some((l) => l.productId === m.id) ? ' · already added' : ''}
-                                        </span>
-                                    </button>
+                <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Supplier</label>
+                            <select
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                value={supplierId}
+                                onChange={(e) => setSupplierId(Number(e.target.value))}
+                            >
+                                <option value="">Select supplier…</option>
+                                {suppliers.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
                                 ))}
+                            </select>
+                        </div>
+                        {/* <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Supplier</label>
+                            <div className='grid grid-cols-4 w-full relative gap-2  justify-between'>
+                                <div className='col-span-3 bg-[yellow]'>
+                                    <AppSelectWithSearch value={String(supplierId)} onValueChange={(value) => { setSupplierId(Number(value)) }} placeHolder='Select a Supplier' items={suppliers.map((s) => {
+                                        return { value: String(s.id), label: s.name }
+                                    })} />
+                                </div>
+                                <Button size='sm' className='h-[30px] col-span-1' onClick={() => { router.push('suppliers/new') }}>Add New</Button>
                             </div>
-                        )}
+                        </div> */}
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Purchase Order ID</label>
+                            <input
+                                className="w-full cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm text-neutral-500"
+                                value="Auto Generated"
+                                disabled
+                            />
+                            <p className="mt-1 text-xs text-neutral-400">
+                                Purchase Order ID will be generated automatically when the order is created.
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">Quantity</label>
-                        <input
-                            type="number"
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            value={pickQty}
-                            onChange={(e) => setPickQty(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-neutral-600">Rate (per unit)</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
-                            value={pickRate}
-                            onChange={(e) => setPickRate(e.target.value)}
-                        />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Expected Date (optional)</label>
+                            <input
+                                type="date"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                value={expectedDate}
+                                onChange={(e) => setExpectedDate(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Notes (optional)</label>
+                            <input
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
-                <button
-                    type="button"
-                    className="rounded-lg border border-secondary-300 bg-secondary-50 px-4 py-2 text-sm font-medium text-secondary-700 transition hover:bg-secondary-100"
-                    onClick={addLine}
-                >
-                    + Add product
-                </button>
 
-                {lines.length > 0 && (
-                    <table className="w-full text-left text-sm">
-                        <thead className="border-b border-neutral-200 text-[8px] uppercase tracking-wide text-neutral-500">
-                            <tr>
-                                <th className="py-2">product</th>
-                                <th className="py-2">Generic Name</th>
-                                <th className="py-2">Manufacturer</th>
-                                <th className="py-2">Qty</th>
-                                <th className="py-2">Rate (per unit)</th>
-                                <th className="py-2">GST %</th>
-                                <th className="py-2">GST Amt</th>
-                                <th className="py-2">Total</th>
-                                <th className="py-2"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y text-[8px] divide-neutral-100">
-                            {lines.map((l) => (
-                                <tr key={l.productId} className="hover:bg-neutral-50">
-                                    <td className="py-2 font-medium text-neutral-800">{l.productName}</td>
-                                    <td className="py-2 font-medium text-neutral-800">{l.genericName}</td>
-                                    <td className="py-2 font-medium text-neutral-800">{l.manufacturer}</td>
-                                    <td className="py-2 text-neutral-600">{l.quantity}</td>
-                                    <td className="py-2 text-neutral-600">₹{l.expectedRate.toFixed(2)}</td>
-                                    <td className="py-2 text-neutral-600">
-                                        {l.gstPercentage}% ({l.gstType === 'EXCLUSIVE' ? '+' : 'incl.'})
-                                    </td>
-                                    <td className="py-2 text-neutral-600">₹{lineGstAmount(l).toFixed(2)}</td>
-                                    <td className="py-2 font-medium text-neutral-800">₹{lineTotal(l).toFixed(2)}</td>
-                                    <td className="py-2">
+                <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4">
+                    <h2 className="font-medium text-neutral-800">Requested products</h2>
+                    <div className="grid grid-cols-3 gap-3">
+                        {/* ---- searchable product picker ---- */}
+                        <div className="relative" ref={searchWrapRef}>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">product</label>
+                            <input
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                placeholder="Search by name, generic, manufacturer…"
+                                value={productSearch}
+                                onFocus={() => setShowDropdown(true)}
+                                onChange={(e) => {
+                                    setProductSearch(e.target.value);
+                                    setSelectedProduct(null);
+                                    setPickRate('');
+                                    setShowDropdown(true);
+                                }}
+                            />
+                            {selectedProduct && (
+                                <p className="mt-1 text-[11px] text-neutral-400">
+                                    GST {selectedProduct.gstPercentage}% ·{' '}
+                                    {((selectedProduct as unknown as { gstType?: GstType }).gstType ?? 'INCLUSIVE') === 'EXCLUSIVE'
+                                        ? 'added on top'
+                                        : 'included in rate'}
+                                </p>
+                            )}
+
+                            {showDropdown && productSearch.trim() && (
+                                <div className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white shadow-lg">
+                                    {filteredProducts.length === 0 && (
+                                        <p className="px-3 py-2 text-sm text-neutral-400">No products found</p>
+                                    )}
+                                    {filteredProducts.map((m) => (
                                         <button
-                                            className="text-xs font-medium text-danger-600 hover:text-danger-700 hover:underline"
-                                            onClick={() => removeLine(l.productId)}
+                                            type="button"
+                                            key={m.id}
+                                            onClick={() => pickProduct(m)}
+                                            disabled={lines.some((l) => l.productId === m.id)}
+                                            className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
-                                            Remove
+                                            <span className="font-medium text-neutral-800">{m.name}</span>
+                                            <span className="text-xs text-neutral-400">
+                                                {m.manufacturer} · GST {m.gstPercentage}%
+                                                {lines.some((l) => l.productId === m.id) ? ' · already added' : ''}
+                                            </span>
                                         </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-                {lines.length > 0 && (
-                    <div className="flex flex-col items-end gap-1">
-                        <p className="text-xs text-neutral-500">GST Total: ₹{totalGst.toFixed(2)}</p>
-                        <p className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-700">
-                            Total: ₹{totalAmount.toFixed(2)}
-                        </p>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Quantity</label>
+                            <input
+                                type="number"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                value={pickQty}
+                                onChange={(e) => setPickQty(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-neutral-600">Rate (per unit)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                value={pickRate}
+                                onChange={(e) => setPickRate(e.target.value)}
+                            />
+                        </div>
                     </div>
-                )}
-            </div>
+                    <button
+                        type="button"
+                        className="rounded-lg border border-secondary-300 bg-secondary-50 px-4 py-2 text-sm font-medium text-secondary-700 transition hover:bg-secondary-100"
+                        onClick={addLine}
+                    >
+                        + Add product
+                    </button>
 
-            <div className="flex justify-end gap-2">
-                <Link
-                    href="/purchase-orders"
-                    className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
-                >
-                    Cancel
-                </Link>
-                <button
-                    className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
-                    onClick={handleSubmit}
-                    disabled={saving}
-                >
-                    {saving ? 'Saving…' : 'Create Purchase Order'}
-                </button>
-            </div>
+                    {lines.length > 0 && (
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b border-neutral-200 text-[8px] uppercase tracking-wide text-neutral-500">
+                                <tr>
+                                    <th className="py-2">product</th>
+                                    <th className="py-2">Generic Name</th>
+                                    <th className="py-2">Manufacturer</th>
+                                    <th className="py-2">Qty</th>
+                                    <th className="py-2">Rate (per unit)</th>
+                                    <th className="py-2">GST %</th>
+                                    <th className="py-2">GST Amt</th>
+                                    <th className="py-2">Total</th>
+                                    <th className="py-2"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y text-[8px] divide-neutral-100">
+                                {lines.map((l) => (
+                                    <tr key={l.productId} className="hover:bg-neutral-50">
+                                        <td className="py-2 font-medium text-neutral-800">{l.productName}</td>
+                                        <td className="py-2 font-medium text-neutral-800">{l.genericName}</td>
+                                        <td className="py-2 font-medium text-neutral-800">{l.manufacturer}</td>
+                                        <td className="py-2 text-neutral-600">{l.quantity}</td>
+                                        <td className="py-2 text-neutral-600">₹{l.expectedRate.toFixed(2)}</td>
+                                        <td className="py-2 text-neutral-600">
+                                            {l.gstPercentage}% ({l.gstType === 'EXCLUSIVE' ? '+' : 'incl.'})
+                                        </td>
+                                        <td className="py-2 text-neutral-600">₹{lineGstAmount(l).toFixed(2)}</td>
+                                        <td className="py-2 font-medium text-neutral-800">₹{lineTotal(l).toFixed(2)}</td>
+                                        <td className="py-2">
+                                            <button
+                                                className="text-xs font-medium text-danger-600 hover:text-danger-700 hover:underline"
+                                                onClick={() => removeLine(l.productId)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                    {lines.length > 0 && (
+                        <div className="flex flex-col items-end gap-1">
+                            <p className="text-xs text-neutral-500">GST Total: ₹{totalGst.toFixed(2)}</p>
+                            <p className="rounded-lg bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-700">
+                                Total: ₹{totalAmount.toFixed(2)}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex justify-end gap-2">
+                    <Link
+                        href="/purchase-orders"
+                        className="rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
+                    >
+                        Cancel
+                    </Link>
+                    <button
+                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        onClick={handleSubmit}
+                        disabled={saving}
+                    >
+                        {saving ? 'Saving…' : 'Create Purchase Order'}
+                    </button>
+                </div>
+            </Container>
+
         </div>
     );
 }

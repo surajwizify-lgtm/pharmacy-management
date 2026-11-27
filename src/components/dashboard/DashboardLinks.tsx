@@ -2,7 +2,7 @@
 import React from 'react'
 import { Card, CardContent } from '../ui/card'
 import { useRouter } from 'next/navigation'
-import { Button, ButtonVarients } from '../ui/button';
+import { Button, ButtonVarients } from '@/components/common/button';
 
 
 export default function DashboardLinks() {

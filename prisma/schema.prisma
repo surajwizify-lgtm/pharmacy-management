@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  SUPER_ADMIN
   ADMIN
   PHARMACIST
   CASHIER
@@ -99,7 +100,11 @@ model User {
   bills            Bill[]
   auditLogs        AuditLog[]
   stockAdjustments StockAdjustment[]
+  pharmacyId       Int?
+  pharmacy         Pharmacy?         @relation(fields: [pharmacyId], references: [id])
 
+  // @@unique([pharmacyId, username])
+  @@index([pharmacyId])
   @@map("users")
 }
 
@@ -137,16 +142,20 @@ model Manufacturer {
 
 model Location {
   id          Int          @id @default(autoincrement())
-  name        String       @db.VarChar(100) // e.g. "Rack A1", "Shelf 3-B"
-  code        String?      @unique @db.VarChar(20) // short scannable code, e.g. "A1-03"
+  name        String       @db.VarChar(100)
+  code        String?      @db.VarChar(20)
   type        LocationType @default(RACK)
   description String?      @db.VarChar(300)
   active      Boolean      @default(true)
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
-  batches Batch[]
+  batches    Batch[]
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
+  @@unique([pharmacyId, code])
+  @@index([pharmacyId])
   @@index([name])
   @@index([code])
   @@map("locations")
@@ -178,7 +187,10 @@ model Supplier {
   purchaseInvoices PurchaseInvoice[]
   payments         SupplierPayment[]
   supplierReturns  SupplierReturn[]
+  pharmacyId       Int
+  pharmacy         Pharmacy          @relation(fields: [pharmacyId], references: [id])
 
+  @@index([pharmacyId])
   @@map("suppliers")
 }
 
@@ -236,7 +248,10 @@ model Product {
   purchaseOrderItems   PurchaseOrderItem[]
   supplierReturnItems  SupplierReturnItem[]
   stockAdjustments     StockAdjustment[]
+  pharmacyId           Int
+  pharmacy             Pharmacy              @relation(fields: [pharmacyId], references: [id])
 
+  @@index([pharmacyId])
   @@index([name])
   @@index([hsnCode])
   @@index([status])
@@ -260,6 +275,8 @@ model Batch {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
   version           Int       @default(0)
+  pharmacyId        Int
+  pharmacy          Pharmacy  @relation(fields: [pharmacyId], references: [id])
 
   billItems           BillItem[]
   returnItems         ReturnItem[]
@@ -267,6 +284,7 @@ model Batch {
   supplierReturnItems SupplierReturnItem[]
   stockAdjustments    StockAdjustment[]
 
+  @@index([pharmacyId])
   @@index([productId])
   @@index([expiryDate])
   @@index([batchNumber])
@@ -277,7 +295,7 @@ model Batch {
 
 model PurchaseOrder {
   id           Int                 @id @default(autoincrement())
-  poNumber     String              @unique @map("po_number")
+  poNumber     String              @map("po_number")
   supplierId   Int                 @map("supplier_id")
   supplier     Supplier            @relation(fields: [supplierId], references: [id])
   status       PurchaseOrderStatus @default(DRAFT)
@@ -289,7 +307,11 @@ model PurchaseOrder {
 
   items            PurchaseOrderItem[]
   purchaseInvoices PurchaseInvoice[]
+  pharmacyId       Int
+  pharmacy         Pharmacy            @relation(fields: [pharmacyId], references: [id])
 
+  @@unique([pharmacyId, poNumber])
+  @@index([pharmacyId])
   @@map("purchase_orders")
 }
 
@@ -310,14 +332,14 @@ model PurchaseOrderItem {
 model PurchaseInvoice {
   id              Int            @id @default(autoincrement())
   invoiceNumber   String         @map("invoice_number") @db.VarChar(100)
-  grnNumber       String         @unique @map("grn_number")
+  grnNumber       String         @map("grn_number")
   supplierId      Int            @map("supplier_id")
   supplier        Supplier       @relation(fields: [supplierId], references: [id])
   purchaseOrderId Int?           @map("purchase_order_id")
   purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
 
   invoiceDate  DateTime @default(now()) @map("invoice_date")
-  isInterState Boolean  @default(false) @map("is_inter_state") // IGST vs CGST+SGST
+  isInterState Boolean  @default(false) @map("is_inter_state")
 
   subtotal      Decimal @db.Decimal(12, 2)
   totalDiscount Decimal @default(0) @map("total_discount") @db.Decimal(12, 2)
@@ -337,7 +359,11 @@ model PurchaseInvoice {
   payments        SupplierPayment[]
   supplierReturns SupplierReturn[]
   gstLedgerEntry  GstLedgerEntry?
+  pharmacy        Pharmacy              @relation(fields: [pharmacyId], references: [id])
+  pharmacyId      Int
 
+  @@unique([pharmacyId, grnNumber])
+  @@index([pharmacyId])
   @@index([supplierId])
   @@index([purchaseOrderId])
   @@index([invoiceDate])
@@ -391,7 +417,11 @@ model SupplierReturn {
 
   items          SupplierReturnItem[]
   gstLedgerEntry GstLedgerEntry?
+  pharmacy       Pharmacy             @relation(fields: [pharmacyId], references: [id])
+  pharmacyId     Int
 
+  @@unique([pharmacyId, returnNumber])
+  @@index([pharmacyId])
   @@index([supplierId])
   @@index([purchaseInvoiceId])
   @@map("supplier_returns")
@@ -449,7 +479,11 @@ model StockAdjustment {
   approvedById     Int?             @map("approved_by_id")
   approvedBy       User?            @relation(fields: [approvedById], references: [id])
   createdAt        DateTime         @default(now()) @map("created_at")
+  pharmacy         Pharmacy         @relation(fields: [pharmacyId], references: [id])
+  pharmacyId       Int
 
+  @@unique([pharmacyId, adjustmentNumber])
+  @@index([pharmacyId])
   @@index([productId])
   @@index([batchId])
   @@map("stock_adjustments")
@@ -464,25 +498,31 @@ model Doctor {
 
   bills Bill[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
+  @@index([pharmacyId])
   @@index([name])
   @@map("doctors")
 }
 
 model Hospital {
-  id      Int     @id @default(autoincrement())
-  name    String  @db.VarChar(200)
-  address String? @db.VarChar(300)
-  phone   String? @db.VarChar(20)
-  gstin   String? @unique @db.VarChar(15)
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(200)
+  address    String?  @db.VarChar(300)
+  phone      String?  @db.VarChar(20)
+  gstin      String?  @unique @db.VarChar(15)
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   bills Bill[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([pharmacyId])
   @@index([name])
   @@map("hospitals")
 }
@@ -490,7 +530,7 @@ model Hospital {
 model Customer {
   id      Int     @id @default(autoincrement())
   name    String  @db.VarChar(200)
-  phone   String? @unique @db.VarChar(20)
+  phone   String? @db.VarChar(20)
   email   String? @db.VarChar(150)
   address String? @db.VarChar(300)
   gstin   String? @db.VarChar(15)
@@ -502,9 +542,13 @@ model Customer {
 
   bills Bill[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
+  @@unique([pharmacyId, phone])
+  @@index([pharmacyId])
   @@index([name])
   @@index([phone])
   @@map("customers")
@@ -512,7 +556,7 @@ model Customer {
 
 model Bill {
   id         Int      @id @default(autoincrement())
-  billNumber String   @unique @map("bill_number") @db.VarChar(50)
+  billNumber String   @map("bill_number") @db.VarChar(50)
   billDate   DateTime @default(now()) @map("bill_date")
 
   cashierId Int  @map("cashier_id")
@@ -554,7 +598,11 @@ model Bill {
   payments       Payment[]
   returns        Return[]
   gstLedgerEntry GstLedgerEntry?
+  pharmacyId     Int
+  pharmacy       Pharmacy        @relation(fields: [pharmacyId], references: [id])
 
+  @@unique([pharmacyId, billNumber])
+  @@index([pharmacyId])
   @@index([billDate])
   @@index([cashierId])
   @@index([doctorId])
@@ -637,21 +685,27 @@ model GstFilingPeriod {
   filed          Boolean   @default(false)
   filedAt        DateTime? @map("filed_at")
   createdAt      DateTime  @default(now()) @map("created_at")
+  pharmacyId     Int
+  pharmacy       Pharmacy  @relation(fields: [pharmacyId], references: [id])
 
+  @@index([pharmacyId])
   @@map("gst_filing_periods")
 }
 
 model AuditLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int?     @map("user_id")
-  user      User?    @relation(fields: [userId], references: [id])
-  action    String   @db.VarChar(100)
-  entity    String   @db.VarChar(100)
-  entityId  Int?     @map("entity_id")
-  details   String?
-  ipAddress String?  @map("ip_address") @db.VarChar(45)
-  createdAt DateTime @default(now()) @map("created_at")
+  id         Int      @id @default(autoincrement())
+  userId     Int?     @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String   @db.VarChar(100)
+  entity     String   @db.VarChar(100)
+  entityId   Int?     @map("entity_id")
+  details    String?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
+  @@index([pharmacyId])
   @@index([userId])
   @@index([entity, entityId])
   @@map("audit_logs")
@@ -667,8 +721,10 @@ model GstLedgerEntry {
   supplierReturnId Int?            @unique @map("supplier_return_id")
   supplierReturn   SupplierReturn? @relation(fields: [supplierReturnId], references: [id])
 
-  billId Int?  @unique @map("bill_id")
-  bill   Bill? @relation(fields: [billId], references: [id])
+  billId     Int?     @unique @map("bill_id")
+  bill       Bill?    @relation(fields: [billId], references: [id])
+  pharmacyId Int
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id])
 
   returnId   Int?    @unique @map("return_id")
   saleReturn Return? @relation(fields: [returnId], references: [id])
@@ -680,7 +736,34 @@ model GstLedgerEntry {
   totalGst     Decimal  @map("total_gst") @db.Decimal(12, 2)
   entryDate    DateTime @default(now()) @map("entry_date")
 
+  @@index([pharmacyId])
   @@index([type])
   @@index([entryDate])
   @@map("gst_ledger_entries")
+}
+
+model Pharmacy {
+  id Int @id @default(autoincrement())
+
+  name    String
+  gstin   String
+  phone   String?
+  address String?
+
+  users            User[]
+  products         Product[]
+  suppliers        Supplier[]
+  customers        Customer[]
+  locations        Location[]
+  purchaseOrders   PurchaseOrder[]
+  purchaseInvoices PurchaseInvoice[]
+  bills            Bill[]
+  batches          Batch[]
+  doctors          Doctor[]
+  hospitals        Hospital[]
+  gstLedgerEntries GstLedgerEntry[]
+  gstFilingPeriods GstFilingPeriod[]
+  auditLogs        AuditLog[]
+  supplierReturns  SupplierReturn[]
+  stockAdjustments StockAdjustment[]
 }

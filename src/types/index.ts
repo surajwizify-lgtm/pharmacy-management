@@ -1,19 +1,11 @@
-export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER';
+import { Pharmacy, Role } from "@prisma/client";
+
+// export type Role = 'ADMIN' | 'PHARMACIST' | 'CASHIER' | 'SUPER_ADMIN';
 export type productStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'OTHER';
 
-// export interface Batch {
-//   id: number;
-//   productId: number;
-//   batchNumber: string;
-//   expiryDate: string;
-//   purchasePrice: string;
-//   sellingPrice: string;
-//   quantityAvailable: number;
-//   version: number;
-//   product?: product;
-// }
+
 export interface Batch {
   id: number;
   productId: number;
@@ -28,26 +20,60 @@ export interface Batch {
   version: number;
 }
 
+
 export interface product {
   id: number;
+
   name: string;
-  manufacturer: string;
-  category: string | null;
+  genericName: string | null;
+
+  manufacturer: string | null;
+  manufacturerId: number | null;
+
+  categoryId: number | null;
+  category: ProductCategory | null;
+
   barcode: string | null;
-  hsnCode: string;
+  hsnCode: string | null;
+
   gstPercentage: string;
   gstType: 'INCLUSIVE' | 'EXCLUSIVE';
-  prescriptionRequired: boolean;
-  status: productStatus;
+
   mrp: number;
   cp: number;
   sp: number;
-  genericName?: string;
+
+  unit: string;
+  packSize: string | null;
+  defaultMrp: number;
+  reorderLevel: number;
+  rackLocation: string | null;
+
+  scheduleType: string;
+
+  prescriptionRequired: boolean;
+  tracksExpiry: boolean;
+
+  attributes: unknown | null;
+
+  status: productStatus;
+
   createdAt: string;
   updatedAt: string;
+
   version: number;
+
+  pharmacyId: number;
+
   batches: Batch[];
+
   totalStock?: number;
+}
+
+export interface ProductCategory {
+  id: number;
+  name: string;
+  parentId: number | null;
 }
 
 export interface BillItem {
@@ -66,29 +92,7 @@ export interface BillItem {
   product?: product;
 }
 
-// export interface Bill {
-//   id: number;
-//   billNumber: string;
-//   billDate: string;
-//   cashierId: number;
-//   customerName: string | null;
-//   customerPhone: string | null;
-//   customerGstin: string | null;
-//   ipOp: string | null;
-//   doctorId: number | null;
-//   hospitalId: number | null;
-//   isInterState: boolean;
-//   subtotal: string;
-//   totalCgst: string;
-//   totalSgst: string;
-//   totalIgst: string;
-//   totalGst: string;
-//   totalAmount: string;
-//   paymentStatus: PaymentStatus;
-//   billItems: BillItem[];
-//   payments?: { id: number; amount: string; method: PaymentMethod; paidAt: string }[];
-//   cashier?: AppUser;
-// }
+
 export interface Bill {
   id: number;
   billNumber: string;
@@ -146,6 +150,7 @@ export interface AppUser {
   username: string;
   fullName: string;
   role: Role;
+  pharmacy?: Pharmacy;
   active: boolean;
-  createdAt: string;
+  createdAt: Date;
 }

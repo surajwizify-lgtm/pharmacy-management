@@ -1,13 +1,12 @@
-import Link from "next/link";
+// app/purchase-orders/manufacturers/page.tsx
 import { prisma } from "@/lib/prisma";
 import { Prisma, SupplierStatus } from "@prisma/client";
-import DeleteManufacturerButton from "@/components/DeleteManufacturerButton";
 import PageHeader from "@/components/common/Header";
 import HeaderButton from "@/components/common/HeaderButton";
 import Container from "@/components/common/Container";
+import ManufacturersTable from "./ManufacturersTable";
+import type { Manufacturer } from "./ManufacturersTable";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 export const dynamic = "force-dynamic";
 
 export default async function ManufacturerListPage({
@@ -32,18 +31,24 @@ export default async function ManufacturerListPage({
             : {}),
     };
 
-    const manufacturers = await prisma.manufacturer.findMany({
+    const rows = await prisma.manufacturer.findMany({
         where,
         orderBy: { name: "asc" },
     });
 
+    const manufacturers: Manufacturer[] = rows.map((m) => ({
+        id: m.id,
+        name: m.name,
+        contactPerson: m.contactPerson,
+        phone: m.phone,
+        email: m.email,
+        status: m.status,
+    }));
+
     return (
         <div className="">
-            <PageHeader
-                header={`Manufacturers`}
-                subheader="Manage All Manufatures Here"
-            >
-                <HeaderButton text="New Manufacturer" href='/purchase-orders/manufacturers/new' />
+            <PageHeader header="Manufacturers" subheader="Manage All Manufatures Here">
+                <HeaderButton text="New Manufacturer" href="/purchase-orders/manufacturers/new" />
             </PageHeader>
 
             <Container>
@@ -72,77 +77,8 @@ export default async function ManufacturerListPage({
                     </button>
                 </form>
 
-                <div className="overflow-x-auto border rounded-md">
-                    <Table className="table-fixed">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Contact Person</TableHead>
-                                <TableHead>Phone</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-
-                        <TableBody>
-                            {manufacturers.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6}>
-                                        No manufacturers found.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                manufacturers.map((m) => (
-                                    <TableRow key={m.id}>
-                                        <TableCell>
-                                            {m.name}
-                                        </TableCell>
-
-                                        <TableCell>
-                                            {m.contactPerson || "-"}
-                                        </TableCell>
-
-                                        <TableCell>
-                                            {m.phone || "-"}
-                                        </TableCell>
-
-                                        <TableCell>
-                                            {m.email || "-"}
-                                        </TableCell>
-
-                                        <TableCell>
-                                            <span
-                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs ${m.status === "ACTIVE"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-gray-100 text-gray-600"
-                                                    }`}
-                                            >
-                                                {m.status}
-                                            </span>
-                                        </TableCell>
-
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Button variant="link" >
-                                                    <Link href={`/purchase-orders/manufacturers/${m.id}`}>
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-
-                                                <DeleteManufacturerButton
-                                                    id={m.id}
-                                                    name={m.name}
-                                                />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </Container >
-        </div >
+                <ManufacturersTable data={manufacturers} />
+            </Container>
+        </div>
     );
 }

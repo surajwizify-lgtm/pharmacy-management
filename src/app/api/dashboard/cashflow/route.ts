@@ -1,6 +1,7 @@
 // src/app/api/dashboard/cashflow/route.ts
 import { prisma } from '@/lib/prisma';
-import { requireSession, withErrorHandling } from '@/lib/api-utils';
+import { requireSession, withErrorHandling, notFound } from '@/lib/api-utils';
+import { Role } from '@prisma/client';
 
 function monthKey(d: Date) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -8,10 +9,21 @@ function monthKey(d: Date) {
 
 export async function GET(req: Request) {
     return withErrorHandling(async () => {
-        await requireSession();
+        const session = await requireSession();
 
         const { searchParams } = new URL(req.url);
         const months = Math.min(Math.max(Number(searchParams.get('months') ?? 12), 1), 24);
+
+        // SUPER_ADMIN can inspect a specific pharmacy via ?pharmacyId=
+        const pharmacyIdParam = searchParams.get('pharmacyId');
+        const pharmacyId =
+            session.user.role === Role.SUPER_ADMIN && pharmacyIdParam
+                ? Number(pharmacyIdParam)
+                : session.user.pharmacyId;
+
+        if (!pharmacyId) {
+            throw notFound('No pharmacy associated with this user');
+        }
 
         const start = new Date();
         start.setMonth(start.getMonth() - (months - 1));
@@ -19,12 +31,15 @@ export async function GET(req: Request) {
         start.setHours(0, 0, 0, 0);
 
         const [inflowPayments, outflowPayments] = await Promise.all([
+            // Payment has no pharmacyId of its own — scope via parent Bill
             prisma.payment.findMany({
-                where: { paidAt: { gte: start } },
+                where: { paidAt: { gte: start }, bill: { pharmacyId } },
                 select: { amount: true, paidAt: true },
             }),
+            // SupplierPayment has no pharmacyId of its own — scope via parent Supplier
+            // (not purchaseInvoice, since purchaseInvoiceId is optional on this model)
             prisma.supplierPayment.findMany({
-                where: { paidAt: { gte: start } },
+                where: { paidAt: { gte: start }, supplier: { pharmacyId } },
                 select: { amount: true, paidAt: true },
             }),
         ]);

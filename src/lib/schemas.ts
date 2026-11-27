@@ -15,6 +15,7 @@ export const createUserSchema = z.object({
   password: z.string().min(8),
   fullName: z.string().min(1),
   role: z.nativeEnum(Role),
+  pharmacyId: z.string()
 });
 
 export const createproductSchema = z.object({
@@ -123,4 +124,33 @@ export const createSalesReturnSchema = z.object({
 export const recordPaymentSchema = z.object({
   amount: z.number().positive(),
   method: z.nativeEnum(PaymentMethod),
+});
+
+export const itemSchema = z.object({
+  productId: z.number().int().positive(),
+  batchNumber: z.string().min(1),
+  manufactureDate: z.string().optional(),
+  expiryDate: z.string().min(1),
+  quantity: z.number().int().positive(),
+  freeQuantity: z.number().int().min(0).default(0),
+  purchaseRate: z.number().min(0),
+  mrp: z.number().min(0),
+  sellingPrice: z.number().min(0),
+  discountPercent: z.number().min(0).max(100).default(0),
+  hsnCode: z.string().min(1),
+  gstPercentage: z.number().min(0).max(28),
+  location: z.string().optional(),
+});
+
+export const bodySchema = z.object({
+  supplierId: z.number().int().positive(),
+  // poNumber: z.string().min(1),
+  // orderDate: z.string().min(1),
+  // expectedDate: z.string().optional(),
+  notes: z.string().optional(),
+  invoiceNumber: z.string().min(1),
+  grnNumber: z.string().min(1),
+  invoiceDate: z.string().min(1),
+  isInterState: z.boolean().default(false),
+  items: z.array(itemSchema).min(1),
 });
