@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
 import PurchaseInvoicesTable from '@/components/purchase-orders/purchase-invoices/PurchaseInvoiceTable';
+import Section from '@/components/common/Section';
 
 export default async function PurchaseInvoicesPage() {
     const session = await getServerSession(authOptions);
@@ -62,11 +63,13 @@ export default async function PurchaseInvoicesPage() {
         <div className="">
             <PageHeader
                 header={`Purchase Invoices`}
-                subheader="View All Purchase Invoices"
+                subheader="Create a new supplier invoice by entering invoice details, adding purchased items with batch info, applying GST, and tracking stock in real time."
             >
                 <HeaderButton text="Create Invoice" href="/purchase-orders/purchase-invoices/new" />
             </PageHeader>
-            <PurchaseInvoicesTable suppliers={suppliers} invoices={invoices} />
+            <Section>
+                <PurchaseInvoicesTable suppliers={suppliers} invoices={invoices} />
+            </Section>
         </div>
     );
 }

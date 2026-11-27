@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { SupplierStatus } from "@prisma/client";
 import DeleteManufacturerButton from "@/components/DeleteManufacturerButton";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/common/button";
 import { DataTable } from "@/components/data-table/data-table";
 
 export interface Manufacturer {

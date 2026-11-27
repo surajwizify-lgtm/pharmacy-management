@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/common/button';
 import { ArrowBigLeft } from 'lucide-react';
 import BackButton from './BackButton';
 import { useDispatch } from 'react-redux';

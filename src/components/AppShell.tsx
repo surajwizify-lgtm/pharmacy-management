@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/sidebar";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toggleSideBar } from "@/store/slices/uiSlice";
+import { Toaster } from "sonner";
 
 export default function AppShell({
     children,
@@ -35,6 +36,7 @@ export default function AppShell({
             >
                 {children}
             </main>
+            <Toaster position="top-right" />
         </div>
     );
 }

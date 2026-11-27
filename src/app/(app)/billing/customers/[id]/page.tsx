@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import DetailPageHeader from "@/components/common/DetailPageHeader";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/common/button";
 import { Printer } from "lucide-react";
 import Container from "@/components/common/Container";
 import PrintBillButton from "@/components/billing/PrintBillButton";

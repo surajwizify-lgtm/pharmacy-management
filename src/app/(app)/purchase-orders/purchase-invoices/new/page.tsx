@@ -1,269 +1,53 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { apiFetch, ApiClientError } from '@/lib/api-client';
 import Container from '@/components/common/Container';
 import DetailPageHeader from '@/components/common/DetailPageHeader';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import Button from '@/components/Button';
-import { Copy, Printer, Trash2 } from 'lucide-react';
+import { Copy, Printer, Search, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AppSelect from '@/components/common/AppSelect';
 import { DatePicker } from '@/components/ui/date-picker';
-
-type Supplier = { id: number; name: string };
-type Product = {
-    id: number;
-    name: string;
-    hsnCode: string | null;
-    gstPercentage: number;
-};
-
-type ItemRow = {
-    productId: number | '';
-    batchNumber: string;
-    manufactureDate: string;
-    expiryDate: string;
-    quantity: string;
-    freeQuantity: string;
-    purchaseRate: string;
-    mrp: string;
-    sellingPrice: string;
-    discountPercent: string;
-    hsnCode: string;
-    gstPercentage: string;
-    location: string;
-};
-type Location = { id: number; name: string; code: string | null };
-const EMPTY_ITEM: ItemRow = {
-    productId: '',
-    batchNumber: '',
-    manufactureDate: '',
-    expiryDate: '',
-    quantity: '',
-    freeQuantity: '0',
-    purchaseRate: '',
-    mrp: '',
-    sellingPrice: '',
-    discountPercent: '0',
-    hsnCode: '',
-    gstPercentage: '',
-    location: '',
-};
-
-function num(v: string) {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-}
-
-function calcLine(item: ItemRow, isInterState: boolean) {
-    const qty = num(item.quantity);
-    const rate = num(item.purchaseRate);
-    const discountPct = num(item.discountPercent);
-    const gstPct = num(item.gstPercentage);
-
-    const gross = qty * rate;
-    const discountAmt = gross * (discountPct / 100);
-    const taxableValue = gross - discountAmt;
-    const gstAmount = taxableValue * (gstPct / 100);
-
-    const cgstAmount = isInterState ? 0 : gstAmount / 2;
-    const sgstAmount = isInterState ? 0 : gstAmount / 2;
-    const igstAmount = isInterState ? gstAmount : 0;
-
-    const totalAmount = taxableValue + gstAmount;
-
-    return { taxableValue, gstAmount, cgstAmount, sgstAmount, igstAmount, totalAmount };
-}
-
-function Cell({
-    type = 'text',
-    value,
-    onChange,
-    required,
-    min,
-    max,
-    step,
-    placeholder,
-    className = '',
-}: {
-    type?: string;
-    value: string | number;
-    onChange: (v: string) => void;
-    required?: boolean;
-    min?: number;
-    max?: number;
-    step?: string;
-    placeholder?: string;
-    className?: string;
-}) {
-    return (
-        <input
-            type={type}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            required={required}
-            min={min}
-            max={max}
-            step={step}
-            placeholder={placeholder}
-            className={`w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 ${className}`}
-        />
-    );
-}
+import { usePurchaseForm } from '@/hooks/usePurchaseForm';
+import { Cell } from '@/components/purchase-orders/purchase-invoices/cell';
 
 export default function NewPurchasePage() {
-    const router = useRouter();
-    const [locations, setLocations] = useState<Location[]>([]);
-    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-    const [products, setProducts] = useState<Product[]>([]);
-
-    const [supplierId, setSupplierId] = useState<number | ''>('');
-    const [poNumber, setPoNumber] = useState('');
-    const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
-    const [expectedDate, setExpectedDate] = useState('');
-    const [notes, setNotes] = useState('');
-
-    const [invoiceNumber, setInvoiceNumber] = useState('');
-    const [grnNumber, setGrnNumber] = useState('');
-    const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().slice(0, 10));
-    const [isInterState, setIsInterState] = useState(false);
-
-    const [items, setItems] = useState<ItemRow[]>([{ ...EMPTY_ITEM }]);
-
-    const [error, setError] = useState<string | null>(null);
-    const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        apiFetch<Supplier[]>('/api/suppliers').then(setSuppliers).catch(() => { });
-        apiFetch<Product[]>('/api/products').then(setProducts).catch(() => { });
-    }, []);
-
-    function updateItem(index: number, patch: Partial<ItemRow>) {
-        setItems((prev) => prev.map((it, i) => (i === index ? { ...it, ...patch } : it)));
-    }
-
-    function onProductChange(index: number, productId: number) {
-        const p = products.find((p) => p.id === productId);
-        updateItem(index, {
-            productId,
-            hsnCode: p?.hsnCode ?? '',
-            gstPercentage: p ? String(p.gstPercentage) : '',
-        });
-    }
-
-    function addItem() {
-        setItems((prev) => [...prev, { ...EMPTY_ITEM }]);
-    }
-
-    function removeItem(index: number) {
-        setItems((prev) => prev.filter((_, i) => i !== index));
-    }
-
-    function duplicateItem(index: number) {
-        setItems((prev) => {
-            const source = prev[index];
-            const clone: ItemRow = {
-                ...source,
-                batchNumber: '',
-                manufactureDate: '',
-                expiryDate: '',
-                quantity: '',
-                freeQuantity: '0',
-            };
-            const next = [...prev];
-            next.splice(index + 1, 0, clone);
-            return next;
-        });
-    }
-
-    const lineCalcs = useMemo(() => items.map((it) => calcLine(it, isInterState)), [items, isInterState]);
-
-    const totals = useMemo(() => {
-        return lineCalcs.reduce(
-            (acc, c) => ({
-                subtotal: acc.subtotal + c.taxableValue,
-                totalCgst: acc.totalCgst + c.cgstAmount,
-                totalSgst: acc.totalSgst + c.sgstAmount,
-                totalIgst: acc.totalIgst + c.igstAmount,
-                totalGst: acc.totalGst + c.gstAmount,
-                totalAmount: acc.totalAmount + c.totalAmount,
-            }),
-            { subtotal: 0, totalCgst: 0, totalSgst: 0, totalIgst: 0, totalGst: 0, totalAmount: 0 }
-        );
-    }, [lineCalcs]);
-
-    async function handleSubmit(e: FormEvent) {
-        e.preventDefault();
-        setError(null);
-
-        if (!supplierId) return setError('Select a supplier');
-        if (!poNumber || !invoiceNumber || !grnNumber) return setError('PO number, invoice number, and GRN number are required');
-        if (items.length === 0 || items.some((it) => !it.productId)) return setError('Every line needs a product');
-
-        setSaving(true);
-        try {
-            const payload = {
-                supplierId,
-                poNumber,
-                orderDate,
-                expectedDate: expectedDate || undefined,
-                notes: notes || undefined,
-
-                invoiceNumber,
-                grnNumber,
-                invoiceDate,
-                isInterState,
-
-                subtotal: totals.subtotal,
-                totalCgst: totals.totalCgst,
-                totalSgst: totals.totalSgst,
-                totalIgst: totals.totalIgst,
-                totalGst: totals.totalGst,
-                totalAmount: totals.totalAmount,
-
-                items: items.map((it, i) => ({
-                    productId: it.productId,
-                    batchNumber: it.batchNumber,
-                    manufactureDate: it.manufactureDate || undefined,
-                    expiryDate: it.expiryDate,
-                    quantity: num(it.quantity),
-                    freeQuantity: num(it.freeQuantity),
-                    purchaseRate: num(it.purchaseRate),
-                    mrp: num(it.mrp),
-                    sellingPrice: num(it.sellingPrice),
-                    discountPercent: num(it.discountPercent),
-                    hsnCode: it.hsnCode,
-                    gstPercentage: num(it.gstPercentage),
-                    cgstAmount: lineCalcs[i].cgstAmount,
-                    sgstAmount: lineCalcs[i].sgstAmount,
-                    igstAmount: lineCalcs[i].igstAmount,
-                    taxableValue: lineCalcs[i].taxableValue,
-                    totalAmount: lineCalcs[i].totalAmount,
-                    location: it.location || undefined,
-                })),
-            };
-
-            await apiFetch('/api/purchase-invoices/withpo', { method: 'POST', body: JSON.stringify(payload) });
-            router.push('/purchase-orders/purchase-invoices');
-        } catch (err) {
-            setError(err instanceof ApiClientError ? err.message : 'Something went wrong');
-        } finally {
-            setSaving(false);
-        }
-    }
-    useEffect(() => {
-        apiFetch<Supplier[]>('/api/suppliers').then(setSuppliers).catch(() => { });
-        apiFetch<Product[]>('/api/products').then(setProducts).catch(() => { });
-        apiFetch<Location[]>('/api/locations').then(setLocations).catch(() => { });
-    }, []);
-
+    const {
+        locations,
+        suppliers,
+        products,
+        supplierId, setSupplierId,
+        // poNumber, 
+        // setPoNumber,
+        // orderDate, 
+        // setOrderDate,
+        // expectedDate, 
+        // setExpectedDate,
+        notes, setNotes,
+        invoiceNumber, setInvoiceNumber,
+        grnNumber, setGrnNumber,
+        invoiceDate, setInvoiceDate,
+        isInterState, setIsInterState,
+        items,
+        error,
+        saving,
+        lineCalcs,
+        totals,
+        updateItem,
+        onProductChange,
+        addItem,
+        removeItem,
+        duplicateItem,
+        handleSubmit,
+        search, setSearch,
+        results, setResults,
+    } = usePurchaseForm();
     return (
-        <div>
+        <div className='h-screen overflow-clip'>
             <DetailPageHeader
+            
                 backHref="/products"
                 backLabel="Back to products"
                 title={'Create PO & Invoice Togather'}
@@ -279,44 +63,13 @@ export default function NewPurchasePage() {
                 actions={
                     true && (
                         <div>
-                            <Button
-                                variant={'success'}
-                                disabled={saving}
-                                onClick={() => handleSubmit}
 
-                            >
-                                {saving ? 'Submitting…' : 'Submit'}
-                            </Button>
                         </div>
                     )
                 }
             />
             <Container className="">
-                <form className="flex h-[calc(100vh-2rem)] flex-col">
-                    {/* <div className="flex shrink-0 items-center justify-between border-b border-slate-200 pb-3">
-                        <div>
-                            <h1 className="text-xl font-bold text-slate-900">New purchase</h1>
-                            <p className="text-xs text-slate-500">Creates the purchase order and receives it in one go.</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {error && <p className="mr-2 text-xs text-red-600">{error}</p>}
-                            <button
-                                type="button"
-                                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                                onClick={() => router.back()}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="rounded-md bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                            >
-                                {saving ? 'Saving…' : 'Create purchase order & invoice'}
-                            </button>
-
-                        </div>
-                    </div> */}
+                <form className="flex h-[calc(100vh-7rem)] flex-col">
 
                     <div className="grid shrink-0 grid-cols-2 gap-x-6 gap-y-2 border-b border-slate-200 py-3 lg:grid-cols-4 xl:grid-cols-8">
                         <div className="xl:col-span-2">
@@ -334,22 +87,22 @@ export default function NewPurchasePage() {
                             </select>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">PO number</label>
                             <Cell value={poNumber} onChange={setPoNumber} required />
-                        </div>
-                        <div>
+                        </div> */}
+                        {/* <div>
                             <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Order date</label>
                             <Cell type="date" value={orderDate} onChange={setOrderDate} required />
                             <DatePicker
                                 onChange={setOrderDate}
                                 value={orderDate}
                             />
-                        </div>
-                        <div>
+                        </div> */}
+                        {/* <div>
                             <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Expected date</label>
                             <Cell type="date" value={expectedDate} onChange={setExpectedDate} />
-                        </div>
+                        </div> */}
                         <div>
                             <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Invoice no.</label>
                             <Cell value={invoiceNumber} onChange={setInvoiceNumber} required />
@@ -377,6 +130,43 @@ export default function NewPurchasePage() {
                             </label>
                         </div>
                     </div>
+                    <div>
+                        <div className="relative col-span-3  w-full shrink-0">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+                            <Input
+                                id="productSearch"
+                                // label=""
+                                type="text"
+                                placeholder="Search products"
+                                className='pl-9'
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                            {results.length > 0 && (
+                                <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] shadow-xl">
+                                    {results.map((m) => (
+                                        <div key={m.id}>
+                                            {m.batches.map((b) => (
+                                                <button
+                                                    type="button"
+                                                    key={`${m.id}-${b.batchNumber}`}
+                                                    className="grid w-full grid-cols-6 items-center gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-[var(--color-bg-tertiary)]"
+                                                    onClick={() => { onProductChange(0, Number(m.id)), setSearch('') }}
+                                                >
+                                                    <span className="col-span-3 truncate text-sm font-medium text-[var(--text-primary)]">{m.name}</span>
+                                                    <span className="text-xs text-[var(--text-secondary)]">{"Batch " + b.batchNumber}</span>
+                                                    <span className="text-xs text-[var(--text-secondary)]">{"Exp " + new Date(b.expiryDate).toLocaleDateString("en-IN")}</span>
+                                                    <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
+                                                        {b.quantityAvailable} in stock
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="flex min-h-0 flex-1 flex-col py-3">
                         <div className="mb-2 flex shrink-0 items-center justify-between">
@@ -388,14 +178,13 @@ export default function NewPurchasePage() {
                             </button>
                         </div>
 
-                        <div className="max-h-[500px] overflow-auto rounded-lg border border-[var(--color-bg-tertiary)]">
-                            <Table className="table-fixed w-full text-[11px]">
+                        <div className="max-h-[500px] overflow-auto ">
+                            <Table className="table-fixed [&_td]:h-px [&_th]:border-border [&_th]:border [&_td]:p-0 w-full text-[11px]">
                                 <TableHeader className="sticky top-0 z-10 ">
                                     <TableRow>
                                         <TableHead className="w-[14%]">Product</TableHead>
                                         <TableHead className="w-[8%]">Batch</TableHead>
-                                        <TableHead className="w-[8%]">Mfg</TableHead>
-                                        <TableHead className="w-[8%]">Expiry</TableHead>
+
                                         <TableHead className="w-[5%]">Qty</TableHead>
                                         <TableHead className="w-[5%]">Free</TableHead>
                                         <TableHead className="w-[7%]">Rate</TableHead>
@@ -405,7 +194,9 @@ export default function NewPurchasePage() {
                                         <TableHead className="w-[7%]">HSN</TableHead>
                                         <TableHead className="w-[6%]">GST %</TableHead>
                                         <TableHead className="w-[6%]">Rack</TableHead>
-                                        <TableHead className="w-[9%] text-right">Total</TableHead>
+                                        <TableHead className="w-[8%]">Mfg</TableHead>
+                                        <TableHead className="w-[8%]">Expiry</TableHead>
+                                        <TableHead className="w-[9%]">Total</TableHead>
                                         <TableHead className="w-[4%] text-center">Action</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -416,24 +207,14 @@ export default function NewPurchasePage() {
 
                                         return (
                                             <TableRow key={i}>
-                                                <TableCell>
-                                                    <AppSelect
-                                                        value={String(it.productId ?? "")}
-                                                        placeholder="Select Product"
-                                                        options={[
-                                                            { label: "Select...", value: "" },
-                                                            ...products.map((p) => ({
-                                                                label: p.name,
-                                                                value: String(p.id),
-                                                            })),
-                                                        ]}
-                                                        onChange={(value) => onProductChange(i, Number(value))}
-                                                    />
+                                                <TableCell className='overflow-visible'>
+
+                                                    {it.name}
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         value={it.batchNumber}
                                                         onChange={(e) =>
                                                             updateItem(i, { batchNumber: e.target.value })
@@ -441,31 +222,11 @@ export default function NewPurchasePage() {
                                                     />
                                                 </TableCell>
 
-                                                <TableCell>
-                                                    <Input
-                                                        size="sm"
-                                                        type="date"
-                                                        value={it.manufactureDate}
-                                                        onChange={(e) =>
-                                                            updateItem(i, { manufactureDate: e.target.value })
-                                                        }
-                                                    />
-                                                </TableCell>
+
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
-                                                        type="date"
-                                                        value={it.expiryDate}
-                                                        onChange={(e) =>
-                                                            updateItem(i, { expiryDate: e.target.value })
-                                                        }
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         value={it.quantity}
@@ -476,8 +237,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         value={it.freeQuantity}
@@ -488,8 +249,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -501,8 +262,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -514,8 +275,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         step="0.01"
@@ -527,8 +288,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         max={100}
@@ -541,8 +302,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         value={it.hsnCode}
                                                         onChange={(e) =>
                                                             updateItem(i, { hsnCode: e.target.value })
@@ -551,8 +312,8 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
-                                                    <Input
-                                                        size="sm"
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
                                                         type="number"
                                                         min={0}
                                                         max={28}
@@ -576,6 +337,27 @@ export default function NewPurchasePage() {
                                                             })),
                                                         ]}
                                                         onChange={(value) => updateItem(i, { location: value })}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
+                                                        type="date"
+                                                        value={it.manufactureDate}
+                                                        onChange={(e) =>
+                                                            updateItem(i, { manufactureDate: e.target.value })
+                                                        }
+                                                    />
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <input
+                                                        className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
+                                                        type="date"
+                                                        value={it.expiryDate}
+                                                        onChange={(e) =>
+                                                            updateItem(i, { expiryDate: e.target.value })
+                                                        }
                                                     />
                                                 </TableCell>
 
@@ -611,211 +393,29 @@ export default function NewPurchasePage() {
                                 </TableBody>
                             </Table>
                         </div>
-                        {/* <table className="w-full table-fixed border-collapse text-[11px]">
-                                <thead className="sticky top-0 z-10 bg-slate-50 text-[9px] uppercase tracking-wide text-slate-500">
-                                    <tr>
-                                        <th className="w-[14%] px-1 py-2 text-left font-semibold">Product</th>
-                                        <th className="w-[8%] px-1 py-2 text-left font-semibold">Batch</th>
-                                        <th className="w-[8%] px-1 py-2 text-left font-semibold">Mfg</th>
-                                        <th className="w-[8%] px-1 py-2 text-left font-semibold">Expiry</th>
-                                        <th className="w-[5%] px-1 py-2 text-left font-semibold">Qty</th>
-                                        <th className="w-[5%] px-1 py-2 text-left font-semibold">Free</th>
-                                        <th className="w-[7%] px-1 py-2 text-left font-semibold">Rate</th>
-                                        <th className="w-[7%] px-1 py-2 text-left font-semibold">MRP</th>
-                                        <th className="w-[7%] px-1 py-2 text-left font-semibold">Sell</th>
-                                        <th className="w-[6%] px-1 py-2 text-left font-semibold">Disc%</th>
-                                        <th className="w-[7%] px-1 py-2 text-left font-semibold">HSN</th>
-                                        <th className="w-[6%] px-1 py-2 text-left font-semibold">GST%</th>
-                                        <th className="w-[6%] px-1 py-2 text-left font-semibold">Rack</th>
-                                        <th className="w-[9%] px-1 py-2 text-right font-semibold">Total</th>
-                                        <th className="w-[4%] px-1 py-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {items.map((it, i) => {
-                                        const c = lineCalcs[i];
-                                        return (
-                                            <tr key={i} className="align-top hover:bg-slate-50">
-                                                <td className="px-1 py-1">
-                                                    <select
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                        value={it.productId}
-                                                        onChange={(e) => onProductChange(i, Number(e.target.value))}
-                                                        required
-                                                    >
-                                                        <option value="">Select…</option>
-                                                        {products.map((p) => (
-                                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="text"
-                                                        value={it.batchNumber}
-                                                        onChange={(e) => updateItem(i, { batchNumber: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="date"
-                                                        value={it.manufactureDate}
-                                                        onChange={(e) => updateItem(i, { manufactureDate: e.target.value })}
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[10px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="date"
-                                                        value={it.expiryDate}
-                                                        onChange={(e) => updateItem(i, { expiryDate: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[10px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        value={it.quantity}
-                                                        onChange={(e) => updateItem(i, { quantity: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        value={it.freeQuantity}
-                                                        onChange={(e) => updateItem(i, { freeQuantity: e.target.value })}
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        step="0.01"
-                                                        value={it.purchaseRate}
-                                                        onChange={(e) => updateItem(i, { purchaseRate: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        step="0.01"
-                                                        value={it.mrp}
-                                                        onChange={(e) => updateItem(i, { mrp: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        step="0.01"
-                                                        value={it.sellingPrice}
-                                                        onChange={(e) => updateItem(i, { sellingPrice: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        max={100}
-                                                        step="0.01"
-                                                        value={it.discountPercent}
-                                                        onChange={(e) => updateItem(i, { discountPercent: e.target.value })}
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="text"
-                                                        value={it.hsnCode}
-                                                        onChange={(e) => updateItem(i, { hsnCode: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min={0}
-                                                        max={28}
-                                                        step="0.01"
-                                                        value={it.gstPercentage}
-                                                        onChange={(e) => updateItem(i, { gstPercentage: e.target.value })}
-                                                        required
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    />
-                                                </td>
-                                                <td className="px-1 py-1">
-                                                    <select
-                                                        value={it.location}
-                                                        onChange={(e) => updateItem(i, { location: e.target.value })}
-                                                        className="w-full rounded border border-slate-200 bg-white px-1 py-1 text-[11px] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                    >
-                                                        <option value="">—</option>
-                                                        {locations.map((loc) => (
-                                                            <option key={loc.id} value={loc.id}>
-                                                                {loc.code ? `${loc.name} (${loc.code})` : loc.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="whitespace-nowrap px-1 py-1 text-right font-semibold text-slate-700">
-                                                    ₹{c.totalAmount.toFixed(2)}
-                                                </td>
-                                                <td className="px-1 py-1 text-center whitespace-nowrap">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => duplicateItem(i)}
-                                                        disabled={!it.productId}
-                                                        className="mr-1.5 text-blue-500 hover:underline disabled:cursor-not-allowed disabled:text-slate-300"
-                                                        aria-label="Add another batch for this product"
-                                                        title="Add another batch for this product"
-                                                    >
-                                                        ⧉
-                                                    </button>
-                                                    {items.length > 1 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeItem(i)}
-                                                            className="text-red-500 hover:underline"
-                                                            aria-label="Remove line"
-                                                        >
-                                                            ✕
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table> */}
-                        {/* </div> */}
+
                     </div>
-                    <div className="flex shrink-0 items-center justify-end gap-6 border-t border-slate-200 pt-3 text-xs">
+                    <div className="flex shrink-0 items-center justify-end gap-5 border-t border-slate-200 py-3 text-xs">
                         <span className="text-slate-500">Subtotal <span className="font-medium text-slate-700">₹{totals.subtotal.toFixed(2)}</span></span>
                         {isInterState ? (
                             <span className="text-slate-500">IGST <span className="font-medium text-slate-700">₹{totals.totalIgst.toFixed(2)}</span></span>
-                        ) : (
-                            <>
-                                <span className="text-slate-500">CGST <span className="font-medium text-slate-700">₹{totals.totalCgst.toFixed(2)}</span></span>
-                                <span className="text-slate-500">SGST <span className="font-medium text-slate-700">₹{totals.totalSgst.toFixed(2)}</span></span>
-                            </>
-                        )}
+                        )
+                            :
+                            (
+                                <>
+                                    <span className="text-slate-500">CGST <span className="font-medium text-slate-700">₹{totals.totalCgst.toFixed(2)}</span></span>
+                                    <span className="text-slate-500">SGST <span className="font-medium text-slate-700">₹{totals.totalSgst.toFixed(2)}</span></span>
+                                </>
+                            )}
                         <span className="text-sm font-semibold text-slate-900">Total ₹{totals.totalAmount.toFixed(2)}</span>
+                        <Button
+                            variant={'success'}
+                            disabled={saving}
+                            onClick={handleSubmit}
+
+                        >
+                            {saving ? 'Submitting…' : 'Submit'}
+                        </Button>
                     </div>
                 </form>
             </Container>
