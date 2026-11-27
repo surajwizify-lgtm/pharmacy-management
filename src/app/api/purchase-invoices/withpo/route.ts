@@ -4,37 +4,9 @@ import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Prisma, Role } from '@prisma/client';
+import { bodySchema, itemSchema } from '@/lib/schemas';
 
-const itemSchema = z.object({
-    productId: z.number().int().positive(),
-    batchNumber: z.string().min(1),
-    manufactureDate: z.string().optional(),
-    expiryDate: z.string().min(1),
-    quantity: z.number().int().positive(),
-    freeQuantity: z.number().int().min(0).default(0),
-    purchaseRate: z.number().min(0),
-    mrp: z.number().min(0),
-    sellingPrice: z.number().min(0),
-    discountPercent: z.number().min(0).max(100).default(0),
-    hsnCode: z.string().min(1),
-    gstPercentage: z.number().min(0).max(28),
-    location: z.string().optional(),
-});
 
-const bodySchema = z.object({
-    supplierId: z.number().int().positive(),
-    poNumber: z.string().min(1),
-    orderDate: z.string().min(1),
-    expectedDate: z.string().optional(),
-    notes: z.string().optional(),
-
-    invoiceNumber: z.string().min(1),
-    grnNumber: z.string().min(1),
-    invoiceDate: z.string().min(1),
-    isInterState: z.boolean().default(false),
-
-    items: z.array(itemSchema).min(1),
-});
 
 function calcLine(item: z.infer<typeof itemSchema>, isInterState: boolean) {
     const gross = item.quantity * item.purchaseRate;
@@ -72,17 +44,14 @@ export async function POST(req: NextRequest) {
     if (role !== 'ADMIN' && role !== 'PHARMACIST') {
         return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
-
     const pharmacyId = session.user.pharmacyId;
     if (!pharmacyId) {
         return NextResponse.json({ message: 'No pharmacy associated with this user' }, { status: 400 });
     }
-
     const json = await req.json().catch(() => null);
     if (!json) {
         return NextResponse.json({ message: 'Invalid JSON body' }, { status: 400 });
     }
-
     const parsed = bodySchema.safeParse(json);
     if (!parsed.success) {
         return NextResponse.json(
@@ -92,9 +61,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
-
     const lineCalcs = data.items.map((it) => calcLine(it, data.isInterState));
-
     const totals = lineCalcs.reduce(
         (acc, c) => ({
             subtotal: acc.subtotal + c.taxableValue,
@@ -133,31 +100,31 @@ export async function POST(req: NextRequest) {
                 : [];
             const locationIdByName = new Map(matchedLocations.map((l) => [l.name, l.id]));
 
-            const po = await tx.purchaseOrder.create({
-                data: {
-                    poNumber: data.poNumber,
-                    supplierId: data.supplierId,
-                    status: 'RECEIVED',
-                    orderDate: new Date(data.orderDate),
-                    expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
-                    notes: data.notes,
-                    pharmacyId,
-                    items: {
-                        create: data.items.map((i) => ({
-                            productId: i.productId,
-                            quantity: i.quantity,
-                            expectedRate: i.purchaseRate,
-                        })),
-                    },
-                },
-            });
+            // const po = await tx.purchaseOrder.create({
+            //     data: {
+            //         poNumber: data.poNumber,
+            //         supplierId: data.supplierId,
+            //         status: 'RECEIVED',
+            //         // orderDate: new Date(data.orderDate),
+            //         // expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
+            //         notes: data.notes,
+            //         pharmacyId,
+            //         items: {
+            //             create: data.items.map((i) => ({
+            //                 productId: i.productId,
+            //                 quantity: i.quantity,
+            //                 expectedRate: i.purchaseRate,
+            //             })),
+            //         },
+            //     },
+            // });
 
             const invoice = await tx.purchaseInvoice.create({
                 data: {
                     invoiceNumber: data.invoiceNumber,
                     grnNumber: data.grnNumber,
                     supplierId: data.supplierId,
-                    purchaseOrderId: po.id,
+                    // purchaseOrderId: po.id,
                     invoiceDate: new Date(data.invoiceDate),
                     isInterState: data.isInterState,
                     subtotal: totals.subtotal,
@@ -235,11 +202,11 @@ export async function POST(req: NextRequest) {
                 },
             });
 
-            return { po, invoice };
+            return { invoice };
         });
 
         return NextResponse.json(
-            { poId: result.po.id, invoiceId: result.invoice.id },
+            { invoiceId: result.invoice.id },
             { status: 201 }
         );
     } catch (err) {

@@ -1,6 +1,6 @@
 "use client"
 import PrintBillButton from "@/components/billing/PrintBillButton";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/common/button";
 import CreateDoctor from "@/components/doctor/CreateDoctor";
 import CreateHospital from "@/components/hospitals/CreateHospital";
 import Input from "@/components/Input";
@@ -26,6 +26,7 @@ interface CustomerOption {
 }
 
 type GstMode = 'EXCLUSIVE' | 'INCLUSIVE';
+
 interface DoctorOption {
     id: number;
     name: string;
@@ -286,6 +287,7 @@ export default function CreateBillPage() {
         setCustomerName(c.name);
         setShowCustomerSuggestions(false);
     }
+
     const ColGroup = () => (
         <colgroup>
             <col style={{ width: '250px' }} />
@@ -364,31 +366,21 @@ export default function CreateBillPage() {
         }, 250);
         return () => clearTimeout(t);
     }, [customerName]);
+
     useEffect(() => {
         dispatch(setCollapsed(true))
     }, [])
+
     return (
         <div>
             <div className="h-screen w-full overflow-hidden grid grid-rows-12 bg-[var(--color-bg-secondary)]">
                 <div className="row-span-12 grid grid-cols-12 min-h-0">
                     <div className="col-span-12 flex flex-col min-h-0 border-r border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)]">
-                        {/* <div className="flex items-center gap-3 border-b border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] px-5 py-3 shrink-0">
-                            <div onClick={() => { dispatch(setCollapsed(false)) }}>
-                                <BackButton />
-                            </div>
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--text-link)]/10">
-                                <ShoppingCart className="h-5 w-5 text-[var(--text-link)]" />
-                            </div>
-                            <div>
-                                <h1 className="text-lg font-semibold text-[var(--text-primary)] leading-tight">Customer Invoice</h1>
-                                <p className="text-xs text-[var(--text-secondary)]">Search products and build the bill</p>
-                            </div>
-                        </div> */}
                         <DetailPageHeader title="Customer Invoice" subtitle='Search products and build the bill'></DetailPageHeader>
                         <Container>
                             <section>
                                 <div className="col-span-3 flex min-h-0 flex-col p-3">
-                                    <div className="grid grid-cols-3 gap-4 border-b border-b-gray-300 pb-2">
+                                    <div className="grid grid-cols-4 gap-4">
                                         <div className="grid grid-cols-4 gap-2 border-r border-r-gray-300 pr-4">
                                             <div className="relative col-span-3" ref={customerBoxRef}>
                                                 <div className="mb-1 flex items-center justify-between">
@@ -447,6 +439,7 @@ export default function CreateBillPage() {
                                                 />
                                             </div>
                                         </div>
+
                                         <div className="relative border-r border-r-gray-300 pr-4 " ref={doctorBoxRef}>
                                             <div className="mb-1 flex items-center justify-between">
                                                 <label className="flex items-center gap-1.5 font-medium text-[var(--text-secondary)]">
@@ -497,7 +490,7 @@ export default function CreateBillPage() {
                                             )}
                                         </div>
 
-                                        <div className="relative " ref={hospitalBoxRef}>
+                                        <div className="relative border-r border-r-gray-300 pr-4" ref={hospitalBoxRef}>
                                             <div className="mb-1 flex items-center justify-between">
                                                 <label className="flex items-center gap-1.5 font-medium text-[var(--text-secondary)]">
                                                     <Building2 className="h-3.5 w-3.5" /> Referring hospital
@@ -546,71 +539,7 @@ export default function CreateBillPage() {
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
-
-
-                                    {/* <div className="mt-3 shrink-0 overflow-hidden rounded-xl border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] shadow-sm">
-                                    <div className="border-b border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-4 py-3">
-                                        <p className="text-[11px] uppercase tracking-wide text-[var(--text-secondary)]">Amount Payable</p>
-                                        <div className="flex items-center gap-1 text-2xl font-bold text-[var(--text-primary)]">
-                                            <IndianRupee className="h-5 w-5" />
-                                            {(estimatedSubtotal + estimatedGst).toFixed(2)}
-                                        </div>
-                                    </div>
-
-                                    <div className="p-3 space-y-3">
-                                        <div>
-                                            <label className="text-xs font-medium text-[var(--text-secondary)]">Method</label>
-                                            <select
-                                                className="mt-1 w-full rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none"
-                                                value={createPaymentMethod}
-                                                onChange={(e) => setCreatePaymentMethod(e.target.value as PaymentMethod)}
-                                            >
-                                                <option value="CASH">Cash</option>
-                                                <option value="CARD">Card</option>
-                                                <option value="UPI">UPI</option>
-                                                <option value="OTHER">Other</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-2 rounded-lg bg-[var(--color-bg-tertiary)] p-2">
-                                            <div className="text-center">
-                                                <p className="text-[11px] text-[var(--text-secondary)]">Subtotal</p>
-                                                <p className="text-sm font-semibold text-[var(--text-primary)]">₹{estimatedSubtotal.toFixed(2)}</p>
-                                            </div>
-
-                                            {isInterState ? (
-                                                <div className="col-span-2 text-center">
-                                                    <p className="text-[11px] text-[var(--text-secondary)]">IGST</p>
-                                                    <p className="text-sm font-semibold text-[var(--text-controlled)]">₹{estimatedIgst.toFixed(2)}</p>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="text-center">
-                                                        <p className="text-[11px] text-[var(--text-secondary)]">CGST</p>
-                                                        <p className="text-sm font-semibold text-[var(--text-link)]">₹{estimatedCgst.toFixed(2)}</p>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <p className="text-[11px] text-[var(--text-secondary)]">SGST</p>
-                                                        <p className="text-sm font-semibold text-[var(--text-controlled)]">₹{estimatedSgst.toFixed(2)}</p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        <button
-                                            className="w-full rounded-lg bg-[var(--text-success)] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-                                            disabled={cart.length === 0 || submitting}
-                                            onClick={submitBill}
-                                        >
-                                            {submitting ? "Creating…" : "Create Bill"}
-                                        </button>
-                                    </div>
-                                </div> */}
-                                </div>
-                                <div>
-                                    <div className="row-span-1 grid grid-cols-12 items-center gap-3 w-full  px-5">
-                                        <div className="col-span-4 flex items-center gap-2">
+                                        <div className=" w-full flex flex-col  items-start gap-2">
                                             <label htmlFor="prescription" className="shrink-0 text-sm font-medium text-[var(--text-rx)]">Prescription</label>
                                             <Input
                                                 className="text-sm"
@@ -620,8 +549,55 @@ export default function CreateBillPage() {
                                                 onChange={(e) => setPrescriptionFile(e.target.files?.[0] ?? null)}
                                             />
                                         </div>
-                                        <div className="col-span-4" />
+                                    </div>
 
+
+
+                                </div>
+                            </section>
+                        </Container>
+
+                        <Container className="flex relative flex-1">
+                            <div className="relative flex flex-1 min-h-0 flex-col p-4 gap-3">
+                                {/* Product search */}
+                                <div className="grid grid-cols-4 gap-5 place-items-center place-items-center
+
+">
+                                    <div className="relative col-span-3 w-full shrink-0">
+                                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
+                                        <Input
+                                            id="productSearch"
+                                            label=""
+                                            type="text"
+                                            className="pl-9"
+                                            placeholder="Search product by name, barcode, or HSN..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                        />
+                                        {results.length > 0 && (
+                                            <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] shadow-xl">
+                                                {results.map((m) => (
+                                                    <div key={m.id}>
+                                                        {m.batches.map((b) => (
+                                                            <button
+                                                                key={`${m.id}-${b.batchNumber}`}
+                                                                className="grid w-full grid-cols-6 items-center gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-[var(--color-bg-tertiary)]"
+                                                                onClick={() => addToCart(m, b)}
+                                                            >
+                                                                <span className="col-span-3 truncate text-sm font-medium text-[var(--text-primary)]">{m.name}</span>
+                                                                <span className="text-xs text-[var(--text-secondary)]">{"Batch " + b.batchNumber}</span>
+                                                                <span className="text-xs text-[var(--text-secondary)]">{"Exp " + new Date(b.expiryDate).toLocaleDateString("en-IN")}</span>
+                                                                <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
+                                                                    {b.quantityAvailable} in stock
+                                                                </span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex w-full">
                                         <label
                                             className="col-span-2 flex items-center gap-1.5 h-9 px-2.5 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-xs font-medium text-[var(--text-warning)] cursor-pointer select-none"
                                             htmlFor="interstate"
@@ -660,48 +636,7 @@ export default function CreateBillPage() {
                                         </div>
                                     </div>
                                 </div>
-                            </section>
-                        </Container>
 
-                        <Container className="flex relative flex-1">
-                            <div className="relative flex flex-1 min-h-0 flex-col p-4 gap-3">
-                                {/* Product search */}
-                                <div className="relative shrink-0">
-                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
-                                    <Input
-                                        id="productSearch"
-                                        label=""
-                                        type="text"
-                                        className="pl-9"
-                                        placeholder="Search product by name, barcode, or HSN..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                    {results.length > 0 && (
-                                        <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] shadow-xl">
-                                            {results.map((m) => (
-                                                <div key={m.id}>
-                                                    {m.batches.map((b) => (
-                                                        <button
-                                                            key={`${m.id}-${b.batchNumber}`}
-                                                            className="grid w-full grid-cols-6 items-center gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-[var(--color-bg-tertiary)]"
-                                                            onClick={() => addToCart(m, b)}
-                                                        >
-                                                            <span className="col-span-3 truncate text-sm font-medium text-[var(--text-primary)]">{m.name}</span>
-                                                            <span className="text-xs text-[var(--text-secondary)]">{"Batch " + b.batchNumber}</span>
-                                                            <span className="text-xs text-[var(--text-secondary)]">{"Exp " + new Date(b.expiryDate).toLocaleDateString("en-IN")}</span>
-                                                            <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
-                                                                {b.quantityAvailable} in stock
-                                                            </span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Cart */}
                                 {cart.length === 0 ? (
                                     <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] text-[var(--text-secondary)]">
                                         <ShoppingCart className="mb-2 h-8 w-8" />
@@ -715,11 +650,11 @@ export default function CreateBillPage() {
                                                 Prices shown {gstMode === 'INCLUSIVE' ? 'inclusive' : 'exclusive'} of GST · {isInterState ? 'IGST' : 'CGST + SGST'}
                                             </span>
                                         </div>
-                                        <table className="table-fixed w-full [&_th]:p-0 [&_th]:pl-1 &_td]:border-r [&_th]:border-r [&_td]:border-gray-200 [&_th]:border-gray-200">
+                                        <table className="table-fixed w-full [&_th]:p-0  [&_td]:border-r [&_th]:border-r [&_td]:border-gray-200 [&_th]:border-gray-200">
                                             <ColGroup />
                                             <TableHeader>
                                                 <TableRow className="bg-white rounded-xs text-black">
-                                                    <TableHead className="text-black">Name And Generic Name</TableHead>
+                                                    <TableHead className="text-black"><div className="pl-2">Name And Generic Name</div></TableHead>
                                                     <TableHead className="text-black text-center">Qty</TableHead>
                                                     <TableHead className="text-black text-center">Unit Price</TableHead>
                                                     <TableHead className="text-black text-center">GST%</TableHead>
@@ -738,7 +673,7 @@ export default function CreateBillPage() {
                                         </table>
 
                                         {/* ── Scrollable Body Table ── */}
-                                        <div className="flex-1 min-h-0 overflow-y-auto">
+                                        <div className="h-[250px] min-h-0  overflow-y-auto">
                                             <table className="table-fixed w-full [&_tr]:p-5 [&_td]:p-0  [&_td]:border [&_th]:border [&_td]:border-gray-200 [&_th]:border-gray-200">
                                                 <ColGroup />
                                                 <TableBody>
@@ -821,12 +756,12 @@ export default function CreateBillPage() {
                                                                 ) : (
                                                                     <>
                                                                         <TableCell className="text-center">
-                                                                            <span className="rounded-md text-center bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-xs font-medium text-[var(--text-link)]">
+                                                                            <span className="rounded-md text-center bg-[var(--color-bg-tertiary)] px-2 py-0.5 ">
                                                                                 ₹{cgst.toFixed(2)}
                                                                             </span>
                                                                         </TableCell>
                                                                         <TableCell className="text-center">
-                                                                            <span className="rounded-md bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-xs font-medium text-[var(--text-controlled)]">
+                                                                            <span className="rounded-md bg-[var(--color-bg-tertiary)] px-2 py-0.5 ">
                                                                                 ₹{sgst.toFixed(2)}
                                                                             </span>
                                                                         </TableCell>
@@ -834,7 +769,7 @@ export default function CreateBillPage() {
                                                                 )}
 
                                                                 {/* Line Total */}
-                                                                <TableCell className="font-semibold text-center text-[var(--text-primary)]">
+                                                                <TableCell className="text-center ">
                                                                     ₹{total.toFixed(2)}
                                                                 </TableCell>
 
@@ -857,7 +792,7 @@ export default function CreateBillPage() {
                                         </div>
 
                                         {/* ── Footer Table ── */}
-                                        <table className="table-fixed w-full border-t [&_td]:p-1 [&_td]:pl-1">
+                                        <table className="table-fixed shrink-0 w-full border-t [&_td]:p-1 [&_td]:pl-1">
                                             <ColGroup />
                                             <tfoot className="font-bold">
                                                 <tr>
@@ -865,13 +800,13 @@ export default function CreateBillPage() {
                                                     <td></td>
                                                     <td></td>
                                                     <td></td>
-                                                    {!isInterState && <td>₹{estimatedCgst.toFixed(2)}</td>}
-                                                    {!isInterState && <td>₹{estimatedSgst.toFixed(2)}</td>}
-                                                    {isInterState && <td>₹{estimatedIgst.toFixed(2)}</td>}
-                                                    <td>₹{(estimatedSubtotal + estimatedGst).toFixed(2)}</td>
+                                                    {!isInterState && <td className="border-r border-r-gray-300 text-center">₹{estimatedCgst.toFixed(2)}</td>}
+                                                    {!isInterState && <td className="border-r border-r-gray-300 text-center">₹{estimatedSgst.toFixed(2)}</td>}
+                                                    {isInterState && <td className="border-r border-r-gray-300 text-center">₹{estimatedIgst.toFixed(2)}</td>}
+                                                    <td className="text-center">₹{(estimatedSubtotal + estimatedGst).toFixed(2)}</td>
                                                     <td className=" pr-1">
                                                         <button
-                                                            className="w-full rounded-lg bg-[var(--text-success)] py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                                                            className="w-full rounded-lg bg-blue-500 hover:bg-blue-700 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
                                                             disabled={cart.length === 0 || submitting}
                                                             onClick={submitBill}
                                                         >

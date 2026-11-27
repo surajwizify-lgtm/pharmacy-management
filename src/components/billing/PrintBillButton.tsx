@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { Printer, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
 import BillPrintTemplate, { BillPrintData } from "./BillPrintTemplate";
-import { Button } from "../ui/button";
+import { Button } from "@/components/common/button";
 
 interface PrintBillButtonProps {
     billId: number;

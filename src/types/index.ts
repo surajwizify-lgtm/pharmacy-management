@@ -5,17 +5,7 @@ export type productStatus = 'ACTIVE' | 'DISCONTINUED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'CARD' | 'UPI' | 'OTHER';
 
-// export interface Batch {
-//   id: number;
-//   productId: number;
-//   batchNumber: string;
-//   expiryDate: string;
-//   purchasePrice: string;
-//   sellingPrice: string;
-//   quantityAvailable: number;
-//   version: number;
-//   product?: product;
-// }
+
 export interface Batch {
   id: number;
   productId: number;
@@ -30,27 +20,6 @@ export interface Batch {
   version: number;
 }
 
-// export interface product {
-//   id: number;
-//   name: string;
-//   manufacturer: string;
-//   category: string | null;
-//   barcode: string | null;
-//   hsnCode: string;
-//   gstPercentage: string;
-//   gstType: 'INCLUSIVE' | 'EXCLUSIVE';
-//   prescriptionRequired: boolean;
-//   status: productStatus;
-//   mrp: number;
-//   cp: number;
-//   sp: number;
-//   genericName?: string;
-//   createdAt: string;
-//   updatedAt: string;
-//   version: number;
-//   batches: Batch[];
-//   totalStock?: number;
-// }
 
 export interface product {
   id: number;
@@ -123,29 +92,7 @@ export interface BillItem {
   product?: product;
 }
 
-// export interface Bill {
-//   id: number;
-//   billNumber: string;
-//   billDate: string;
-//   cashierId: number;
-//   customerName: string | null;
-//   customerPhone: string | null;
-//   customerGstin: string | null;
-//   ipOp: string | null;
-//   doctorId: number | null;
-//   hospitalId: number | null;
-//   isInterState: boolean;
-//   subtotal: string;
-//   totalCgst: string;
-//   totalSgst: string;
-//   totalIgst: string;
-//   totalGst: string;
-//   totalAmount: string;
-//   paymentStatus: PaymentStatus;
-//   billItems: BillItem[];
-//   payments?: { id: number; amount: string; method: PaymentMethod; paidAt: string }[];
-//   cashier?: AppUser;
-// }
+
 export interface Bill {
   id: number;
   billNumber: string;

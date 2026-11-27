@@ -5,6 +5,8 @@ import Container from '@/components/common/Container';
 import LocationsTable from './LocationsTable';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import HeaderButton from '@/components/common/HeaderButton';
+import AddLocationButton from './AddLocationButton';
 
 export default async function LocationsPage() {
     const session = await getServerSession(authOptions);
@@ -26,7 +28,9 @@ export default async function LocationsPage() {
 
     return (
         <div className="">
-            <PageHeader header="Locations" subheader="Add rack, shelves, coldstorage" />
+            <PageHeader header="Locations" subheader="Add rack, shelves, coldstorage" >
+                <AddLocationButton />
+            </PageHeader>
 
             <Container>
                 <LocationsTable data={locations} />

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { useState } from "react";
 import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import { Button } from "@/components/common/button";
 import { cn } from "@/lib/utils";
 
 interface DataTableProps<TData, TValue> {

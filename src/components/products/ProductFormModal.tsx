@@ -349,7 +349,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { apiFetch, ApiClientError } from '@/lib/api-client';
 import type { product } from '@/types';
-import { Button } from '../ui/button';
+import { Button } from '@/components/common/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 type GstType = 'INCLUSIVE' | 'EXCLUSIVE';
