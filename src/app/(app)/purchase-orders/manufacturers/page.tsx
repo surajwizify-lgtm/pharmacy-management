@@ -6,6 +6,7 @@ import HeaderButton from "@/components/common/HeaderButton";
 import Container from "@/components/common/Container";
 import ManufacturersTable from "./ManufacturersTable";
 import type { Manufacturer } from "./ManufacturersTable";
+import Page from "@/components/common/page";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function ManufacturerListPage({
     }));
 
     return (
-        <div className="">
+        <Page className="">
             <PageHeader header="Manufacturers" subheader="Manage All Manufatures Here">
                 <HeaderButton text="New Manufacturer" href="/purchase-orders/manufacturers/new" />
             </PageHeader>
@@ -79,6 +80,6 @@ export default async function ManufacturerListPage({
 
                 <ManufacturersTable data={manufacturers} />
             </Container>
-        </div>
+        </Page>
     );
 }

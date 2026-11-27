@@ -368,12 +368,13 @@ body {
   }
 
   html {
-    @apply font-sans;}
+    @apply font-sans;
+  }
 }
 
 @keyframes marquee {
   0% {
-    transform: translateX(100vw);
+    transform: translateX(70vw);
   }
 
   100% {

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/common/button"
 import {
     Dialog,
     DialogClose,
@@ -22,7 +22,7 @@ export function AddEditModel({ children, onSubmit, onClose, onClick, buttonTitle
     return (
         <Dialog>
             <form>
-                <DialogTrigger render={<Button size={'xs'} onClick={onClick} variant="outline">{buttonTitle}</Button>} />
+                <DialogTrigger render={<Button onClick={onClick} variant="outline">{buttonTitle}</Button>} />
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle>{title}</DialogTitle>

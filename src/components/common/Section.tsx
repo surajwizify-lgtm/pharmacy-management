@@ -20,7 +20,7 @@ export default function Section({
     const hasHeader = title || description || action;
 
     return (
-        <section className={cn("w-full space-y-4", className)}>
+        <section className={cn("w-full space-y-4 ", className, fullWidth ? '' : 'px-5')}>
             <div className={cn(!fullWidth && "max-w-7xl mx-auto")}>
                 {hasHeader && (
                     <div className="flex items-start justify-between gap-4 mb-4">

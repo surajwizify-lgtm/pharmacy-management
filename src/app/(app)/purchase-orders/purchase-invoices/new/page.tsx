@@ -5,7 +5,7 @@ import DetailPageHeader from '@/components/common/DetailPageHeader';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-import Button from '@/components/Button';
+import { Button } from '@/components/common/button';
 import { Copy, Printer, Search, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AppSelect from '@/components/common/AppSelect';
@@ -17,6 +17,7 @@ import Section from '@/components/common/Section';
 import { LocationCell } from './LocationCell';
 import { ProductCell } from './ProductCell';
 import AddProductButton from '@/app/(app)/products/AddProductButton';
+import AddSupplierButton from '../../suppliers/AddSupplierButton';
 
 export default function NewPurchasePage() {
     const {
@@ -71,8 +72,8 @@ export default function NewPurchasePage() {
                 }}
                 actions={
                     true && (
-                        <div>
-                            <AddProductButton />
+                        <div className='flex gap-2'>
+                            <AddProductButton /><AddSupplierButton />
                         </div>
                     )
                 }

@@ -376,7 +376,12 @@ export default function CreateBillPage() {
             <div className="h-screen w-full overflow-hidden grid grid-rows-12 bg-[var(--color-bg-secondary)]">
                 <div className="row-span-12 grid grid-cols-12 min-h-0">
                     <div className="col-span-12 flex flex-col min-h-0 border-r border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)]">
-                        <DetailPageHeader title="Customer Invoice" subtitle='Search products and build the bill'></DetailPageHeader>
+                        <DetailPageHeader actions={
+                            <Button onClick={() => router.push('/purchase-orders/new')}>Create Purchase Order</Button>
+                        } title="Customer Invoice" subtitle='Search products and build the bill'>
+
+
+                        </DetailPageHeader>
                         <Container>
                             <section>
                                 <div className="col-span-3 flex min-h-0 flex-col p-3">
@@ -450,7 +455,7 @@ export default function CreateBillPage() {
                                                     onClick={() => setShowCreateDoctor(true)}
                                                     className="flex items-center gap-1 text-xs font-medium text-[var(--text-link)] hover:underline"
                                                 >
-                                                    <UserPlus className="h-3.5 w-3.5" /> New doctor
+                                                    <UserPlus className="h-3.5 w-3.5" /> doctor
                                                 </button>
                                             </div>
                                             <Input
@@ -500,7 +505,7 @@ export default function CreateBillPage() {
                                                     onClick={() => setShowCreateHospital(true)}
                                                     className="flex items-center gap-1 text-xs font-medium text-[var(--text-link)] hover:underline"
                                                 >
-                                                    <Plus className="h-3.5 w-3.5" /> New hospital
+                                                    <Plus className="h-3.5 w-3.5" /> hospital
                                                 </button>
                                             </div>
                                             <Input
@@ -584,11 +589,17 @@ export default function CreateBillPage() {
                                                                 className="grid w-full grid-cols-6 items-center gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-[var(--color-bg-tertiary)]"
                                                                 onClick={() => addToCart(m, b)}
                                                             >
-                                                                <span className="col-span-3 truncate text-sm font-medium text-[var(--text-primary)]">{m.name}</span>
+                                                                <span className=" truncate text-sm font-medium text-[var(--text-primary)]">{m.name}</span>
                                                                 <span className="text-xs text-[var(--text-secondary)]">{"Batch " + b.batchNumber}</span>
                                                                 <span className="text-xs text-[var(--text-secondary)]">{"Exp " + new Date(b.expiryDate).toLocaleDateString("en-IN")}</span>
                                                                 <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
                                                                     {b.quantityAvailable} in stock
+                                                                </span>
+                                                                <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
+                                                                    CP: ₹{m.cp}
+                                                                </span>
+                                                                <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
+                                                                    MRP: ₹{m.mrp}
                                                                 </span>
                                                             </button>
                                                         ))}
@@ -638,7 +649,7 @@ export default function CreateBillPage() {
                                 </div>
 
                                 {cart.length === 0 ? (
-                                    <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] text-[var(--text-secondary)]">
+                                    <div className="flex flex-1 min-h-0 flex-col items-center justify-center rounded-xl border  border-[var(--color-border)]  text-[var(--text-secondary)]">
                                         <ShoppingCart className="mb-2 h-8 w-8" />
                                         <p className="text-sm">Search and add products to start a bill.</p>
                                     </div>

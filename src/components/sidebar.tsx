@@ -52,8 +52,8 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     href: '/billing', label: 'Sales & Payments', roles: ['ADMIN', 'PHARMACIST', 'CASHIER'], icon: Receipt, children: [
-      { href: '/billing/all-sales', label: 'Invoices' },
-      { href: '/billing/sale-returns', label: 'Sale Returns' },
+      { href: '/billing/all-sales', label: 'View/Create Customer Bill' },
+      { href: '/billing/sale-returns', label: 'Customer Returns' },
       { href: '/billing/customers', label: 'Customers' },
     ],
   },
@@ -63,8 +63,9 @@ const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'PHARMACIST', 'CASHIER'],
     icon: ShoppingCart,
     children: [
+      { href: '/purchase-orders/purchase-invoices', label: 'View/Create Supplier Bill' },
       { href: '/purchase-orders/registered', label: 'Purchase Orders' },
-      { href: '/purchase-orders/purchase-invoices', label: 'Bills' },
+
       { href: '/purchase-orders/manufacturers', label: 'Manufacturers' },
       { href: '/purchase-orders/suppliers', label: 'Suppliers' },
       { href: '/purchase-orders/return', label: 'Supplier Return' },

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import PageHeader from '@/components/common/Header';
 import Container from '@/components/common/Container';
 import BatchesTable, { BatchWithProduct } from './BatchesTable';
+import Page from '@/components/common/page';
 
 
 export default async function BatchesPage() {
@@ -22,7 +23,7 @@ export default async function BatchesPage() {
   }));
 
   return (
-    <div className="">
+    <Page className="">
       <PageHeader
         header="Batches & Stock"
         subheader="Monitor inventory batches, expiry dates and maintain FIFO stock movement."
@@ -31,6 +32,6 @@ export default async function BatchesPage() {
       <Container>
         <BatchesTable data={data} />
       </Container>
-    </div>
+    </Page>
   );
 }

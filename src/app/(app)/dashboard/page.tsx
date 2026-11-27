@@ -16,6 +16,8 @@ import PageHeader from '@/components/common/Header';
 import Container from '@/components/common/Container';
 import { Card } from '@/components/ui/card';
 import DashboardLinks from '@/components/dashboard/DashboardLinks';
+import Page from '@/components/common/page';
+import Section from '@/components/common/Section';
 
 async function getStats() {
   const [productCount, activeproducts, allproductsWithBatches, expiringBatches, billsToday, revenueAgg] =
@@ -55,16 +57,21 @@ export default async function DashboardPage() {
   const isAdmin = role == "ADMIN";
 
   return (
-    <div className="">
-      <PageHeader
-        header={`Welcome back, ${session?.user?.fullName?.split(' ')[0]}`}
-        subheader="Track your key metrics, recent activity, and team performance in one place."
-      >
-        {/* <HeaderButton text="Create New Bill" href="/billing/all-sales/new" /> */}
-      </PageHeader>
-      <Container>
-        {isAdmin && <DashboardLinks />}
-        {isAdmin && <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+    <Page className="">
+      <Section fullWidth  >
+        <PageHeader
+          header={`Welcome back, ${session?.user?.fullName?.split(' ')[0]}`}
+          subheader="Track your key metrics, recent activity, and team performance in one place."
+        >
+          {/* <HeaderButton text="Create New Bill" href="/billing/all-sales/new" /> */}
+        </PageHeader>
+      </Section>
+
+      {isAdmin && <Section>
+        <DashboardLinks />
+      </Section>}
+      {isAdmin && <Section>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <StatCard
             label="Active products"
             value={stats.activeproducts}
@@ -85,8 +92,10 @@ export default async function DashboardPage() {
             icon={AlertTriangle}
             tone={stats.lowStock.length > 0 ? 'amber' : 'secondary'}
           />
-        </div>}
-        {isAdmin && <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        </div>
+      </Section>}
+      {isAdmin && <Section>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card className=" overflow-hidden p-0">
             <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4">
               <h2 className="flex items-center gap-2 font-medium text-neutral-800">
@@ -152,9 +161,9 @@ export default async function DashboardPage() {
           <OverduePayablesList />
 
           <CashFlowChart />
-        </div>}
-      </Container>
-    </div>
+        </div>
+      </Section>}
+    </Page>
   );
 }
 

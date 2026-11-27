@@ -28,6 +28,7 @@ import Container from '@/components/common/Container';
 import { CardContent } from '@/components/ui/card';
 import { DataTable } from '@/components/data-table/data-table';
 import { getColumns } from './column';
+import Section from '@/components/common/Section';
 
 const STATUS_OPTIONS = ['ALL', 'PAID', 'PARTIALLY_PAID', 'UNPAID'] as const;
 

@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
 import Container from '@/components/common/Container';
+import Page from '@/components/common/page';
 
 type GstSummary = {
     from: string;
@@ -161,7 +162,7 @@ export default function GstSummaryPage() {
     }, []);
 
     return (
-        <div className="">
+        <Page className="">
             <PageHeader
                 header={`GST Summary`}
                 subheader="View Gst Summary Here"
@@ -319,7 +320,7 @@ export default function GstSummaryPage() {
                     periods={periods}
                 />
             )}
-        </div>
+        </Page>
     );
 }
 

@@ -6,6 +6,7 @@ import PageHeader from '@/components/common/Header';
 import HeaderButton from '@/components/common/HeaderButton';
 import PurchaseInvoicesTable from '@/components/purchase-orders/purchase-invoices/PurchaseInvoiceTable';
 import Section from '@/components/common/Section';
+import Page from '@/components/common/page';
 
 export default async function PurchaseInvoicesPage() {
     const session = await getServerSession(authOptions);
@@ -60,7 +61,7 @@ export default async function PurchaseInvoicesPage() {
     });
 
     return (
-        <div className="">
+        <Page className="">
             <PageHeader
                 header={`Purchase Invoices`}
                 subheader="Create a new supplier invoice by entering invoice details, adding purchased items with batch info, applying GST, and tracking stock in real time."
@@ -70,6 +71,6 @@ export default async function PurchaseInvoicesPage() {
             <Section>
                 <PurchaseInvoicesTable suppliers={suppliers} invoices={invoices} />
             </Section>
-        </div>
+        </Page>
     );
 }
