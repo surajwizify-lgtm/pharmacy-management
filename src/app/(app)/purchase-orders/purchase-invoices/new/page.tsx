@@ -16,6 +16,7 @@ import Page from '@/components/common/page';
 import Section from '@/components/common/Section';
 import { LocationCell } from './LocationCell';
 import { ProductCell } from './ProductCell';
+import AddProductButton from '@/app/(app)/products/AddProductButton';
 
 export default function NewPurchasePage() {
     const {
@@ -71,7 +72,7 @@ export default function NewPurchasePage() {
                 actions={
                     true && (
                         <div>
-
+                            <AddProductButton />
                         </div>
                     )
                 }
