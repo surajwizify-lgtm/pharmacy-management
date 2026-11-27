@@ -26,11 +26,13 @@ export function usePurchaseForm() {
     const [isInterState, setIsInterState] = useState(false);
 
     const [items, setItems] = useState<ItemRow[]>([{ ...EMPTY_ITEM }]);
+    const [locationSearch, setLocationSearch] = useState('');
 
     const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [search, setSearch] = useState('')
     const [results, setResults] = useState<product[]>([]);
+    const [isFocused, setIsFocused] = useState(false);
 
 
 
@@ -71,7 +73,7 @@ export function usePurchaseForm() {
                 manufactureDate: '',
                 expiryDate: '',
                 quantity: '',
-                freeQuantity: '0',
+                freeQuantity: '',
             };
             const next = [...prev];
             next.splice(index + 1, 0, clone);
@@ -161,17 +163,19 @@ export function usePurchaseForm() {
             setSaving(false);
         }
     }
+    const filteredLocation = locations.filter((l) => l.name.includes(locationSearch))
     useEffect(() => {
-        if (!search) {
-            setResults([]);
-            return;
-        }
+        // if (!search) {
+        //     setResults([]);
+        //     return;
+        // }
         const t = setTimeout(async () => {
             const data = await apiFetch<product[]>(`/api/products?search=${encodeURIComponent(search)}&status=ACTIVE`);
             setResults(data);
         }, 250);
         return () => clearTimeout(t);
     }, [search]);
+
     useEffect(() => {
         apiFetch<Supplier[]>('/api/suppliers').then(setSuppliers).catch(() => { });
         apiFetch<Product[]>('/api/products').then(setProducts).catch(() => { });
@@ -209,5 +213,8 @@ export function usePurchaseForm() {
         search,
         setSearch,
         results, setResults,
+        isFocused, setIsFocused,
+        locationSearch, setLocationSearch,
+        filteredLocation,
     }
 }

@@ -160,14 +160,14 @@ export function Sidebar({
 
         {!collapsed && <div className="relative mx-5 h-px bg-surface-200" />}
         {!collapsed && <nav className="relative flex-1 space-y-0.5 overflow-y-auto py-4">
-          {NAV_ITEMS.filter((item) => !role || item.roles.includes(role)).map((item) => {
+          {NAV_ITEMS.filter((item,) => !role || item.roles.includes(role)).map((item, j) => {
             const active = pathname === item.href || pathname?.startsWith(item.href + '/');
             const Icon = item.icon;
 
             if (!item.children) {
               return (
                 <Link
-                  key={item.href}
+                  key={j}
                   href={item.href}
                   className={clsx(
                     'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 pl-4 text-sm font-medium transition-all duration-200',

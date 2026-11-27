@@ -12,6 +12,10 @@ import AppSelect from '@/components/common/AppSelect';
 import { DatePicker } from '@/components/ui/date-picker';
 import { usePurchaseForm } from '@/hooks/usePurchaseForm';
 import { Cell } from '@/components/purchase-orders/purchase-invoices/cell';
+import Page from '@/components/common/page';
+import Section from '@/components/common/Section';
+import { LocationCell } from './LocationCell';
+import { ProductCell } from './ProductCell';
 
 export default function NewPurchasePage() {
     const {
@@ -43,11 +47,15 @@ export default function NewPurchasePage() {
         handleSubmit,
         search, setSearch,
         results, setResults,
+        isFocused, setIsFocused,
+        locationSearch, setLocationSearch,
+        filteredLocation
     } = usePurchaseForm();
+    console.log(filteredLocation)
+
     return (
-        <div className='h-screen overflow-clip'>
+        <Page className='h-screen overflow-clip'>
             <DetailPageHeader
-            
                 backHref="/products"
                 backLabel="Back to products"
                 title={'Create PO & Invoice Togather'}
@@ -68,8 +76,8 @@ export default function NewPurchasePage() {
                     )
                 }
             />
-            <Container className="">
-                <form className="flex h-[calc(100vh-7rem)] flex-col">
+            <Section>
+                <form className="flex h-[calc(100vh-7rem)] flex-col space-y-3">
 
                     <div className="grid shrink-0 grid-cols-2 gap-x-6 gap-y-2 border-b border-slate-200 py-3 lg:grid-cols-4 xl:grid-cols-8">
                         <div className="xl:col-span-2">
@@ -86,23 +94,6 @@ export default function NewPurchasePage() {
                                 ))}
                             </select>
                         </div>
-
-                        {/* <div>
-                            <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">PO number</label>
-                            <Cell value={poNumber} onChange={setPoNumber} required />
-                        </div> */}
-                        {/* <div>
-                            <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Order date</label>
-                            <Cell type="date" value={orderDate} onChange={setOrderDate} required />
-                            <DatePicker
-                                onChange={setOrderDate}
-                                value={orderDate}
-                            />
-                        </div> */}
-                        {/* <div>
-                            <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Expected date</label>
-                            <Cell type="date" value={expectedDate} onChange={setExpectedDate} />
-                        </div> */}
                         <div>
                             <label className="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-400">Invoice no.</label>
                             <Cell value={invoiceNumber} onChange={setInvoiceNumber} required />
@@ -130,43 +121,8 @@ export default function NewPurchasePage() {
                             </label>
                         </div>
                     </div>
-                    <div>
-                        <div className="relative col-span-3  w-full shrink-0">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" />
-                            <Input
-                                id="productSearch"
-                                // label=""
-                                type="text"
-                                placeholder="Search products"
-                                className='pl-9'
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                            {results.length > 0 && (
-                                <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] shadow-xl">
-                                    {results.map((m) => (
-                                        <div key={m.id}>
-                                            {m.batches.map((b) => (
-                                                <button
-                                                    type="button"
-                                                    key={`${m.id}-${b.batchNumber}`}
-                                                    className="grid w-full grid-cols-6 items-center gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2.5 text-left transition-colors last:border-b-0 hover:bg-[var(--color-bg-tertiary)]"
-                                                    onClick={() => { onProductChange(0, Number(m.id)), setSearch('') }}
-                                                >
-                                                    <span className="col-span-3 truncate text-sm font-medium text-[var(--text-primary)]">{m.name}</span>
-                                                    <span className="text-xs text-[var(--text-secondary)]">{"Batch " + b.batchNumber}</span>
-                                                    <span className="text-xs text-[var(--text-secondary)]">{"Exp " + new Date(b.expiryDate).toLocaleDateString("en-IN")}</span>
-                                                    <span className="justify-self-end rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-success)]">
-                                                        {b.quantityAvailable} in stock
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+
+
 
                     <div className="flex min-h-0 flex-1 flex-col py-3">
                         <div className="mb-2 flex shrink-0 items-center justify-between">
@@ -178,7 +134,7 @@ export default function NewPurchasePage() {
                             </button>
                         </div>
 
-                        <div className="max-h-[500px] overflow-auto ">
+                        <div className="max-h-[500px] overflow-visible ">
                             <Table className="table-fixed [&_td]:h-px [&_th]:border-border [&_th]:border [&_td]:p-0 w-full text-[11px]">
                                 <TableHeader className="sticky top-0 z-10 ">
                                     <TableRow>
@@ -206,10 +162,18 @@ export default function NewPurchasePage() {
                                         const c = lineCalcs[i];
 
                                         return (
-                                            <TableRow key={i}>
+                                            <TableRow className="overflow-visible h-8" key={i}>
                                                 <TableCell className='overflow-visible'>
 
-                                                    {it.name}
+                                                    <ProductCell
+                                                        results={results}
+                                                        search={search}
+                                                        onSearchChange={setSearch}
+                                                        onSelect={(id) => {
+                                                            onProductChange(i, id);
+                                                            setSearch('');
+                                                        }}
+                                                    />
                                                 </TableCell>
 
                                                 <TableCell>
@@ -326,6 +290,13 @@ export default function NewPurchasePage() {
                                                 </TableCell>
 
                                                 <TableCell>
+                                                    <LocationCell
+                                                        locations={locations}
+                                                        value={String(it.location ?? '')}
+                                                        onChange={(val) => updateItem(i, { location: val })}
+                                                    />
+                                                </TableCell>
+                                                {/* <TableCell>
                                                     <AppSelect
                                                         value={String(it.location ?? "")}
                                                         placeholder="Rack"
@@ -338,7 +309,7 @@ export default function NewPurchasePage() {
                                                         ]}
                                                         onChange={(value) => updateItem(i, { location: value })}
                                                     />
-                                                </TableCell>
+                                                </TableCell> */}
                                                 <TableCell>
                                                     <input
                                                         className='w-full h-full border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] text-center text-[var(--text-primary)] focus:border-[var(--text-link)] focus:outline-none'
@@ -395,6 +366,7 @@ export default function NewPurchasePage() {
                         </div>
 
                     </div>
+
                     <div className="flex shrink-0 items-center justify-end gap-5 border-t border-slate-200 py-3 text-xs">
                         <span className="text-slate-500">Subtotal <span className="font-medium text-slate-700">₹{totals.subtotal.toFixed(2)}</span></span>
                         {isInterState ? (
@@ -418,7 +390,8 @@ export default function NewPurchasePage() {
                         </Button>
                     </div>
                 </form>
-            </Container>
-        </div >
+            </Section>
+
+        </Page >
     );
 }

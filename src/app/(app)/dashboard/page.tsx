@@ -105,8 +105,8 @@ export default async function DashboardPage() {
                 <p className="py-4 text-sm text-neutral-400">All products are well stocked.</p>
               ) : (
                 <ul className="divide-y divide-neutral-100">
-                  {stats.lowStock.map((m) => (
-                    <li key={m.id} className="flex items-center justify-between py-2.5 text-sm">
+                  {stats.lowStock.map((m, i) => (
+                    <li key={i} className="flex items-center justify-between py-2.5 text-sm">
                       <span className="font-medium text-neutral-700">{m.name}</span>
                       <span className="badge bg-amber-100 text-amber-700">{m.totalStock} left</span>
                     </li>
@@ -134,8 +134,8 @@ export default async function DashboardPage() {
                 <p className="py-4 text-sm text-neutral-400">Nothing expiring in the next 90 days.</p>
               ) : (
                 <ul className="divide-y divide-neutral-100">
-                  {stats.expiringBatches.map((b) => (
-                    <li key={b.id} className="flex items-center justify-between py-2.5 text-sm">
+                  {stats.expiringBatches.map((b, j) => (
+                    <li key={j} className="flex items-center justify-between py-2.5 text-sm">
                       <span className="text-neutral-700">
                         <span className="font-medium">{b.product.name}</span>{' '}
                         <span className="text-neutral-400">· {b.batchNumber}</span>
